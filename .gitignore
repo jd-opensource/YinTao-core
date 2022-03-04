@@ -1,0 +1,10 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+yarn*
+yarn.lock
+package-lock.json
+lib
+gulp_build.log

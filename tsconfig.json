@@ -1,0 +1,32 @@
+{
+    "files": [
+        "src/index.ts"
+    ],
+    "include": [
+        "src", "lib/run/compiler/virtual-san-box.js",
+        // "src/shared",
+    ],
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "strict": true, 
+        "module": "commonjs",
+        "types": ["node"],
+        "target": "ES2019",
+        "lib": ["esnext", "dom", "DOM.Iterable"],
+        "checkJs": false,
+        "useUnknownInCatchVariables": false,
+        "suppressImplicitAnyIndexErrors": false,
+        "noImplicitAny":false,
+        "allowJs": true,
+        "jsx": "react",
+        "resolveJsonModule": true,
+        "inlineSourceMap": true,
+        "noImplicitOverride": true,
+        "inlineSources": true,
+    },
+    "compileOnSave": true,
+    "exclude": [
+        "tests",
+        "@types",
+    ],
+}

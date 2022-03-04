@@ -1,0 +1,43 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "airbnb-base"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "no-return-assign": 0,
+        "no-param-reassign":0,
+        "no-promise-executor-return":0,
+        "eqeqeq":0, // 允许使用 ==
+        "func-names":0, // 允许赋值给函数参数
+        "no-restricted-syntax": 0,
+        "no-plusplus":0, // 允许使用i++
+        "no-return-await":0,
+        "no-shadow":0,
+        "max-len": 0,
+        "no-undef": 0, // 允许直接使用全局变量
+        "max-classes-per-file": 0,
+        "no-use-before-define": 0, // 允许在定义前使用
+        "no-eval": 0,
+        "no-dynamic-require": 0, // 运行使用动态require
+        "import/no-import-module-exports": 0, // 运行在cjm使用import
+        "semi": [2, "never"], // 不允许无效分号
+        "no-console": 0, // 运行使用console
+        "lines-between-class-members": 0, // 类成员直接必须空行
+        "import/extensions": 0,
+        "no-underscore-dangle": 0, // 允许_标识私有变量
+        "class-methods-use-this": 0, // 不强制类函数使用this
+        "import/no-unresolved": 0, // 允许导入时不使用完整扩展名
+        "@typescript-eslint/no-unused-vars": 2 // 使用Ts 检查 unused-vars
+    }
+}
