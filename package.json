@@ -26,6 +26,7 @@
     "semver": "^7.3.5",
     "stack-utils": "^2.0.5",
     "strip-bom": "^2.0.0",
+    "testcafe-browser-tools": "^2.0.22",
     "ws": "^8.5.0"
   },
   "devDependencies": {

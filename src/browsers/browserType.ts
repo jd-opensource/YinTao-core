@@ -1,23 +1,43 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import browserTools from 'testcafe-browser-tools'
 import { launchProcess, envArrayToObject } from '../utils/processLauncher'
 import { existsAsync } from '../utils/suger'
 import PipeTransport from '../server/pipeTransport'
+import { CallMetadata, SdkObject } from '../server/instrumentation'
 
 export type BrowserName = 'chromium' | 'firefox' | 'webkit';
 export const DEFAULT_TIMEOUT = 30000
-
-export default abstract class BrowserType {
+export default abstract class BrowserType extends SdkObject {
   private _name: BrowserName
   readonly _playwrightOptions: any
 
   constructor(browserName: BrowserName, options: any) {
-    // super(playwrightOptions.rootSdkObject, 'browser-type')
+    super(options.rootSdkObject, 'browser-type')
     // this.attribution.browserType = this
     this._playwrightOptions = options
     this._name = browserName
   }
+
+  executablePath(): string {
+    return 'C:\\Users\\zhouyuan11\\AppData\\Local\\ms-playwright\\chromium-975608\\chrome-win\\chrome.exe'
+  }
+  name(): string {
+    return this._name
+  }
+
+  // async launch(metadata: CallMetadata, options: any, protocolLogger?: any): Promise<any> {
+  //   options = this._validateLaunchOptions(options)
+  //   const controller = new ProgressController(metadata, this)
+  //   controller.setLogName('browser')
+  //   const browser = await controller.run((progress) => {
+  //     const seleniumHubUrl = (options as any).__testHookSeleniumRemoteURL || process.env.SELENIUM_REMOTE_URL
+  //     if (seleniumHubUrl) { return this._launchWithSeleniumHub(progress, seleniumHubUrl, options) }
+  //     return this._innerLaunchWithRetries(progress, options, undefined, helper.debugProtocolLogger(protocolLogger)).catch((e) => { throw this._rewriteStartupError(e) })
+  //   }, TimeoutSettings.timeout(options))
+  //   return browser
+  // }
 
   async _launchProcess(options:any, userDataDir?: string) {
     const {
@@ -30,14 +50,19 @@ export default abstract class BrowserType {
       handleSIGHUP = true,
     } = options
 
-    let executable: string
+    let executable: string = ''
     if (executablePath) {
       if (!(await existsAsync(executablePath))) { throw new Error(`Failed to launch ${this._name} because executable doesn't exist at ${executablePath}`) }
       executable = executablePath
     } else {
       // 获取本地chrome路径，很糟糕的是需要通过browsers.json 获取
       // 先写死, 之后尝试参考testcafe获取本地
-      executable = 'C:\\Users\\zhouyuan11\\AppData\\Local\\ms-playwright\\chromium-975608\\chrome-win\\chrome.exe'
+      const localBrowsers = await browserTools.getInstallations()
+      if (localBrowsers?.chrome?.path) {
+        executable = localBrowsers.chrome.path
+      } else {
+        console.error(`Failed to launch ${this._name}`)
+      }
     }
 
     const browserArguments = []

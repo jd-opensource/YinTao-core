@@ -57,3 +57,8 @@ export async function removeFolders(dirs: string[]): Promise<Array<Error|null|un
     })
   })))
 }
+
+export function monotonicTime(): number {
+  const [seconds, nanoseconds] = process.hrtime()
+  return seconds * 1000 + (nanoseconds / 1000 | 0) / 1000
+}

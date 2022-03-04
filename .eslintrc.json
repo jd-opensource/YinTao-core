@@ -15,6 +15,10 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "no-proto":0,
+        "no-unused-vars":0,
+        "default-case":0,
+        "no-bitwise":0,
         "no-return-assign": 0,
         "no-param-reassign":0,
         "no-promise-executor-return":0,
@@ -38,6 +42,6 @@
         "no-underscore-dangle": 0, // 允许_标识私有变量
         "class-methods-use-this": 0, // 不强制类函数使用this
         "import/no-unresolved": 0, // 允许导入时不使用完整扩展名
-        "@typescript-eslint/no-unused-vars": 2 // 使用Ts 检查 unused-vars
+        "@typescript-eslint/no-unused-vars": 1 // 使用Ts 检查 unused-vars
     }
 }
