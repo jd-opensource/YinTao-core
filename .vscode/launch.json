@@ -16,6 +16,19 @@
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "install",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            "args": [ "install","firefox"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
         }
     ]
 }

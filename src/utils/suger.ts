@@ -3,11 +3,15 @@ import crypto from 'crypto'
 import fs from 'fs'
 import removeFolder from 'rimraf'
 
-export const a = 2
 export const readFile = promisify(fs.readFile)
 
 export function createGuid(): string {
   return crypto.randomBytes(16).toString('hex')
+}
+
+export function getCherryVersion(majorMinorOnly = false) {
+  const packageJson = require('./../../package.json');
+  return majorMinorOnly ? packageJson.version.split('.').slice(0, 2).join('.') : packageJson.version;
 }
 
 export const existsAsync = (path: string): Promise<boolean> => new Promise((resolve) => fs.stat(path, (err) => resolve(!err)))

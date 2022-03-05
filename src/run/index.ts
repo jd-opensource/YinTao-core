@@ -6,16 +6,10 @@ import BrowserTypeDispatcher from '../dispatchers/BrowserTypeDispatcher'
 async function bootstrap() {
   const browser = new BrowserTypeDispatcher('chromium' as any, { rootSdkObject: { attribution: {} } })
   // 先不启动代理通讯服务，以原始步骤先观察逻辑
-  // 尝试启动浏览器
-  // const { context, launchOptions, contextOptions } = await launchContext(options, !!process.env.PWTEST_CLI_HEADLESS, process.env.PWTEST_CLI_EXECUTABLE_PATH);
-  // 核心浏览器那块还得用 play的，没人力维护
-  // 通讯逻辑沿用，但不沿用代码寻找更佳的升级空间，提高可控
-  // 首先构造cherry连接通讯部分参考 inProcessFactory
-  // const chromium = new Chromium({})
-  // 先不管监听尝试打开浏览器
-  // 不能直接以它的逻辑开始，容易过度引用代码，而是先以执行流程方向简化
-  await browser._launchProcess({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' }, undefined)
-  // const browser = await chromium.launch({})
+  // mac os.tempdir() 移植下载浏览器，并维护browsers.json
+  // testcafe-browser-tools 在mac中不可用还是需要用
+  await browser._launchProcess({ executablePath: '/Users/renran/Library/Caches/ms-playwright/chromium-973391/chrome-mac/Chromium.app/Contents/MacOS/Chromium'}, undefined)
+  // 后续研究 与浏览器可靠通讯
 }
 
 export async function run(code: string, opts: any = null) {
