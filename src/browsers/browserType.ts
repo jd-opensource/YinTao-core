@@ -6,6 +6,7 @@ import { launchProcess, envArrayToObject } from '../utils/processLauncher'
 import { existsAsync } from '../utils/suger'
 import PipeTransport from '../server/pipeTransport'
 import { CallMetadata, SdkObject } from '../server/instrumentation'
+import { registry } from '../utils/registry';
 
 export type BrowserName = 'chromium' | 'firefox' | 'webkit';
 export const DEFAULT_TIMEOUT = 30000
@@ -55,14 +56,11 @@ export default abstract class BrowserType extends SdkObject {
       if (!(await existsAsync(executablePath))) { throw new Error(`Failed to launch ${this._name} because executable doesn't exist at ${executablePath}`) }
       executable = executablePath
     } else {
-      // 获取本地chrome路径，很糟糕的是需要通过browsers.json 获取
-      // 先写死, 之后尝试参考testcafe获取本地
-      const localBrowsers = await browserTools.getInstallations()
-      if (localBrowsers?.chrome?.path) {
-        executable = localBrowsers.chrome.path
-      } else {
-        console.error(`Failed to launch ${this._name}`)
-      }
+      const registryExecutable = registry.findExecutable(options.channel || this._name);
+      if (!registryExecutable || registryExecutable.browserName !== this._name)
+        throw new Error(`Unsupported ${this._name} channel "${options.channel}"`);
+      executable = registryExecutable.executablePathOrDie(this._playwrightOptions.sdkLanguage);
+      await registryExecutable.validateHostRequirements(this._playwrightOptions.sdkLanguage);
     }
 
     const browserArguments = []

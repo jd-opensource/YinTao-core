@@ -4,11 +4,11 @@ import { runCompiledCode, compileCode } from './compiler'
 import BrowserTypeDispatcher from '../dispatchers/BrowserTypeDispatcher'
 
 async function bootstrap() {
-  const browser = new BrowserTypeDispatcher('chromium' as any, { rootSdkObject: { attribution: {} } })
+  const browser = new BrowserTypeDispatcher('chromium' as any, { rootSdkObject: { attribution: {} },sdkLanguage:'javascript' })
   // 先不启动代理通讯服务，以原始步骤先观察逻辑
   // mac os.tempdir() 移植下载浏览器，并维护browsers.json
   // testcafe-browser-tools 在mac中不可用还是需要用
-  await browser._launchProcess({ executablePath: '/Users/renran/Library/Caches/ms-playwright/chromium-973391/chrome-mac/Chromium.app/Contents/MacOS/Chromium'}, undefined)
+  await browser._launchProcess({}, undefined)
   // 后续研究 与浏览器可靠通讯
 }
 
