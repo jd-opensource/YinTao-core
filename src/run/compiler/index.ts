@@ -1,16 +1,16 @@
 // 引入babel 编译源代码
 import { transform } from '@babel/core'
 import createCallsiteRecord from 'callsite-record'
-import { createGuid } from '../../utils/suger'
 import { Page, Dom } from './cherryv1'
 import runScript from './runScript'
+import * as cherry from '../../../index'
 
 export function compileCode(code:string):string {
   const compiled = transform(code, { filename: 'virtual_test.js' })
   return compiled?.code as string
 }
 
-function _addGlobalApi() {
+function _addGlobalApi(testId:string) {
   Object.defineProperty(global, 'page', {
     get: () => new Page(),
     configurable: true,
@@ -22,7 +22,6 @@ function _addGlobalApi() {
   })
 
   // 这里代替test的前置，我们将再这里增加一些前置内容
-  const testId = createGuid()
   Object.defineProperty(global, '__cherryRun', {
     get: () => ({
       gid: testId,
@@ -37,8 +36,8 @@ function _delGlobalApi() {
   delete global.__cherryRun
 }
 
-export async function runCompiledCode(code:string) {
-  _addGlobalApi()
+export async function runCompiledCode(code:string, testId:string) {
+  _addGlobalApi(testId)
   const runCode = `(async()=>{${code}\n;})()`
   const res = await runScript(runCode, {
     globalParams: {
@@ -54,5 +53,12 @@ export async function runCompiledCode(code:string) {
     console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
   }
   _delGlobalApi()
+  await testClear(testId)
   console.log('run finished!')
+}
+
+async function testClear(testId:string) {
+  const control = cherry.testControl.get(testId)
+  await control?.browser.close()
+  cherry.testControl.delete(testId)
 }

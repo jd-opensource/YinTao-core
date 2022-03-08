@@ -22,6 +22,7 @@ import { Protocol } from './protocol'
 import {
   Serializable, EvaluationArgument, PageFunction, PageFunctionOn, SmartHandle, ElementHandleForTag, BindingSource,
 } from './structs'
+import TestControl from '../src/test_control/testControl'
 
 type PageWaitForSelectorOptionsNotHidden = PageWaitForSelectorOptions & {
   state?: 'visible'|'attached';
@@ -10934,6 +10935,8 @@ export type AndroidKey =
 
 export const _electron: Electron
 export const _android: Android
+
+export const testControl: Map<string, TestControl>
 
 // This is required to not export everything by default. See https://github.com/Microsoft/TypeScript/issues/19545#issuecomment-340490459
 export {}

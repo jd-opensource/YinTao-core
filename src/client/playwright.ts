@@ -15,6 +15,7 @@
  */
 
 import * as channels from '../protocol/channels'
+import TestControl from '../test_control/testControl'
 import { TimeoutError } from '../utils/errors'
 import * as socks from '../utils/socksProxy'
 // import { Android } from './android'
@@ -44,6 +45,7 @@ export class Playwright extends ChannelOwner<channels.PlaywrightChannel> {
   // readonly firefox: BrowserType
   // readonly webkit: BrowserType
   readonly devices: Devices
+  public testControl: Map<string, TestControl>
   selectors: Selectors
   readonly request: APIRequest
   readonly errors: { TimeoutError: typeof TimeoutError }
@@ -55,6 +57,7 @@ export class Playwright extends ChannelOwner<channels.PlaywrightChannel> {
     this.request = new APIRequest(this)
     this.chromium = BrowserType.from(initializer.chromium)
     this.chromium._playwright = this
+    this.testControl = new Map()
     // this.firefox = BrowserType.from(initializer.firefox)
     // this.firefox._playwright = this
     // this.webkit = BrowserType.from(initializer.webkit)
