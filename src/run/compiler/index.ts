@@ -1,64 +1,73 @@
 // 引入babel 编译源代码
 import { transform } from '@babel/core'
 import createCallsiteRecord from 'callsite-record'
-import { Page, Dom } from './cherryv1'
 import runScript from './runScript'
 import * as cherry from '../../../index'
+import TestControl from '../../test_control/testControl'
+import { createGuid } from '../../utils/utils'
+import Resolver from '../resolve/resolver'
+import V1Parse from '../resolve/v1Parse'
 
-export function compileCode(code:string):string {
-  const compiled = transform(code, { filename: 'virtual_test.js' })
-  return compiled?.code as string
-}
-
-function _addGlobalApi(testId:string) {
-  Object.defineProperty(global, 'page', {
-    get: () => new Page(),
-    configurable: true,
-  })
-
-  Object.defineProperty(global, 'dom', {
-    get: () => new Dom(),
-    configurable: true,
-  })
-
-  // 这里代替test的前置，我们将再这里增加一些前置内容
-  Object.defineProperty(global, '__cherryRun', {
-    get: () => ({
-      gid: testId,
-    }),
-    configurable: true,
-  })
-}
-
-function _delGlobalApi() {
-  delete global.page
-  delete global.dom
-  delete global.__cherryRun
-}
-
-export async function runCompiledCode(code:string, testId:string) {
-  _addGlobalApi(testId)
-  const runCode = `(async()=>{${code}\n;})()`
-  const res = await runScript(runCode, {
-    globalParams: {
-      page: new Page(),
-      dom: new Dom(),
-    },
-    dirname: __dirname,
-  })
-  if (res.error !== undefined) {
-    // @ts-ignore
-    const errorMsg:string = createCallsiteRecord({ forError: res.error })._renderRecord(code, { frameSize: 3 })
-    // del frist empty allow code align
-    console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
+export default class Compiler {
+  code:string
+  id:string
+  resolver?: Resolver
+  control?: TestControl
+  constructor(code:string, analyse:string = 'v1') {
+    this.code = code
+    this.id = createGuid()
+    this.compileCode()
   }
-  _delGlobalApi()
-  await testClear(testId)
-  console.log('run finished!')
-}
 
-async function testClear(testId:string) {
-  const control = cherry.testControl.get(testId)
-  await control?.browser.close()
-  cherry.testControl.delete(testId)
+  /**
+   * @method 执行前的前置处理
+   */
+  async bootstrap(browserType:string) {
+    let browserCore
+    if (browserType === 'chrome') {
+      browserCore = cherry.chromium
+    }
+    const launchOptions = {
+      headless: false,
+      executablePath: undefined,
+    }
+    const browser = await browserCore.launch(launchOptions)
+    // 设置测试控制器
+    this.control = new TestControl(this.id, browser)
+    cherry.testControl.set(this.id, this.control)
+
+    // 这里需要传入解析版本
+    this.resolver = new V1Parse(this.control)
+  }
+
+  /**
+   * @method 执行编译代码
+   */
+  async runCompiledCode() {
+    await this.bootstrap('chrome') // 初始化引导,理论可以传多个配合看后续设计
+    const runCode = `(async()=>{${this.code}\n;})()`
+    const res = await runScript(runCode, {
+      globalParams: this.resolver?.registerGlobalApi() || {},
+      dirname: __dirname,
+    })
+    if (res.error !== undefined) {
+      // @ts-ignore
+      const errorMsg:string = createCallsiteRecord({ forError: res.error })._renderRecord(this.code, { frameSize: 3 })
+      // del frist empty allow code align
+      console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
+    }
+    // this.resolver?.unRegisterGlobalApi()
+    await this.clearTest()
+    console.log('run finished!')
+  }
+
+  compileCode():string {
+    const compiled = transform(this.code, { filename: 'virtual_test.js' })
+    return compiled?.code as string
+  }
+
+  async clearTest() {
+    await this.control?.browser.close()
+    cherry.testControl.delete(this.id)
+  }
 }
