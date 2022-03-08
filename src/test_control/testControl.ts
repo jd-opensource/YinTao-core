@@ -1,7 +1,10 @@
-import { Browser, BrowserContext, Page } from '../../types/types'
+import {
+  Browser, BrowserContext, Page, Frame,
+} from '../../types/types'
 
 export default class TestControl {
-  currentContext: BrowserContext | undefined
+  runContext: Page | Frame | undefined
+  browserContext: BrowserContext | undefined
   currentPage: Page | undefined
   browser: Browser
   id: string
@@ -10,8 +13,8 @@ export default class TestControl {
     this.browser = browser
   }
 
-  updateContext(context: BrowserContext) {
-    this.currentContext = context
+  updateContext(context: Page | Frame) {
+    this.runContext = context
   }
 
   updatePage(page: Page) {

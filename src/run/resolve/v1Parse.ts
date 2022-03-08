@@ -1,7 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 import TestControl from '../../test_control/testControl'
+import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
+import { Page as PageType } from '../../../types/types'
 
 // 初版driver脚本解析
 export default class V1Parse extends Resolver {
@@ -17,16 +19,11 @@ export default class V1Parse extends Resolver {
     return {
       page: new Page(this.control),
       dom: new Dom(this.control),
+      sleep: __sleep,
       __cherryRun: {
         gid: this.testId,
       },
     }
-  }
-
-  unRegisterGlobalApi() {
-    delete global.page
-    delete global.dom
-    delete global.__cherryRun
   }
 }
 
@@ -42,19 +39,32 @@ class Page {
       deviceScaleFactor: 1,
     }
     const context = await this.control.browser.newContext(contextOptions)
-    this.control.updateContext(context)
-    // 创建 context的时候会有一个gid，但这和测试的不太相同，首先我们确认是否需要这样一个gid
-    // 这主要体现在并行测试上，因为我们没有全局的test。因此不能再这个时候给他gid。
     const page = await context.newPage()
-    this.control.updatePage(page)
+    this.control.updatePage(page) //  这块后续看是否需要
+    this.control.updateContext(page)
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
       await page.goto(url)
     }
   }
 
+  async to(url:string) {
+    if (url) {
+      if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
+      await this.control?.runContext?.goto(url)
+    }
+  }
+
   async change(index: number) {
     console.log('change')
+  }
+
+  async changeIframe(index: number) {
+    if (this.control.runContext && (<PageType> this.control.runContext).frames) {
+      this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
+    } else {
+      throw new Error('Unable to switch ifarme! not frames.')
+    }
   }
 }
 
@@ -66,14 +76,14 @@ class Dom {
 
   async click(sign:string) {
     // @ts-ignore
-    await this.control?.currentPage?.click(sign)
+    await this.control?.runContext?.click(sign)
   }
 
   async set(value:string, sign:string) {
-    await this.control?.currentPage?.fill(sign, value)
+    await this.control?.runContext?.fill(sign, value)
   }
 
   async fill(sign:string, value:string) {
-    await this.control?.currentPage?.fill(sign, value)
+    await this.control?.runContext?.fill(sign, value)
   }
 }

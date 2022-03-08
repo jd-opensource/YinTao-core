@@ -12,7 +12,7 @@
                 "<node_internals>/**"
             ],
             "program": "lib//index.js",
-            "args": [ "run","./tests/base.js"],
+            "args": [ "run","./tests/debug.js"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

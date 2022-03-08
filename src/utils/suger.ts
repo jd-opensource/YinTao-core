@@ -15,6 +15,8 @@ export function getCherryVersion(majorMinorOnly = false) {
   return majorMinorOnly ? packageJson.version.split('.').slice(0, 2).join('.') : packageJson.version
 }
 
+export const __sleep = (ms:number) => new Promise((res) => setTimeout(res, ms))
+
 export const existsAsync = (path: string): Promise<boolean> => new Promise((resolve) => fs.stat(path, (err) => resolve(!err)))
 
 // See https://joel.tools/microtasks/
