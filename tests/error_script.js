@@ -1,0 +1,8 @@
+await page.create(`http://baidu.com`)
+await page.change(0)
+await dom.click(`#kw`)
+await dom.set(`1`,`#kw`)
+await hint_err2('编译错误')
+await dom.set(`2`,`#kw`)
+await dom.set(`3`,`#kw`)
+await dom.click(`#su`)

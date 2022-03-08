@@ -3,8 +3,7 @@
         "src/index.ts"
     ],
     "include": [
-        "src", "lib/run/compiler/virtual-san-box.js",
-        // "src/shared",
+        "src", "lib/run/compiler/virtual-san-box.js", "index.d.ts",
     ],
     "compilerOptions": {
         "esModuleInterop": true,
@@ -28,5 +27,7 @@
     "exclude": [
         "tests",
         "@types",
+        "lib/**/*",
+        // "src/server/common/**/*"
     ],
 }

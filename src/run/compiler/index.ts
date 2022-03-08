@@ -1,11 +1,12 @@
 // 引入babel 编译源代码
 import { transform } from '@babel/core'
 import createCallsiteRecord from 'callsite-record'
+import { createGuid } from '../../utils/suger'
 import { Page, Dom } from './cherryv1'
 import runScript from './runScript'
 
 export function compileCode(code:string):string {
-  const compiled = transform(code, {})
+  const compiled = transform(code, { filename: 'virtual_test.js' })
   return compiled?.code as string
 }
 
@@ -19,10 +20,21 @@ function _addGlobalApi() {
     get: () => new Dom(),
     configurable: true,
   })
+
+  // 这里代替test的前置，我们将再这里增加一些前置内容
+  const testId = createGuid()
+  Object.defineProperty(global, '__cherryRun', {
+    get: () => ({
+      gid: testId,
+    }),
+    configurable: true,
+  })
 }
 
 function _delGlobalApi() {
   delete global.page
+  delete global.dom
+  delete global.__cherryRun
 }
 
 export async function runCompiledCode(code:string) {

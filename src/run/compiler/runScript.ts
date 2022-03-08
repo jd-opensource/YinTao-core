@@ -135,7 +135,7 @@ export default async function runScript<T = any>(code: string, options: RunScrip
       }
 
       if (!result) {
-        result = global.require(id)
+        result = require(id)
       }
 
       return result

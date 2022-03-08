@@ -1,12 +1,11 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import browserTools from 'testcafe-browser-tools'
 import { launchProcess, envArrayToObject } from '../utils/processLauncher'
 import { existsAsync } from '../utils/suger'
-import PipeTransport from '../server/pipeTransport'
-import { CallMetadata, SdkObject } from '../server/instrumentation'
-import { registry } from '../utils/registry';
+import { PipeTransport } from '../server/pipeTransport'
+import { SdkObject } from '../server/instrumentation'
+import { registry } from '../utils/registry'
 
 export type BrowserName = 'chromium' | 'firefox' | 'webkit';
 export const DEFAULT_TIMEOUT = 30000
@@ -56,11 +55,10 @@ export default abstract class BrowserType extends SdkObject {
       if (!(await existsAsync(executablePath))) { throw new Error(`Failed to launch ${this._name} because executable doesn't exist at ${executablePath}`) }
       executable = executablePath
     } else {
-      const registryExecutable = registry.findExecutable(options.channel || this._name);
-      if (!registryExecutable || registryExecutable.browserName !== this._name)
-        throw new Error(`Unsupported ${this._name} channel "${options.channel}"`);
-      executable = registryExecutable.executablePathOrDie(this._playwrightOptions.sdkLanguage);
-      await registryExecutable.validateHostRequirements(this._playwrightOptions.sdkLanguage);
+      const registryExecutable = registry.findExecutable(options.channel || this._name)
+      if (!registryExecutable || registryExecutable.browserName !== this._name) { throw new Error(`Unsupported ${this._name} channel "${options.channel}"`) }
+      executable = registryExecutable.executablePathOrDie(this._playwrightOptions.sdkLanguage)
+      await registryExecutable.validateHostRequirements(this._playwrightOptions.sdkLanguage)
     }
 
     const browserArguments = []

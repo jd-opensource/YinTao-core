@@ -15,19 +15,28 @@
     "@types/node": "^17.0.21",
     "callsite-record": "^4.1.4",
     "chalk": "^5.0.0",
+    "colors": "^1.4.0",
     "commander": "^9.0.0",
     "debug": "^4.3.3",
+    "electron": "^17.1.0",
     "error-stack-parser": "^2.0.7",
+    "https-proxy-agent": "^5.0.0",
     "indent-string": "^1.2.2",
+    "jpeg-js": "^0.4.3",
     "lodash": "^4.17.21",
+    "mime": "^3.0.0",
     "parse5": "^6.0.1",
+    "pixelmatch": "^5.2.1",
     "proxy-from-env": "^1.1.0",
     "rimraf": "^3.0.2",
     "semver": "^7.3.5",
+    "socks-proxy-agent": "^6.2.0-beta.0",
     "stack-utils": "^2.0.5",
     "strip-bom": "^2.0.0",
     "testcafe-browser-tools": "^2.0.22",
-    "ws": "^8.5.0"
+    "ws": "^8.5.0",
+    "yauzl": "^2.10.0",
+    "yazl": "^2.5.1"
   },
   "devDependencies": {
     "@babel/traverse": "^7.17.3",
@@ -42,6 +51,7 @@
     "gulp": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
     "jest": "^27.5.1",
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "webpack-cli": "^4.9.2"
   }
 }

@@ -1496,14 +1496,14 @@ export type PageExpectScreenshotParams = {
     selector: string,
   },
   comparatorOptions?: {
-    pixelCount?: number,
-    pixelRatio?: number,
+    maxDiffPixels?: number,
+    maxDiffPixelRatio?: number,
     threshold?: number,
   },
   screenshotOptions?: {
     omitBackground?: boolean,
     fullPage?: boolean,
-    disableAnimations?: boolean,
+    animations?: 'disabled',
     clip?: Rect,
     mask?: {
       frame: FrameChannel,
@@ -1519,14 +1519,14 @@ export type PageExpectScreenshotOptions = {
     selector: string,
   },
   comparatorOptions?: {
-    pixelCount?: number,
-    pixelRatio?: number,
+    maxDiffPixels?: number,
+    maxDiffPixelRatio?: number,
     threshold?: number,
   },
   screenshotOptions?: {
     omitBackground?: boolean,
     fullPage?: boolean,
-    disableAnimations?: boolean,
+    animations?: 'disabled',
     clip?: Rect,
     mask?: {
       frame: FrameChannel,
@@ -1547,7 +1547,7 @@ export type PageScreenshotParams = {
   quality?: number,
   omitBackground?: boolean,
   fullPage?: boolean,
-  disableAnimations?: boolean,
+  animations?: 'disabled',
   clip?: Rect,
   mask?: {
     frame: FrameChannel,
@@ -1560,7 +1560,7 @@ export type PageScreenshotOptions = {
   quality?: number,
   omitBackground?: boolean,
   fullPage?: boolean,
-  disableAnimations?: boolean,
+  animations?: 'disabled',
   clip?: Rect,
   mask?: {
     frame: FrameChannel,
@@ -2860,7 +2860,7 @@ export type ElementHandleScreenshotParams = {
   type?: 'png' | 'jpeg',
   quality?: number,
   omitBackground?: boolean,
-  disableAnimations?: boolean,
+  animations?: 'disabled',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -2871,7 +2871,7 @@ export type ElementHandleScreenshotOptions = {
   type?: 'png' | 'jpeg',
   quality?: number,
   omitBackground?: boolean,
-  disableAnimations?: boolean,
+  animations?: 'disabled',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -3592,11 +3592,15 @@ export interface AndroidEventTarget {
 }
 export interface AndroidChannel extends AndroidEventTarget, Channel {
   _type_Android: boolean;
-  devices(params?: AndroidDevicesParams, metadata?: Metadata): Promise<AndroidDevicesResult>;
+  devices(params: AndroidDevicesParams, metadata?: Metadata): Promise<AndroidDevicesResult>;
   setDefaultTimeoutNoReply(params: AndroidSetDefaultTimeoutNoReplyParams, metadata?: Metadata): Promise<AndroidSetDefaultTimeoutNoReplyResult>;
 }
-export type AndroidDevicesParams = {};
-export type AndroidDevicesOptions = {};
+export type AndroidDevicesParams = {
+  port?: number,
+};
+export type AndroidDevicesOptions = {
+  port?: number,
+};
 export type AndroidDevicesResult = {
   devices: AndroidDeviceChannel[],
 };

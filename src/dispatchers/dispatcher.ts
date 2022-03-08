@@ -1,27 +1,61 @@
+/**
+ * Copyright (c) Microsoft Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { EventEmitter } from 'events'
-import { CallMetadata } from '../protocol/callMetadata'
 import * as channels from '../protocol/channels'
-// import { SerializedError } from '../protocol/channels'
-import { createScheme } from '../protocol/validator'
-import { tOptional, ValidationError, Validator } from '../protocol/validatorPrimitives'
-import { SdkObject } from '../server/instrumentation'
+import { serializeError } from '../protocol/serializers'
+import { createScheme, Validator, ValidationError } from '../protocol/validator'
+import {
+  assert, debugAssert, isUnderTest, monotonicTime,
+} from '../utils/utils'
+import { tOptional } from '../protocol/validatorPrimitives'
+import { kBrowserOrContextClosedError } from '../utils/errors'
+import { CallMetadata, SdkObject } from '../server/instrumentation'
 import { rewriteErrorMessage } from '../utils/stackTrace'
-import { monotonicTime } from '../utils/suger'
+import type PlaywrightDispatcher from './playwrightDispatcher'
 
 export const dispatcherSymbol = Symbol('dispatcher')
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function lookupDispatcher<DispatcherType>(object: any): DispatcherType {
+  const result = object[dispatcherSymbol]
+  debugAssert(result)
+  return result
+}
+
+export function existingDispatcher<DispatcherType>(object: any): DispatcherType {
+  return object[dispatcherSymbol]
+}
+
+export function lookupNullableDispatcher<DispatcherType>(object: any | null): DispatcherType | undefined {
+  return object ? lookupDispatcher(object) : undefined
+}
+
 export class Dispatcher<Type extends { guid: string }, ChannelType> extends EventEmitter implements channels.Channel {
-  _object: Type
   private _connection: DispatcherConnection
   private _isScope: boolean
+  // Parent is always "isScope".
   private _parent: Dispatcher<any, any> | undefined
+  // Only "isScope" channel owners have registered dispatchers inside.
   private _dispatchers = new Map<string, Dispatcher<any, any>>()
-  readonly _scope: Dispatcher<any, any>
   protected _disposed = false
 
   readonly _guid: string
   readonly _type: string
+  readonly _scope: Dispatcher<any, any>
+  _object: Type
 
   constructor(parent: Dispatcher<any, any> | DispatcherConnection, object: Type, type: string, initializer: channels.InitializerTraits<Type>, isScope?: boolean) {
     super()
@@ -31,11 +65,11 @@ export class Dispatcher<Type extends { guid: string }, ChannelType> extends Even
     this._parent = parent instanceof DispatcherConnection ? undefined : parent
     this._scope = isScope ? this : this._parent!
 
-    const { guid } = object
-    // assert(!this._connection._dispatchers.has(guid))
+    const guid = object.guid
+    assert(!this._connection._dispatchers.has(guid))
     this._connection._dispatchers.set(guid, this)
     if (this._parent) {
-    //   assert(!this._parent._dispatchers.has(guid))
+      assert(!this._parent._dispatchers.has(guid))
       this._parent._dispatchers.set(guid, this)
     }
 
@@ -49,13 +83,27 @@ export class Dispatcher<Type extends { guid: string }, ChannelType> extends Even
 
   _dispatchEvent<T extends keyof channels.EventsTraits<ChannelType>>(method: T, params?: channels.EventsTraits<ChannelType>[T]) {
     if (this._disposed) {
-    //   if (isUnderTest())
-    //     throw new Error(`${this._guid} is sending "${method}" event after being disposed`);
+      if (isUnderTest()) { throw new Error(`${this._guid} is sending "${method}" event after being disposed`) }
       // Just ignore this event outside of tests.
       return
     }
     const sdkObject = this._object instanceof SdkObject ? this._object : undefined
     this._connection.sendMessageToClient(this._guid, this._type, method as string, params, sdkObject)
+  }
+
+  protected _dispose() {
+    assert(!this._disposed)
+    this._disposed = true
+
+    // Clean up from parent and connection.
+    if (this._parent) { this._parent._dispatchers.delete(this._guid) }
+    this._connection._dispatchers.delete(this._guid)
+
+    // Dispose all children.
+    for (const dispatcher of [...this._dispatchers.values()]) { dispatcher._dispose() }
+    this._dispatchers.clear()
+
+    if (this._isScope) { this._connection.sendMessageToClient(this._guid, this._type, '__dispose__', {}) }
   }
 
   _debugScopeState(): any {
@@ -64,16 +112,33 @@ export class Dispatcher<Type extends { guid: string }, ChannelType> extends Even
       objects: Array.from(this._dispatchers.values()).map((o) => o._debugScopeState()),
     }
   }
+
+  async waitForEventInfo(): Promise<void> {
+    // Instrumentation takes care of this.
+  }
 }
 
-let lastEventId = 0
+export type DispatcherScope = Dispatcher<any, any>;
+export class Root extends Dispatcher<{ guid: '' }, any> {
+  private _initialized = false
 
-export const kBrowserOrContextClosedError = 'Target page, context or browser has been closed'
+  constructor(connection: DispatcherConnection, private readonly createPlaywright?: (scope: DispatcherScope, options: channels.RootInitializeParams) => Promise<PlaywrightDispatcher>) {
+    super(connection, { guid: '' }, 'Root', {}, true)
+  }
+
+  async initialize(params: channels.RootInitializeParams): Promise<channels.RootInitializeResult> {
+    assert(this.createPlaywright)
+    assert(!this._initialized)
+    this._initialized = true
+    return {
+      playwright: await this.createPlaywright(this, params),
+    }
+  }
+}
 
 export class DispatcherConnection {
   readonly _dispatchers = new Map<string, Dispatcher<any, any>>()
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onmessage = (m: any) => {}
+  onmessage = (message: object) => {}
   private _validateParams: (type: string, method: string, params: any) => any
   private _validateMetadata: (metadata: any) => { stack?: channels.StackFrame[] }
   private _waitOperations = new Map<string, CallMetadata>()
@@ -103,7 +168,7 @@ export class DispatcherConnection {
   constructor() {
     const tChannel = (name: string): Validator => (arg: any, path: string) => {
       if (arg && typeof arg === 'object' && typeof arg.guid === 'string') {
-        const { guid } = arg
+        const guid = arg.guid
         const dispatcher = this._dispatchers.get(guid)
         if (!dispatcher) throw new ValidationError(`${path}: no object with guid ${guid}`)
         if (name !== '*' && dispatcher._type !== name) throw new ValidationError(`${path}: object with guid ${guid} has type ${dispatcher._type}, expected ${name}`)
@@ -167,7 +232,7 @@ export class DispatcherConnection {
 
     if (sdkObject && params?.info?.waitId) {
       // Process logs for waitForNavigation/waitForLoadState/etc.
-      const { info } = params
+      const info = params.info
       switch (info.phase) {
         case 'before': {
           this._waitOperations.set(info.waitId, callMetadata)
@@ -227,16 +292,6 @@ export class DispatcherConnection {
   }
 }
 
-function isError(obj: any): obj is Error {
-  return obj instanceof Error || obj?.__proto__?.name === 'Error' || (obj?.__proto__ && isError(obj.__proto__))
-}
-
-export function serializeError(e: any): any {
-  if (isError(e)) { return { error: { message: e.message, stack: e.stack, name: e.name } } }
-  //   return { value: serializeValue(e, (value) => ({ fallThrough: value }), new Set()) }
-  return 'cherry_error'
-}
-
 function formatLogRecording(log: string[]): string {
   if (!log.length) { return '' }
   const header = ' logs '
@@ -245,3 +300,5 @@ function formatLogRecording(log: string[]): string {
   const rightLength = headerLength - header.length - leftLength
   return `\n${'='.repeat(leftLength)}${header}${'='.repeat(rightLength)}\n${log.join('\n')}\n${'='.repeat(headerLength)}`
 }
+
+let lastEventId = 0

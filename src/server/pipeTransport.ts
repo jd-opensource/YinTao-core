@@ -16,10 +16,11 @@
  */
 
 import { ConnectionTransport, ProtocolRequest, ProtocolResponse } from './transport'
-import { makeWaitForNextTask } from '../utils/suger'
+import { makeWaitForNextTask } from '../utils/utils'
 import { debugLogger } from '../utils/debugLogger'
 
-export default class PipeTransport implements ConnectionTransport {
+export const _a = 0
+export class PipeTransport implements ConnectionTransport {
   private _pipeWrite: NodeJS.WritableStream
   private _pendingMessage = ''
   private _waitForNextTask = makeWaitForNextTask()

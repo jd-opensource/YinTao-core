@@ -10,8 +10,9 @@ export function createGuid(): string {
 }
 
 export function getCherryVersion(majorMinorOnly = false) {
-  const packageJson = require('./../../package.json');
-  return majorMinorOnly ? packageJson.version.split('.').slice(0, 2).join('.') : packageJson.version;
+  // eslint-disable-next-line global-require
+  const packageJson = require('../../package.json')
+  return majorMinorOnly ? packageJson.version.split('.').slice(0, 2).join('.') : packageJson.version
 }
 
 export const existsAsync = (path: string): Promise<boolean> => new Promise((resolve) => fs.stat(path, (err) => resolve(!err)))

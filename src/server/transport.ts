@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-// import WebSocket from 'ws'
-// import { Progress } from './progress'
-// import { makeWaitForNextTask } from '../utils/utils'
+import WebSocket from 'ws'
+import { Progress } from './progress'
+import { makeWaitForNextTask } from '../utils/utils'
 
 export type ProtocolRequest = {
   id: number;
@@ -44,85 +44,85 @@ export interface ConnectionTransport {
   onclose?: () => void,
 }
 
-// export class WebSocketTransport implements ConnectionTransport {
-//   private _ws: WebSocket
-//   private _progress: Progress
+export class WebSocketTransport implements ConnectionTransport {
+  private _ws: WebSocket
+  private _progress: Progress
 
-//   onmessage?: (message: ProtocolResponse) => void
-//   onclose?: () => void
-//   readonly wsEndpoint: string
+  onmessage?: (message: ProtocolResponse) => void
+  onclose?: () => void
+  readonly wsEndpoint: string
 
-//   static async connect(progress: Progress, url: string, headers?: { [key: string]: string; }, followRedirects?: boolean): Promise<WebSocketTransport> {
-//     progress.log(`<ws connecting> ${url}`)
-//     const transport = new WebSocketTransport(progress, url, headers, followRedirects)
-//     let success = false
-//     progress.cleanupWhenAborted(async () => {
-//       if (!success) { await transport.closeAndWait().catch(() => null) }
-//     })
-//     await new Promise<WebSocketTransport>((fulfill, reject) => {
-//       transport._ws.addEventListener('open', async () => {
-//         progress.log(`<ws connected> ${url}`)
-//         fulfill(transport)
-//       })
-//       transport._ws.addEventListener('error', (event) => {
-//         progress.log(`<ws connect error> ${url} ${event.message}`)
-//         reject(new Error(`WebSocket error: ${event.message}`))
-//         transport._ws.close()
-//       })
-//     })
-//     success = true
-//     return transport
-//   }
+  static async connect(progress: Progress, url: string, headers?: { [key: string]: string; }, followRedirects?: boolean): Promise<WebSocketTransport> {
+    progress.log(`<ws connecting> ${url}`)
+    const transport = new WebSocketTransport(progress, url, headers, followRedirects)
+    let success = false
+    progress.cleanupWhenAborted(async () => {
+      if (!success) { await transport.closeAndWait().catch(() => null) }
+    })
+    await new Promise<WebSocketTransport>((fulfill, reject) => {
+      transport._ws.addEventListener('open', async () => {
+        progress.log(`<ws connected> ${url}`)
+        fulfill(transport)
+      })
+      transport._ws.addEventListener('error', (event) => {
+        progress.log(`<ws connect error> ${url} ${event.message}`)
+        reject(new Error(`WebSocket error: ${event.message}`))
+        transport._ws.close()
+      })
+    })
+    success = true
+    return transport
+  }
 
-//   constructor(progress: Progress, url: string, headers?: { [key: string]: string; }, followRedirects?: boolean) {
-//     this.wsEndpoint = url
-//     this._ws = new WebSocket(url, [], {
-//       perMessageDeflate: false,
-//       maxPayload: 256 * 1024 * 1024, // 256Mb,
-//       handshakeTimeout: progress.timeUntilDeadline(),
-//       headers,
-//       followRedirects,
-//     })
-//     this._progress = progress
-//     // The 'ws' module in node sometimes sends us multiple messages in a single task.
-//     // In Web, all IO callbacks (e.g. WebSocket callbacks)
-//     // are dispatched into separate tasks, so there's no need
-//     // to do anything extra.
-//     const messageWrap: (cb: () => void) => void = makeWaitForNextTask()
+  constructor(progress: Progress, url: string, headers?: { [key: string]: string; }, followRedirects?: boolean) {
+    this.wsEndpoint = url
+    this._ws = new WebSocket(url, [], {
+      perMessageDeflate: false,
+      maxPayload: 256 * 1024 * 1024, // 256Mb,
+      handshakeTimeout: progress.timeUntilDeadline(),
+      headers,
+      followRedirects,
+    })
+    this._progress = progress
+    // The 'ws' module in node sometimes sends us multiple messages in a single task.
+    // In Web, all IO callbacks (e.g. WebSocket callbacks)
+    // are dispatched into separate tasks, so there's no need
+    // to do anything extra.
+    const messageWrap: (cb: () => void) => void = makeWaitForNextTask()
 
-//     this._ws.addEventListener('message', (event) => {
-//       messageWrap(() => {
-//         try {
-//           if (this.onmessage) { this.onmessage.call(null, JSON.parse(event.data as string)) }
-//         } catch (e) {
-//           this._ws.close()
-//         }
-//       })
-//     })
+    this._ws.addEventListener('message', (event) => {
+      messageWrap(() => {
+        try {
+          if (this.onmessage) { this.onmessage.call(null, JSON.parse(event.data as string)) }
+        } catch (e) {
+          this._ws.close()
+        }
+      })
+    })
 
-//     this._ws.addEventListener('close', (event) => {
-//       // eslint-disable-next-line no-unused-expressions
-//       this._progress && this._progress.log(`<ws disconnected> ${url} code=${event.code} reason=${event.reason}`)
-//       if (this.onclose) { this.onclose.call(null) }
-//     })
-//     // Prevent Error: read ECONNRESET.
-//     this._ws.addEventListener('error', (error) => this._progress && this._progress.log(`<ws error> ${error}`))
-//   }
+    this._ws.addEventListener('close', (event) => {
+      // eslint-disable-next-line no-unused-expressions
+      this._progress && this._progress.log(`<ws disconnected> ${url} code=${event.code} reason=${event.reason}`)
+      if (this.onclose) { this.onclose.call(null) }
+    })
+    // Prevent Error: read ECONNRESET.
+    this._ws.addEventListener('error', (error) => this._progress && this._progress.log(`<ws error> ${error}`))
+  }
 
-//   send(message: ProtocolRequest) {
-//     this._ws.send(JSON.stringify(message))
-//   }
+  send(message: ProtocolRequest) {
+    this._ws.send(JSON.stringify(message))
+  }
 
-//   close() {
-//     // eslint-disable-next-line no-unused-expressions
-//     this._progress && this._progress.log(`<ws disconnecting> ${this._ws.url}`)
-//     this._ws.close()
-//   }
+  close() {
+    // eslint-disable-next-line no-unused-expressions
+    this._progress && this._progress.log(`<ws disconnecting> ${this._ws.url}`)
+    this._ws.close()
+  }
 
-//   async closeAndWait() {
-//     if (this._ws.readyState === WebSocket.CLOSED) { return }
-//     const promise = new Promise((f) => this._ws.once('close', f))
-//     this.close()
-//     await promise // Make sure to await the actual disconnect.
-//   }
-// }
+  async closeAndWait() {
+    if (this._ws.readyState === WebSocket.CLOSED) { return }
+    const promise = new Promise((f) => this._ws.once('close', f))
+    this.close()
+    await promise // Make sure to await the actual disconnect.
+  }
+}
