@@ -32,7 +32,7 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
 
   constructor(isTest: boolean) {
     this.id = isTest ? 'test' : 'javascript'
-    this.fileName = isTest ? 'Playwright Test' : 'JavaScript'
+    this.fileName = isTest ? 'test' : 'JavaScript'
     this._isTest = isTest
   }
 
@@ -41,7 +41,7 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
     if (this._isTest && (action.name === 'openPage' || action.name === 'closePage')) { return '' }
 
     const pageAlias = actionInContext.frame.pageAlias
-    const formatter = new JavaScriptFormatter(2)
+    const formatter = new JavaScriptFormatter()
     formatter.newLine()
     formatter.add(`// ${actionTitle(action)}`)
 
@@ -51,41 +51,44 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
       return formatter.format()
     }
 
-    let subject: string
-    if (actionInContext.frame.isMainFrame) {
-      subject = pageAlias
-    } else if (actionInContext.frame.selectorsChain && action.name !== 'navigate') {
-      const locators = actionInContext.frame.selectorsChain.map((selector) => `.${asLocator(selector, 'frameLocator')}`)
-      subject = `${pageAlias}${locators.join('')}`
-    } else if (actionInContext.frame.name) {
-      subject = `${pageAlias}.frame(${formatObject({ name: actionInContext.frame.name })})`
-    } else {
-      subject = `${pageAlias}.frame(${formatObject({ url: actionInContext.frame.url })})`
-    }
+    // let subject: string;
+    // if (actionInContext.frame.isMainFrame) {
+    //   subject = pageAlias;
+    // } else if (actionInContext.frame.selectorsChain && action.name !== 'navigate') {
+    //   const locators = actionInContext.frame.selectorsChain.map(selector => '.' + asLocator(selector, 'frameLocator'));
+    //   subject = `${pageAlias}${locators.join('')}`;
+    // } else if (actionInContext.frame.name) {
+    //   subject = `${pageAlias}.frame(${formatObject({ name: actionInContext.frame.name })})`;
+    // } else {
+    //   subject = `${pageAlias}.frame(${formatObject({ url: actionInContext.frame.url })})`;
+    // }
 
     const signals = toSignalMap(action)
 
     if (signals.dialog) {
       formatter.add(`  ${pageAlias}.once('dialog', dialog => {
-    console.log(\`Dialog message: $\{dialog.message()}\`);
-    dialog.dismiss().catch(() => {});
-  });`)
+     console.log(\`Dialog message: $\{dialog.message()}\`);
+     dialog.dismiss().catch(() => {});
+   });`)
     }
 
     const emitPromiseAll = signals.waitForNavigation || signals.popup || signals.download
     if (emitPromiseAll) {
       // Generate either await Promise.all([]) or
       // const [popup1] = await Promise.all([]).
-      let leftHandSide = ''
-      if (signals.popup) { leftHandSide = `const [${signals.popup.popupAlias}] = ` } else if (signals.download) { leftHandSide = 'const [download] = ' }
-      formatter.add(`${leftHandSide}await Promise.all([`)
+      // let leftHandSide = '';
+      // if (signals.popup)
+      //   leftHandSide = `const [${signals.popup.popupAlias}] = `;
+      // else if (signals.download)
+      //   leftHandSide = `const [download] = `;
+      // formatter.add(`${leftHandSide}await Promise.all([`);
     }
 
     // Popup signals.
     if (signals.popup) { formatter.add(`${pageAlias}.waitForEvent('popup'),`) }
 
     // Navigation signal.
-    if (signals.waitForNavigation) { formatter.add(`${pageAlias}.waitForNavigation(/*{ url: ${quote(signals.waitForNavigation.url)} }*/),`) }
+    if (signals.waitForNavigation) { formatter.add(`${pageAlias}.to(${quote(signals.waitForNavigation.url)}),`) }
 
     // Download signals.
     if (signals.download) { formatter.add(`${pageAlias}.waitForEvent('download'),`) }
@@ -93,12 +96,21 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
     const prefix = (signals.popup || signals.waitForNavigation || signals.download) ? '' : 'await '
     const actionCall = this._generateActionCall(action)
     const suffix = (signals.waitForNavigation || emitPromiseAll) ? '' : ';'
-    formatter.add(`${prefix}${subject}.${actionCall}${suffix}`)
+    formatter.add(`${prefix}${actionCall}${suffix}`)
 
     if (emitPromiseAll) {
-      formatter.add(']);')
+      // 先手动改步骤await
+      for (const index in formatter._lines) {
+        if (formatter._lines[index].length > 0) {
+          if (/^dom.(.+)/.test(formatter._lines[index]) || /^page.(.+)/.test(formatter._lines[index])) { formatter._lines[index] = `await ${formatter._lines[index]}` }
+        }
+      }
+      // formatter.add(`]);`);
     } else if (signals.assertNavigation) {
-      if (this._isTest) { formatter.add(`  await expect(${pageAlias}).toHaveURL(${quote(signals.assertNavigation.url)});`) } else { formatter.add(`  // assert.equal(${pageAlias}.url(), ${quote(signals.assertNavigation.url)});`) }
+      // if (this._isTest)
+      //   formatter.add(`  await expect(${pageAlias}).toHaveURL(${quote(signals.assertNavigation.url)});`);
+      // else
+      //   formatter.add(`  // assert.equal(${pageAlias}.url(), ${quote(signals.assertNavigation.url)});`);
     }
     return formatter.format()
   }
@@ -110,32 +122,34 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
       case 'closePage':
         return 'close()'
       case 'click': {
-        let method = 'click'
-        if (action.clickCount === 2) { method = 'dblclick' }
+        // let method = 'click';
+        // if (action.clickCount === 2)
+        //   method = 'dblclick';
         const modifiers = toModifiers(action.modifiers)
         const options: MouseClickOptions = {}
         if (action.button !== 'left') { options.button = action.button }
         if (modifiers.length) { options.modifiers = modifiers }
         if (action.clickCount > 2) { options.clickCount = action.clickCount }
         if (action.position) { options.position = action.position }
-        const optionsString = formatOptions(options, false)
-        return `${asLocator(action.selector)}.${method}(${optionsString})`
+        // const optionsString = formatOptions(options, false);
+        return `dom.click(${quote(action.selector)})`
       }
       case 'check':
         return `${asLocator(action.selector)}.check()`
       case 'uncheck':
         return `${asLocator(action.selector)}.uncheck()`
       case 'fill':
-        return `${asLocator(action.selector)}.fill(${quote(action.text)})`
+        // return `dom.reSet(${quote(action.selector)},${quote(action.text)})`
+        return `dom.fill(${quote(action.selector)},${quote(action.text)})`
       case 'setInputFiles':
-        return `${asLocator(action.selector)}.setInputFiles(${formatObject(action.files.length === 1 ? action.files[0] : action.files)})`
+        return `dom.upload(${quote(action.selector)},${formatObject(action.files.length === 1 ? action.files[0] : action.files)})`
       case 'press': {
         const modifiers = toModifiers(action.modifiers)
         const shortcut = [...modifiers, action.key].join('+')
         return `${asLocator(action.selector)}.press(${quote(shortcut)})`
       }
       case 'navigate':
-        return `goto(${quote(action.url)})`
+        return `page.to(${quote(action.url)})`
       case 'select':
         return `${asLocator(action.selector)}.selectOption(${formatObject(action.options.length > 1 ? action.options : action.options[0])})`
     }
@@ -155,34 +169,33 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
     const formatter = new JavaScriptFormatter()
     const useText = formatContextOptions(options.contextOptions, options.deviceName)
     formatter.add(`
-      import { test, expect${options.deviceName ? ', devices' : ''} } from '@playwright/test';
-${useText ? `\ntest.use(${useText});\n` : ''}
-      test('test', async ({ page }) => {`)
+       import { test, expect${options.deviceName ? ', devices' : ''} } from '@playwright/test';
+ ${useText ? `\ntest.use(${useText});\n` : ''}
+       test('test', async ({ page }) => {`)
     return formatter.format()
   }
 
   generateTestFooter(saveStorage: string | undefined): string {
-    // eslint-disable-next-line quotes
     return `\n});`
   }
 
   generateStandaloneHeader(options: LanguageGeneratorOptions): string {
     const formatter = new JavaScriptFormatter()
     formatter.add(`
-      const { ${options.browserName}${options.deviceName ? ', devices' : ''} } = require('playwright');
-
-      (async () => {
-        const browser = await ${options.browserName}.launch(${formatObjectOrVoid(options.launchOptions)});
-        const context = await browser.newContext(${formatContextOptions(options.contextOptions, options.deviceName)});`)
+       const { ${options.browserName}${options.deviceName ? ', devices' : ''} } = require('playwright');
+ 
+       (async () => {
+         const browser = await ${options.browserName}.launch(${formatObjectOrVoid(options.launchOptions)});
+         const context = await browser.newContext(${formatContextOptions(options.contextOptions, options.deviceName)});`)
     return formatter.format()
   }
 
   generateStandaloneFooter(saveStorage: string | undefined): string {
     const storageStateLine = saveStorage ? `\n  await context.storageState({ path: ${quote(saveStorage)} });` : ''
     return `\n  // ---------------------${storageStateLine}
-  await context.close();
-  await browser.close();
-})();`
+   await context.close();
+   await browser.close();
+ })();`
   }
 }
 
@@ -193,11 +206,12 @@ function asLocator(selector: string, locatorFn = 'locator') {
   return `${locatorFn}(${quote(match[1])}).nth(${match[2]})`
 }
 
-function formatOptions(value: any, hasArguments: boolean): string {
-  const keys = Object.keys(value)
-  if (!keys.length) { return '' }
-  return (hasArguments ? ', ' : '') + formatObject(value)
-}
+// function formatOptions(value: any, hasArguments: boolean): string {
+//   const keys = Object.keys(value);
+//   if (!keys.length)
+//     return '';
+//   return (hasArguments ? ', ' : '') + formatObject(value);
+// }
 
 function formatObject(value: any, indent = '  '): string {
   if (typeof value === 'string') { return quote(value) }
@@ -232,7 +246,7 @@ function formatContextOptions(options: BrowserContextOptions, deviceName: string
 export class JavaScriptFormatter {
   private _baseIndent: string
   private _baseOffset: string
-  private _lines: string[] = []
+  public _lines: string[] = []
 
   constructor(offset = 0) {
     this._baseIndent = ' '.repeat(2)

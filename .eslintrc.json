@@ -15,6 +15,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "quotes":0,
         "no-dupe-class-members":0,
         "import/no-dynamic-require":0,
         "global-require":0,

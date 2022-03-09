@@ -45,7 +45,14 @@ export default async function live(url: string, opts: any) {
   })
   await openPage(context, url)
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
-  const script = 'dsadsa'
+
+  const script = await new Promise((resolve) => {
+    process.on('message', (msg:any) => {
+      if (msg.type === 'live_finished') resolve(msg.script)
+    })
+  })
+  console.log('脚本', script)
+  context.close()
   return script
 }
 
@@ -122,9 +129,9 @@ async function launchContext(options, headless, executablePath, isClose = false)
     page.on('close', () => {
       const hasPage = browser.contexts().some((context) => context.pages().length > 0)
       if (hasPage) return // Avoid the error when the last page is closed because the browser has been closed.
-      if (isClose) {
-        closeBrowser().catch(() => null)
-      }
+      // if (isClose) {
+      closeBrowser().catch(() => null) // 这里会关闭进程，如果调度不想处理这里，需要解开注释内容
+      // }
     })
   })
   delete launchOptions.headless
