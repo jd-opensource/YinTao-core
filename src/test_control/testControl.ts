@@ -13,6 +13,10 @@ export default class TestControl {
     this.browser = browser
   }
 
+  setBrowserContext(context: BrowserContext) {
+    this.browserContext = context
+  }
+
   updateContext(context: Page | Frame) {
     this.runContext = context
   }
