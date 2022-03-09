@@ -39,6 +39,7 @@ async function build_injected_script(cb) {
   const watchMode = process.argv.slice(2).includes('--watch')
   const webPackFiles = [
     'src/server/injected/webpack.config.js',
+    'src/web/recorder/webpack.config.js',
   ]
   for (const file of webPackFiles) {
     const step = {
@@ -108,6 +109,7 @@ function filePath(relative) {
 function static_resource() {
   return src([
     'src/**/*.json',
+    'src/**/*.png',
   ])
     .pipe(dest('lib'))
 }

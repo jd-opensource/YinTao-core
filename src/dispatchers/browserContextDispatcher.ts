@@ -24,7 +24,7 @@ import {
 } from './networkDispatchers'
 import { CRBrowserContext } from '../server/chromium/crBrowser'
 import { CDPSessionDispatcher } from './cdpSessionDispatcher'
-// import { RecorderSupplement } from '../server/supplements/recorderSupplement'
+import { RecorderSupplement } from '../server/supplements/recorderSupplement'
 import { CallMetadata } from '../server/instrumentation'
 import { ArtifactDispatcher } from './artifactDispatcher'
 import { Artifact } from '../server/artifact'
@@ -172,7 +172,7 @@ export class BrowserContextDispatcher extends Dispatcher<BrowserContext, channel
   }
 
   async recorderSupplementEnable(params: channels.BrowserContextRecorderSupplementEnableParams): Promise<void> {
-  //   await RecorderSupplement.show(this._context, params)
+    await RecorderSupplement.show(this._context, params)
   }
 
   async pause(params: channels.BrowserContextPauseParams, metadata: CallMetadata) {

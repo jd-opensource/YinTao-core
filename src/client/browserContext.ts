@@ -46,6 +46,7 @@ export class BrowserContext extends ChannelOwner<channels.BrowserContextChannel>
   private _routes: network.RouteHandler[] = []
   readonly _browser: Browser | null = null
   private _browserType: BrowserType | undefined
+  // eslint-disable-next-line comma-spacing
   readonly _bindings = new Map<string,(source: structs.BindingSource, ...args: any[]) => any>()
   _timeoutSettings = new TimeoutSettings()
   _ownerPage: Page | undefined

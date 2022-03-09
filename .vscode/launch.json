@@ -20,6 +20,19 @@
         {
             "type": "pwa-node",
             "request": "launch",
+            "name": "live",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            "args": [ "live","https://baidu.com"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
             "name": "install",
             "skipFiles": [
                 "<node_internals>/**"

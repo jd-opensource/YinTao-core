@@ -17,12 +17,15 @@ export default class V1Parse extends Resolver {
 
   registerGlobalApi() {
     const cookies = new Cookies(this.control)
+    const utils = new Utils(this.control)
     return {
       page: new Page(this.control),
       dom: new Dom(this.control),
       sleep: __sleep,
       cookies: cookies.parse.bind(cookies),
+      hint: () => { console.log('hint Temporary does not support!') },
       clearCookie: cookies.clearCookie.bind(cookies),
+      execJavaScript: utils.execJavaScript.bind(utils),
       __cherryRun: {
         gid: this.testId,
       },
@@ -44,6 +47,14 @@ class Page {
   async create(url: string, options?: PageOptions) {
     // 这个控制器必须存在
     if (this.control == undefined) throw new Error('control not find by gid')
+    this._createContext()
+    if (url) {
+      if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
+      await this.control?.currentPage?.goto(url, options)
+    }
+  }
+
+  async _createContext() {
     const contextOptions = {
       deviceScaleFactor: 1,
     }
@@ -52,29 +63,64 @@ class Page {
     const page = await context.newPage()
     this.control.updatePage(page) //  这块后续看是否需要
     this.control.updateContext(page)
-    if (url) {
-      if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
-      await page.goto(url, options)
-    }
   }
 
   async to(url:string, options?: PageOptions) {
+    if (this.control.currentPage === undefined) {
+      await this._createContext()
+    }
+
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
-      await this.control?.runContext?.goto(url, options)
+      await this.control?.currentPage?.goto(url, options)
     }
   }
 
+  async screenshot(path:string) {
+    await this.control.currentPage?.screenshot({ path, type: 'jpeg' })
+  }
+
+  async back() {
+    await this.control?.currentPage?.goBack()
+  }
+  async forward() {
+    await this.control?.currentPage?.goForward()
+  }
+
+  async getURL():Promise<string> {
+    return this.control?.currentPage?.url() as string
+  }
+
   async change(index: number) {
-    console.log('change')
+    const pages = this.control.browserContext?.pages()
+    if (pages && pages.length > 0) {
+      this.control.updatePage(pages[index])
+      this.control.updateContext(pages[index])
+    }
+    await this.control.currentPage?.bringToFront()
   }
 
   async changeIframe(index: number) {
     if (this.control.runContext && (<PageType> this.control.runContext).frames) {
-      this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
+      if (index == -1) {
+        this.control.updateContext(this.control.currentPage as PageType)
+      } else {
+        this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
+      }
     } else {
       throw new Error('Unable to switch ifarme! not frames.')
     }
+  }
+}
+
+class Utils {
+  control:TestControl
+  constructor(testControl:TestControl) {
+    this.control = testControl
+  }
+
+  async execJavaScript(body:string) {
+    this.control.runContext?.evaluate(body)
   }
 }
 
@@ -158,7 +204,23 @@ class Dom {
   }
 
   async set(value:string, sign:string) {
+    await this.control?.runContext?.type(sign, value)
+  }
+
+  async reSet(value:string, sign:string) {
     await this.control?.runContext?.fill(sign, value)
+  }
+
+  async wait(sign:string, ms? :number) {
+    await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
+  }
+
+  async hover(sign:string) {
+    await this.control?.runContext?.hover(sign)
+  }
+
+  async exist(sign:string) :Promise<boolean> {
+    return !!await this.control?.runContext?.isVisible(sign)
   }
 
   async fill(sign:string, value:string) {
