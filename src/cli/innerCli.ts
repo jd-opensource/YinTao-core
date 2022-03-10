@@ -1,8 +1,11 @@
 import { Command, program } from 'commander'
-import live from '../live'
+import { live } from '../live'
 import { runFile } from '../run'
 import { Executable, Registry } from '../utils/registry'
 import { getPlaywrightVersion, spawnAsync } from '../utils/utils'
+
+export { live } from '../live'
+export { runFile, run } from '../run'
 
 function commandWithOpenOptions(command: string, description: string, options: any[][]): Command {
   let result = program.command(command).description(description)

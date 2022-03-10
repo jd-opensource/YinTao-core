@@ -26,7 +26,7 @@ type Options = {
 };
 
 // 转移实现录制
-export default async function live(url: string, opts: any) {
+export async function live(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',

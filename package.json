@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "gulp",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish":"npm publish --access public"
   },
   "author": "renran",
   "license": "ISC",
