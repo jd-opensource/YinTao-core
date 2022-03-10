@@ -105,12 +105,12 @@ function getErrorMessage(e: Error): RunError {
 export default async function runScript<T = any>(code: string, options: RunScriptOptions): Promise<RunResult<T>> {
   const {
     dirname,
-    filename = 'virtual_test.js',
+    filename,
     require: requireOut,
     globalParams = {},
   } = options
 
-  const filePath = path.join(dirname, filename)
+  const filePath = path.join(dirname, filename || '')
   const requireIn = createRequire(filePath)
   const baseScriptOptions = {
     displayErrors: true,

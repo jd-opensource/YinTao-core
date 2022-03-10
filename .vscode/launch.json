@@ -13,6 +13,7 @@
             ],
             "program": "lib//index.js",
             "args": [ "run","./tests/debug.js"],
+            // "args": [ "run","./tests/base.js"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

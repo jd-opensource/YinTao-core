@@ -8,6 +8,8 @@ import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
 import V1Parse from '../resolve/v1Parse'
 
+export const VirtualFile = 'virtual_test.js'
+
 export default class Compiler {
   code:string
   id:string
@@ -49,12 +51,19 @@ export default class Compiler {
     const res = await runScript(runCode, {
       globalParams: this.resolver?.registerGlobalApi() || {},
       dirname: __dirname,
+      filename: VirtualFile,
     })
     if (res.error !== undefined) {
-      // @ts-ignore
-      const errorMsg:string = createCallsiteRecord({ forError: res.error })._renderRecord(this.code, { frameSize: 3 })
-      // del frist empty allow code align
-      console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
+      // 调试时开放isCallsiteFrame,以抛出明细
+      const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
+      if (callsiteRecord !== null) {
+        // @ts-ignore  锁定以调用私有方法
+        const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
+        // del frist empty allow code align
+        console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
+      } else {
+        console.log('cherry run error:', res.error.message)
+      }
     }
     // this.resolver?.unRegisterGlobalApi()
     await this.clearTest()
@@ -62,7 +71,7 @@ export default class Compiler {
   }
 
   compileCode():string {
-    const compiled = transform(this.code, { filename: 'virtual_test.js' })
+    const compiled = transform(this.code, { filename: VirtualFile })
     return compiled?.code as string
   }
 

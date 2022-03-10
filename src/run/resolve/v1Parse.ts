@@ -227,7 +227,16 @@ class Dom {
     await this.control?.runContext?.fill(sign, value)
   }
 
-  async upload(sign:string, files: string | string[]) {
+  async upload(sign:string, files: string | string[]) :Promise<void> {
+    if (files instanceof Array) {
+      for (const _path of files) {
+        if (fs.existsSync(_path) === false) {
+          throw new Error(`Invalid file path: ${_path}`)
+        }
+      }
+    } else if (fs.existsSync(files) === false) {
+      throw new Error(`Invalid file path: ${files}`)
+    }
     await this.control?.runContext?.setInputFiles(sign, files)
   }
 }
