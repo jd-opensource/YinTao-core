@@ -47,7 +47,7 @@ class Page {
   async create(url: string, options?: PageOptions) {
     // 这个控制器必须存在
     if (this.control == undefined) throw new Error('control not find by gid')
-    this._createContext()
+    await this._createContext()
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
       await this.control?.currentPage?.goto(url, options)
