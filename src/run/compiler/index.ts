@@ -46,28 +46,32 @@ export default class Compiler {
    * @method 执行编译代码
    */
   async runCompiledCode() {
-    await this.bootstrap('chrome') // 初始化引导,理论可以传多个配合看后续设计
-    const runCode = `(async()=>{${this.code}\n;})()`
-    const res = await runScript(runCode, {
-      globalParams: this.resolver?.registerGlobalApi() || {},
-      dirname: __dirname,
-      filename: VirtualFile,
-    })
-    if (res.error !== undefined) {
-      // 调试时开放isCallsiteFrame,以抛出明细
-      const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
-      if (callsiteRecord !== null) {
-        // @ts-ignore  锁定以调用私有方法
-        const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
-        // del frist empty allow code align
-        console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
-      } else {
-        console.log('cherry run error:', res.error.message)
+    try {
+      await this.bootstrap('chrome') // 初始化引导,理论可以传多个配合看后续设计
+      const runCode = `(async()=>{${this.code}\n;})()`
+      const res = await runScript(runCode, {
+        globalParams: this.resolver?.registerGlobalApi() || {},
+        dirname: __dirname,
+        filename: VirtualFile,
+      })
+      if (res.error !== undefined) {
+        // 调试时开放isCallsiteFrame,以抛出明细
+        const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
+        if (callsiteRecord !== null) {
+          // @ts-ignore  锁定以调用私有方法
+          const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
+          // del frist empty allow code align
+          console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
+          throw new Error(`cherry run error:${res.error.message}\n${errorMsg.slice(1)}`)
+        } else {
+          console.log('cherry run error:', res.error.message)
+          throw new Error(res.error.message)
+        }
       }
+    } finally {
+      await this.clearTest()
+      console.log('run finished!')
     }
-    // this.resolver?.unRegisterGlobalApi()
-    await this.clearTest()
-    console.log('run finished!')
   }
 
   compileCode():string {
