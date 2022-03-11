@@ -7,7 +7,7 @@
     "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1",
     "publish": "npm publish --access public",
-    "install": "node lib/cli install cr"
+    "install": "node lib/cli install chromium"
   },
   "author": "renran",
   "license": "ISC",
