@@ -15,52 +15,49 @@
  * limitations under the License.
  */
 
-import extract from 'extract-zip';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { existsAsync, download, getUserAgent } from './utils';
-import { debugLogger } from './debugLogger';
+import extract from 'extract-zip'
+import fs from 'fs'
+import os from 'os'
+import path from 'path'
+import { existsAsync, download, getUserAgent } from './utils'
+import { debugLogger } from './debugLogger'
 
 export async function downloadBrowserWithProgressBar(title: string, browserDirectory: string, executablePath: string, downloadURL: string, downloadFileName: string): Promise<boolean> {
-  const progressBarName = `Playwright build of ${title}`;
+  const progressBarName = `Playwright build of ${title}`
   if (await existsAsync(browserDirectory)) {
     // Already downloaded.
-    debugLogger.log('install', `browser ${title} is already downloaded.`);
-    return false;
+    debugLogger.log('install', `browser ${title} is already downloaded.`)
+    return false
   }
 
-  const url = downloadURL;
-  const zipPath = path.join(os.tmpdir(), downloadFileName);
+  const url = downloadURL
+  const zipPath = path.join(os.tmpdir(), downloadFileName)
   try {
     await download(url, zipPath, {
       progressBarName,
       log: debugLogger.log.bind(debugLogger, 'install'),
       userAgent: getUserAgent(),
-    });
-    debugLogger.log('install', `extracting archive`);
-    debugLogger.log('install', `-- zip: ${zipPath}`);
-    debugLogger.log('install', `-- location: ${browserDirectory}`);
-    await extract(zipPath, { dir: browserDirectory });
-    debugLogger.log('install', `fixing permissions at ${executablePath}`);
-    await fs.promises.chmod(executablePath, 0o755);
+    })
+    debugLogger.log('install', `extracting archive`)
+    debugLogger.log('install', `-- zip: ${zipPath}`)
+    debugLogger.log('install', `-- location: ${browserDirectory}`)
+    await extract(zipPath, { dir: browserDirectory })
+    debugLogger.log('install', `fixing permissions at ${executablePath}`)
+    await fs.promises.chmod(executablePath, 0o755)
   } catch (e) {
-    debugLogger.log('install', `FAILED installation ${progressBarName} with error: ${e}`);
-    process.exitCode = 1;
-    throw e;
+    debugLogger.log('install', `FAILED installation ${progressBarName} with error: ${e}`)
+    process.exitCode = 1
+    throw e
   } finally {
-    if (await existsAsync(zipPath))
-      await fs.promises.unlink(zipPath);
+    if (await existsAsync(zipPath)) { await fs.promises.unlink(zipPath) }
   }
-  logPolitely(`${progressBarName} downloaded to ${browserDirectory}`);
-  return true;
+  logPolitely(`${progressBarName} downloaded to ${browserDirectory}`)
+  return true
 }
 
-
 export function logPolitely(toBeLogged: string) {
-  const logLevel = process.env.npm_config_loglevel;
-  const logLevelDisplay = ['silent', 'error', 'warn'].indexOf(logLevel || '') > -1;
+  const logLevel = process.env.npm_config_loglevel
+  const logLevelDisplay = ['silent', 'error', 'warn'].indexOf(logLevel || '') > -1
 
-  if (!logLevelDisplay)
-    console.log(toBeLogged);  // eslint-disable-line no-console
+  if (!logLevelDisplay) { console.log(toBeLogged) } // eslint-disable-line no-console
 }
