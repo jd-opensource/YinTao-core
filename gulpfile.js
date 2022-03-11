@@ -30,7 +30,7 @@ async function build(cb) {
   console.log('run build')
   await clean()
   console.log('building ts ...')
-  series(mainTs, build_injected_script, static_resource)()
+  series(build_injected_script, static_resource, mainTs)()
   // series(mainTs,client_scripts,temporaryJob)()
   return cb()
 }

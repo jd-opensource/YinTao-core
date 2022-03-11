@@ -148,6 +148,7 @@ export class CodeGenerator extends EventEmitter {
   }
 
   generateText(languageGenerator: LanguageGenerator) {
+    console.log('全部代码:', this._actions)
     const text :any[] = []
     // if (this._options.generateHeaders) { text.push(languageGenerator.generateHeader(this._options)) }
     for (const action of this._actions) {

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import type { BrowserContextOptions, LaunchOptions } from '../../../..';
-import { ActionInContext } from './codeGenerator';
-import { Action, DialogSignal, DownloadSignal, NavigationSignal, PopupSignal } from './recorderActions';
+import type { BrowserContextOptions, LaunchOptions } from '../../../..'
+import { ActionInContext } from './codeGenerator'
+import {
+  Action, DialogSignal, DownloadSignal, NavigationSignal, PopupSignal,
+} from './recorderActions'
 
 export type LanguageGeneratorOptions = {
   browserName: string;
@@ -38,31 +40,21 @@ export interface LanguageGenerator {
 
 export function sanitizeDeviceOptions(device: any, options: BrowserContextOptions): BrowserContextOptions {
   // Filter out all the properties from the device descriptor.
-  const cleanedOptions: Record<string, any> = {};
+  const cleanedOptions: Record<string, any> = {}
   for (const property in options) {
-    if (JSON.stringify(device[property]) !== JSON.stringify((options as any)[property]))
-      cleanedOptions[property] = (options as any)[property];
+    if (JSON.stringify(device[property]) !== JSON.stringify((options as any)[property])) { cleanedOptions[property] = (options as any)[property] }
   }
-  return cleanedOptions;
+  return cleanedOptions
 }
 
 export function toSignalMap(action: Action) {
-  let waitForNavigation: NavigationSignal | undefined;
-  let assertNavigation: NavigationSignal | undefined;
-  let popup: PopupSignal | undefined;
-  let download: DownloadSignal | undefined;
-  let dialog: DialogSignal | undefined;
+  let waitForNavigation: NavigationSignal | undefined
+  let assertNavigation: NavigationSignal | undefined
+  let popup: PopupSignal | undefined
+  let download: DownloadSignal | undefined
+  let dialog: DialogSignal | undefined
   for (const signal of action.signals) {
-    if (signal.name === 'navigation' && signal.isAsync)
-      waitForNavigation = signal;
-    else if (signal.name === 'navigation' && !signal.isAsync)
-      assertNavigation = signal;
-    else if (signal.name === 'popup')
-      popup = signal;
-    else if (signal.name === 'download')
-      download = signal;
-    else if (signal.name === 'dialog')
-      dialog = signal;
+    if (signal.name === 'navigation' && signal.isAsync) { waitForNavigation = signal } else if (signal.name === 'navigation' && !signal.isAsync) { assertNavigation = signal } else if (signal.name === 'popup') { popup = signal } else if (signal.name === 'download') { download = signal } else if (signal.name === 'dialog') { dialog = signal }
   }
   return {
     waitForNavigation,
@@ -70,5 +62,5 @@ export function toSignalMap(action: Action) {
     popup,
     download,
     dialog,
-  };
+  }
 }

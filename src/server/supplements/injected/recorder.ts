@@ -35,7 +35,7 @@ export class Recorder {
   private _listeners: (() => void)[] = []
   private _hoveredModel: HighlightModel | null = null
   private _hoveredElement: HTMLElement | null = null
-  private _activeModel: HighlightModel | null = null
+  private _activeElement: HTMLElement | null = null
   private _expectProgrammaticKeyUp = false
   private _pollRecorderModeTimer: NodeJS.Timeout | undefined
   private _mode: 'none' | 'inspecting' | 'recording' = 'none'
@@ -73,9 +73,9 @@ export class Recorder {
       addEventListener(document, 'mouseleave', (event) => this._onMouseLeave(event as MouseEvent), true),
       addEventListener(document, 'focus', () => this._onFocus(), true),
       addEventListener(document, 'scroll', () => {
-        this._hoveredModel = null
-        this._highlight.hideActionPoint()
-        this._updateHighlight()
+        // this._hoveredModel = null
+        // this._highlight.hideActionPoint()
+        // this._updateHighlight()
       }, true),
     ]
     this._highlight.install()
@@ -107,18 +107,19 @@ export class Recorder {
     // Race or scroll.
     if (this._actionSelector && !this._hoveredModel?.elements.length) { this._actionSelector = undefined }
 
-    if (actionSelector !== this._actionSelector) {
-      this._hoveredModel = actionSelector ? querySelector(this._injectedScript, actionSelector, document) : null
-      this._updateHighlight()
-      this._actionSelector = actionSelector
-    }
+    // if (actionSelector !== this._actionSelector) {
+    //   this._hoveredModel = actionSelector ? querySelector(this._injectedScript, actionSelector, document) : null
+    //   this._updateHighlight()
+    //   this._actionSelector = actionSelector
+    // }
     this._pollRecorderModeTimer = setTimeout(() => this._pollRecorderMode(), pollPeriod)
   }
 
   private _clearHighlight() {
-    this._hoveredModel = null
-    this._activeModel = null
-    this._updateHighlight()
+    console.log('一直在清除', '_clearHighlight')
+    // this._hoveredModel = null
+    // this._activeElement = null
+    // this._updateHighlight()
   }
 
   private _actionInProgress(event: Event): boolean {
@@ -136,23 +137,37 @@ export class Recorder {
   }
 
   private _consumedDueWrongTarget(event: Event): boolean {
-    if (this._activeModel && this._activeModel.elements[0] === this._deepEventTarget(event)) { return false }
+    console.log('___activeModel', this._activeElement)
+    // 如果激活的等于当前操作的，则往下走，有效
+    if (this._activeElement && this._activeElement === this._deepEventTarget(event)) { return false }
     consumeEvent(event)
     return true
   }
 
   private _onClick(event: MouseEvent) {
+    console.log('触发了click', event)
     if (this._mode === 'inspecting') { globalThis._playwrightRecorderSetSelector(this._hoveredModel ? this._hoveredModel.selector : '') }
-    if (this._shouldIgnoreMouseEvent(event)) { return }
-    if (this._actionInProgress(event)) { return }
-    if (this._consumedDueToNoModel(event, this._hoveredModel)) { return }
+    if (this._shouldIgnoreMouseEvent(event)) {
+      console.log('click ignore _shouldIgnoreMouseEvent')
+      return
+    }
+    if (this._actionInProgress(event)) {
+      console.log('click ignore _actionInProgress')
+      return
+    }
+    // if (this._consumedDueToNoModel(event, this._hoveredModel)) {
+    //   console.log('click ignore _consumedDueToNoModel')
+    //   return
+    // }
 
+    const selector = this._activeElement && generateSelector(this._injectedScript, this._activeElement, true).selector
+    if (selector === null) { throw new Error('not find selector! 165') }
     const checkbox = asCheckbox(this._deepEventTarget(event))
     if (checkbox) {
       // Interestingly, inputElement.checked is reversed inside this event handler.
       this._performAction({
         name: checkbox.checked ? 'check' : 'uncheck',
-        selector: this._hoveredModel!.selector,
+        selector,
         signals: [],
       })
       return
@@ -160,7 +175,7 @@ export class Recorder {
 
     this._performAction({
       name: 'click',
-      selector: this._hoveredModel!.selector,
+      selector,
       position: positionForEvent(event),
       signals: [],
       button: buttonForEvent(event),
@@ -183,9 +198,10 @@ export class Recorder {
   }
 
   private _onMouseDown(event: MouseEvent) {
+    console.log('_onMouseDown _activeModel ')
     if (this._shouldIgnoreMouseEvent(event)) { return }
     if (!this._performingAction) { consumeEvent(event) }
-    this._activeModel = this._hoveredModel
+    this._activeElement = this._hoveredElement
   }
 
   private _onMouseUp(event: MouseEvent) {
@@ -194,49 +210,59 @@ export class Recorder {
   }
 
   private _onMouseMove(event: MouseEvent) {
-    if (this._mode === 'none') { return }
+    if (this._mode === 'none') return
     const target = this._deepEventTarget(event)
     if (this._hoveredElement === target) { return }
     this._hoveredElement = target
-    this._updateModelForHoveredElement()
+    // console.log('设置了_hoveredElement')
+    // this._updateModelForHoveredElement()
   }
 
   private _onMouseLeave(event: MouseEvent) {
     // Leaving iframe.
     if (this._deepEventTarget(event).nodeType === Node.DOCUMENT_NODE) {
+      console.log('')
       this._hoveredElement = null
-      this._updateModelForHoveredElement()
+      // this._updateModelForHoveredElement()
     }
   }
 
   private _onFocus() {
     const activeElement = this._deepActiveElement(document)
     const result = activeElement ? generateSelector(this._injectedScript, activeElement, true) : null
-    this._activeModel = result && result.selector ? result : null
+    console.log('_onFocus  this._activeModel', result && result.selector ? result : null)
+    this._activeElement = this._hoveredElement // result && result.selector ? result : null
     if (this._injectedScript.isUnderTest) { console.error(`Highlight updated for test: ${result ? result.selector : null}`) } // eslint-disable-line no-console
   }
 
-  private _updateModelForHoveredElement() {
-    if (!this._hoveredElement) {
-      this._hoveredModel = null
-      this._updateHighlight()
-      return
-    }
-    const hoveredElement = this._hoveredElement
-    const { selector, elements } = generateSelector(this._injectedScript, hoveredElement, true)
-    if ((this._hoveredModel && this._hoveredModel.selector === selector) || this._hoveredElement !== hoveredElement) { return }
-    this._hoveredModel = selector ? { selector, elements } : null
-    this._updateHighlight()
-    if (this._injectedScript.isUnderTest) { console.error(`Highlight updated for test: ${selector}`) } // eslint-disable-line no-console
-  }
+  // private _updateModelForHoveredElement() {
+  //   if (!this._hoveredElement) {
+  //     this._hoveredModel = null
+  //     this._updateHighlight()
+  //     return
+  //   }
+  //   const hoveredElement = this._hoveredElement
+  //   const { selector, elements } = generateSelector(this._injectedScript, hoveredElement, true)
+  //   if ((this._hoveredModel && this._hoveredModel.selector === selector) || this._hoveredElement !== hoveredElement) { return }
+  //   this._hoveredModel = selector ? { selector, elements } : null
+  //   this._updateHighlight()
+  //   if (this._injectedScript.isUnderTest) { console.error(`Highlight updated for test: ${selector}`) } // eslint-disable-line no-console
+  // }
 
   private _updateHighlight() {
+    console.log('更新高亮')
     const elements = this._hoveredModel ? this._hoveredModel.elements : []
     const selector = this._hoveredModel ? this._hoveredModel.selector : ''
     this._highlight.updateHighlight(elements, selector, this._mode === 'recording')
   }
 
   private _onInput(event: Event) {
+    console.log('cherry__input', event, this._activeElement)
+    const selector = this._activeElement && generateSelector(this._injectedScript, this._activeElement, true).selector
+    if (selector === null) {
+      console.error(`cherry err:`, this._activeElement, 'not selector 263')
+      throw new Error('cherry err: not selector')
+    }
     if (this._mode !== 'recording') { return true }
     const target = this._deepEventTarget(event)
     if (['INPUT', 'TEXTAREA'].includes(target.nodeName)) {
@@ -250,7 +276,7 @@ export class Recorder {
       if (elementType === 'file') {
         globalThis._playwrightRecorderRecordAction({
           name: 'setInputFiles',
-          selector: this._activeModel!.selector,
+          selector,
           signals: [],
           files: [...(inputElement.files || [])].map((file) => file.name),
         })
@@ -258,10 +284,13 @@ export class Recorder {
       }
 
       // Non-navigating actions are simply recorded by Playwright.
-      if (this._consumedDueWrongTarget(event)) { return }
+      if (this._consumedDueWrongTarget(event)) {
+        console.log('不导航的命令被跳过')
+        return
+      }
       globalThis._playwrightRecorderRecordAction({
         name: 'fill',
-        selector: this._activeModel!.selector,
+        selector,
         signals: [],
         text: inputElement.value,
       })
@@ -293,38 +322,56 @@ export class Recorder {
     }
     if (['Shift', 'Control', 'Meta', 'Alt'].includes(event.key)) { return false }
     const hasModifier = event.ctrlKey || event.altKey || event.metaKey
-    if (event.key.length === 1 && !hasModifier) { return !!asCheckbox(this._deepEventTarget(event)) }
+    if (event.key === 'Process' && this._activeElement?.nodeName === 'INPUT') { // 跳过中文输入
+      return false
+    }
+    if (event.key.length === 1 && !hasModifier) {
+      console.log('zhe _shouldGenerateKeyPressFor jump', !!asCheckbox(this._deepEventTarget(event)))
+      return !!asCheckbox(this._deepEventTarget(event))
+    }
     return true
   }
 
   private _onKeyDown(event: KeyboardEvent) {
+    console.log('___onKeyDown', event, this._mode)
     if (this._mode === 'inspecting') {
       consumeEvent(event)
       return
     }
     if (this._mode !== 'recording') { return }
-    if (!this._shouldGenerateKeyPressFor(event)) { return }
+    if (!this._shouldGenerateKeyPressFor(event)) {
+      console.log('_onKeyDown ignore _shouldGenerateKeyPressFor')
+      return
+    }
     if (this._actionInProgress(event)) {
+      console.log('_onKeyDown ignore _actionInProgress')
       this._expectProgrammaticKeyUp = true
       return
     }
-    if (this._consumedDueWrongTarget(event)) { return }
+    if (this._consumedDueWrongTarget(event)) {
+      console.log('_onKeyDown ignore _consumedDueWrongTarget')
+      return
+    }
+    const selector = this._activeElement && generateSelector(this._injectedScript, this._activeElement, true).selector
+    if (selector == null) throw new Error('_activeElement selector null')
     // Similarly to click, trigger checkbox on key event, not input.
     if (event.key === ' ') {
       const checkbox = asCheckbox(this._deepEventTarget(event))
       if (checkbox) {
         this._performAction({
           name: checkbox.checked ? 'uncheck' : 'check',
-          selector: this._activeModel!.selector,
+          selector,
           signals: [],
         })
         return
       }
     }
+    console.log('输入中文点击的debug', event)
 
+    // 输入中文时会触发这个，实际上再输入时不应该触发这里
     this._performAction({
       name: 'press',
-      selector: this._activeModel!.selector,
+      selector,
       signals: [],
       key: event.key,
       modifiers: modifiersForEvent(event),
@@ -344,13 +391,14 @@ export class Recorder {
   }
 
   private async _performAction(action: actions.Action) {
-    this._clearHighlight()
+    console.log('中文触发这里', action)
+    // this._clearHighlight()
     this._performingAction = true
     await globalThis._playwrightRecorderPerformAction(action).catch(() => {})
     this._performingAction = false
-
+    console.log('中文触发结束')
     // Action could have changed DOM, update hovered model selectors.
-    this._updateModelForHoveredElement()
+    // this._updateModelForHoveredElement()
     // If that was a keyboard action, it similarly requires new selectors for active model.
     this._onFocus()
 
@@ -359,7 +407,7 @@ export class Recorder {
       // in Firefox.
       console.error(`Action performed for test: ${JSON.stringify({ // eslint-disable-line no-console
         hovered: this._hoveredModel ? this._hoveredModel.selector : null,
-        active: this._activeModel ? this._activeModel.selector : null,
+        // active: this._activeElement ? this._activeElement.selector : null,
       })}`)
     }
   }

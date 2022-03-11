@@ -26,6 +26,8 @@
                 "<node_internals>/**"
             ],
             "program": "lib//index.js",
+            // "args": [ "live","https://devexpress.github.io/testcafe/example"],
+            // "args": [ "live","http://t.268xue.com/front/showcoulist.json"],
             "args": [ "live","https://baidu.com"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"

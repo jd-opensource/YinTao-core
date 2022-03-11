@@ -88,7 +88,10 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
     if (signals.popup) { formatter.add(`${pageAlias}.waitForEvent('popup'),`) }
 
     // Navigation signal.
-    if (signals.waitForNavigation) { formatter.add(`${pageAlias}.to(${quote(signals.waitForNavigation.url)}),`) }
+    if (signals.waitForNavigation) {
+      //  去除点击事件附加的页面跳转
+      // formatter.add(`${pageAlias}.to(${quote(signals.waitForNavigation.url)}),`)
+    }
 
     // Download signals.
     if (signals.download) { formatter.add(`${pageAlias}.waitForEvent('download'),`) }

@@ -44,8 +44,8 @@ class InlineSource {
 const entry = {
   utilityScriptSource: path.join(__dirname, 'utilityScript.ts'),
   injectedScriptSource: path.join(__dirname, 'injectedScript.ts'),
-  // consoleApiSource: path.join(__dirname, '..', 'supplements', 'injected', 'consoleApi.ts'),
-  // recorderSource: path.join(__dirname, '..', 'supplements', 'injected', 'recorder.ts'),
+  consoleApiSource: path.join(__dirname, '..', 'supplements', 'injected', 'consoleApi.ts'),
+  recorderSource: path.join(__dirname, '..', 'supplements', 'injected', 'recorder.ts'),
 }
 
 /** @type {import('webpack').Configuration} */
