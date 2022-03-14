@@ -1,5 +1,5 @@
 import { Command, program } from 'commander'
-import { live } from '../live'
+import { apiLive, live } from '../live'
 import { runFile } from '../run'
 import { Executable, Registry } from '../utils/registry'
 import { getPlaywrightVersion, spawnAsync } from '../utils/utils'
@@ -41,6 +41,18 @@ commandWithOpenOptions(
   ],
 ).action((url, options) => {
   live(url, options)
+}).addHelpText('afterAll', `
+Examples:
+  $ live https://example.com`)
+
+commandWithOpenOptions(
+  'apiLive [url]',
+  'open page and generate code for user actions',
+  [
+    ['-o, --output <file name>', 'saves the generated script to a file'],
+  ],
+).action((url, options) => {
+  apiLive(url, options)
 }).addHelpText('afterAll', `
 Examples:
   $ live https://example.com`)

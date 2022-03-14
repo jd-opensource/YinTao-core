@@ -36,6 +36,21 @@
         {
             "type": "pwa-node",
             "request": "launch",
+            "name": "apiLive",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            // "args": [ "live","https://devexpress.github.io/testcafe/example"],
+            // "args": [ "live","http://t.268xue.com/front/showcoulist.json"],
+            "args": [ "apiLive","--timeout=666666666","https://baidu.com"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
             "name": "install",
             "skipFiles": [
                 "<node_internals>/**"

@@ -1,4 +1,3 @@
-// import { live as live2 } from '@cherry-next/cherry-core/lib/live'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
@@ -27,6 +26,33 @@ type Options = {
   viewportSize?: string;
   userAgent?: string;
 };
+
+
+export async function apiLive(url:string,opts:any) {
+  const options = {
+    target: 'test',
+    browser: 'chromium',
+    timeout: '6666666',
+    // loadStorage: './state.json',
+    device: undefined,
+  }
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+
+  const page = await openPage(context, url)
+
+  page.on('request',(request)=>{
+    console.log(`Request sent: ${request.url()}`)
+  })
+
+  const script = await new Promise((resolve) => {
+    process.on('message', (msg:any) => {
+      if (msg.type === 'api_live_finished') resolve(msg.script)
+    })
+  })
+  console.log('存放的脚本', script)
+  context.close()
+  return script
+}
 
 // 转移实现录制
 export async function live(url: string, opts: any) {
