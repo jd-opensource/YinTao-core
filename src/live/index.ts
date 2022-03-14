@@ -1,10 +1,13 @@
 // import { live as live2 } from '@cherry-next/cherry-core/lib/live'
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import * as cherry from '../../index'
 import { BrowserContext } from '../client/browserContext'
 import { BrowserType } from '../client/browserType'
+import { Browser } from '../client/browser'
 import { Page } from '../client/page'
+import { BrowserContextOptions, LaunchOptions } from '../client/types'
 
 type Options = {
   browser: string;
@@ -31,9 +34,13 @@ export async function live(url: string, opts: any) {
     target: 'test',
     browser: 'chromium',
     timeout: '6666666',
+    // loadStorage: './state.json',
     device: undefined,
   }
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+  // 启动辅助浏览器
+  const assistContext = (await launchContext(options, false, undefined)).context
+  // const assistContext = (await launchContext(options, true, undefined)).context // 正式部署使用，true 为开启无痕
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -44,6 +51,7 @@ export async function live(url: string, opts: any) {
     outputFile: undefined,
   })
   await openPage(context, url)
+  await openPage(assistContext, url)
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
 
   const script = await new Promise((resolve) => {
@@ -84,7 +92,7 @@ function lookupBrowserType(options: Options): BrowserType {
   return browserType
 }
 
-async function launchContext(options, headless, executablePath, isClose = false) {
+async function launchContext(options:Options, headless:boolean, executablePath?:string, isClose = false): Promise<{ browser: Browser, browserName: string, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, context: BrowserContext }> {
   const browserType = lookupBrowserType(options)
   const launchOptions :any = {
     headless,
@@ -99,10 +107,48 @@ async function launchContext(options, headless, executablePath, isClose = false)
   }
 
   const contextOptions :any = options.device ? { ...cherry.devices[options.device] } : {}
+
+  if (!headless) { contextOptions.deviceScaleFactor = os.platform() === 'darwin' ? 2 : 1 }
   // In headful mode, use host device scale factor for things to look nice.
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
+
   const browser = await browserType.launch(launchOptions) // Viewport size
+
+  // Viewport size
+  if (options.viewportSize) {
+    try {
+      const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
+      contextOptions.viewport = { width, height }
+    } catch (e) {
+      console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
+      process.exit(0)
+    }
+  }
+
+  if (options.geolocation) {
+    try {
+      const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
+      contextOptions.geolocation = {
+        latitude,
+        longitude,
+      }
+    } catch (e) {
+      console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
+      process.exit(0)
+    }
+    contextOptions.permissions = ['geolocation']
+  }
+
+  if (options.userAgent) { contextOptions.userAgent = options.userAgent }
+
+  if (options.lang) { contextOptions.locale = options.lang }
+
+  if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
+
+  if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
+
+  if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
 
   const context = await browser.newContext(contextOptions)
   let closingBrowser = false

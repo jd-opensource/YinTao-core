@@ -85,7 +85,7 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
     }
 
     // Popup signals.
-    if (signals.popup) { formatter.add(`${pageAlias}.waitForEvent('popup'),`) }
+    // if (signals.popup) { formatter.add(`${pageAlias}.waitForEvent('popup'),`) }
 
     // Navigation signal.
     if (signals.waitForNavigation) {
