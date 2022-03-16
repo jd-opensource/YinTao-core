@@ -27,8 +27,7 @@ type Options = {
   userAgent?: string;
 };
 
-
-export async function apiLive(url:string,opts:any) {
+export async function apiLive(url:string, opts:any) {
   const options = {
     target: 'test',
     browser: 'chromium',
@@ -40,7 +39,7 @@ export async function apiLive(url:string,opts:any) {
 
   const page = await openPage(context, url)
 
-  page.on('request',(request)=>{
+  page.on('request', (request) => {
     console.log(`Request sent: ${request.url()}`)
   })
 
@@ -84,10 +83,10 @@ export async function live(url: string, opts: any) {
     console.log('收到了修正: fix_action', args)
     // 这里发给相关的页面
     // 核心逻辑以完成
-    assistPage.evaluate((args)=>{
+    assistPage.evaluate((args) => {
       console.log('内部的函数', args)
-    }, args);
-})
+    }, args)
+  })
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
 
   const script = await new Promise((resolve) => {

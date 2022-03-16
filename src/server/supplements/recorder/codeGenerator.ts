@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import { nanoid } from 'nanoid'
 import { EventEmitter } from 'events'
 import type { BrowserContextOptions, LaunchOptions } from '../../../..'
 import { Frame } from '../../frames'
@@ -139,6 +139,7 @@ export class CodeGenerator extends EventEmitter {
         },
         committed: true,
         action: {
+          id: nanoid(7),
           name: 'navigate',
           url: frame.url(),
           signals: [],

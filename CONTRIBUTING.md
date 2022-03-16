@@ -25,12 +25,15 @@
 
 #### 准备工作
 
-`CherryCore` 是一个 [Node.js](https://nodejs.org/en/) 应用程序. 它支持 [所有积极维护](https://github.com/nodejs/Release#release-schedule) 的 `Node.js` 框架版本。 安装过程需要[node package manager](https://www.npmjs.com/) (npm) 软件实用程序。
+`CherryCore` 是一个 [Node.js](https://nodejs.org/en/) 应用程序.我们建议使用最新的稳定版本。 它支持 [所有积极维护](https://github.com/nodejs/Release#release-schedule) 的 `Node.js` 框架版本。 安装过程需要[node package manager](https://www.npmjs.com/) (npm) 软件实用程序。
 
 运行以下 `shell` 命令以检查您的操作系统是否包含 `node` 和 `npm`：
 
 ```sh
 node -v; yarn -v
+
+# 安装yarn
+npm i -g  yarn
 ```
 
 如果您的系统不包含 `Node.js`， 请从[Node.js 官网](https://nodejs.org/en/) 下载并安装它。
@@ -45,12 +48,14 @@ node -v; yarn -v
     git clone https://coding.jd.com/cherry/cherry-core.git
     ```
     
-2. 切换到仓库的根目录。要安装依赖项，请运行以下 `shell` 命令：
+2. 切换到仓库的根目录。安装依赖项，请运行以下 `shell` 命令：
 
     ```sh
     yarn
-
-    yarn run dev
+    # 编译代码
+    yarn build
+    # 安装浏览器环境
+    yarn run install
     ```
 
 3. 运行以下 `shell` 命令来构建项目：
