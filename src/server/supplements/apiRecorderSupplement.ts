@@ -15,6 +15,7 @@
  */
 
 import * as fs from 'fs'
+import { nanoid } from 'nanoid'
 import { EventEmitter } from 'events'
 import * as actions from './recorder/recorderActions'
 import type * as channels from '../../protocol/channels'
@@ -232,9 +233,6 @@ class ContextRecorder extends EventEmitter {
     this._recorderSources = []
     const generator = new CodeGenerator(!!params.startRecording)
     generator.on('change', () => {
-      this._context.emit('lastAction',this.scriptText)
-
-
       this.emit(ContextRecorder.Events.Change, {
         sources: this._recorderSources
       })
@@ -282,6 +280,7 @@ class ContextRecorder extends EventEmitter {
         frame: this._describeMainFrame(page),
         committed: true,
         action: {
+          id: nanoid(7),
           name: 'closePage',
           signals: [],
         },
@@ -302,6 +301,7 @@ class ContextRecorder extends EventEmitter {
         frame: this._describeMainFrame(page),
         committed: true,
         action: {
+          id: nanoid(7),
           name: 'openPage',
           url: page.mainFrame().url(),
           signals: [],

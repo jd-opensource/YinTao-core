@@ -15,6 +15,7 @@
  */
 
 import { EventEmitter } from 'events'
+import { nanoid } from 'nanoid'
 import { Frame } from '../../frames'
 import { Action, Signal, FrameDescription, actionTitle } from './recorderActions'
 import { ApiAction } from '../../../live/actionApiRecorder'
@@ -134,6 +135,7 @@ export class CodeGenerator extends EventEmitter {
         },
         committed: true,
         action: {
+          id: nanoid(7),
           name: 'navigate',
           url: frame.url(),
           signals: [],
