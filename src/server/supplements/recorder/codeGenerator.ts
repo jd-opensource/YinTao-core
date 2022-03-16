@@ -53,6 +53,16 @@ export class CodeGenerator extends EventEmitter {
     this.emit('change')
   }
 
+  updateActionSelector(id:string, selector:string) {
+    const index = this._actions.findIndex((i) => i.action.id === id)
+    // todo 应该限定拥有selector的类型
+    // @ts-ignore
+    if (this._actions[index].action && this._actions[index].action.selector) {
+      // @ts-ignore
+      this._actions[index].action.selector = selector
+    }
+  }
+
   setEnabled(enabled: boolean) {
     this._enabled = enabled
   }

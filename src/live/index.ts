@@ -78,20 +78,25 @@ export async function live(url: string, opts: any) {
   const pagea = await openPage(context, url)
   const assistPage = await openPage(assistContext, url)
 
+  // 不能在这里注册，录制时的新页面无法写入
   pagea.exposeBinding('_fix_action', (context:any, args) => {
     // 虽然修复需要时间，但并不需要等待
     console.log('收到了修正: fix_action', args)
-    assistPage.evaluate((args) => {
-      // 使用辅助页面进行修正
-      // 首先需要保证playwight 的原生定位能得到修正
-      // 或者全部使用原生校验
-      console.log('内部的函数', args)
-      const { signs, id, info } = args
-      for (const sign of signs) {
-        // console.log('sign')
-        // 尝试通过sign获取到对应的元素，需要相关方法
-      }
-    }, args)
+    const { signs, id, info } = args
+    // 首先这种外侧肯定用不了,太慢而且含有检查
+    // 因此必须在页面内部实现，
+    // 先应该具备修复能力，在页面内修改ide中的内容
+    console.log('尝试检查', assistPage.$(signs[0]))
+    // assistPage.evaluate((args) => {
+    //   // 使用辅助页面进行修正
+    //   // 首先需要保证playwight 的原生定位能得到修正
+    //   // 或者全部使用原生校验
+    //   console.log('内部的函数', args)
+    //   for (const sign of signs) {
+    //     // console.log('sign')
+    //     // 尝试通过sign获取到对应的元素，需要相关方法
+    //   }
+    // }, args)
   })
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
 

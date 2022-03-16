@@ -360,6 +360,8 @@ class ContextRecorder extends EventEmitter {
       (source: BindingSource, action: actions.Action) => this._recordAction(source.frame, action),
     )
 
+    // 修正逻辑应该添加到这里
+
     await this._context.extendInjectedScript(recorderSource.source)
   }
 
