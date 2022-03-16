@@ -7,6 +7,7 @@ import { BrowserType } from '../client/browserType'
 import { Browser } from '../client/browser'
 import { Page } from '../client/page'
 import { BrowserContextOptions, LaunchOptions } from '../client/types'
+import { ApiRecorder, ApiAction } from './actionApiRecorder'
 
 type Options = {
   browser: string;
@@ -27,31 +28,62 @@ type Options = {
   userAgent?: string;
 };
 
-
-export async function apiLive(url:string,opts:any) {
+/**
+ * 
+ * @param url 
+ * @param opts {callback:Function}
+ * @returns 
+ */
+export async function apiLive(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
+    viewportSize: '1680,1024'
   }
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+  const apiRecorder = new ApiRecorder(opts)
+  const indexPage = await openPage(context, url)
 
-  const page = await openPage(context, url)
+  await apiRecorder.handlePage(indexPage)
+  
+  await context._enableRecorder({
+    language: 'test',
+    launchOptions,
+    contextOptions,
+    device: options.device,
+    saveStorage: undefined,
+    startRecording: true,
+    outputFile: undefined,
+    justApi: true,
+  })
 
-  page.on('request',(request)=>{
-    console.log(`Request sent: ${request.url()}`)
+  // //打开一个空的浏览器
+  // await context.newPage()
+  //新tab页打开
+  context.on('page', async (page:Page) => {
+    await apiRecorder.handlePage(page)
+  })
+  process.on('message', (msg: any) => {
+    if (msg.type === 'lastAction') {
+      apiRecorder.setLastAction(<ApiAction>msg.script)
+    }
   })
 
   const script = await new Promise((resolve) => {
-    process.on('message', (msg:any) => {
+    process.on('message', (msg: any) => {
       if (msg.type === 'api_live_finished') resolve(msg.script)
     })
   })
-  console.log('存放的脚本', script)
+  console.log('脚本', script)
+
+  const recorderApis = await apiRecorder.getApis()
+  console.log('录制的接口：', recorderApis)
+
   context.close()
-  return script
+  return recorderApis
 }
 
 // 转移实现录制
@@ -81,7 +113,7 @@ export async function live(url: string, opts: any) {
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
 
   const script = await new Promise((resolve) => {
-    process.on('message', (msg:any) => {
+    process.on('message', (msg: any) => {
       if (msg.type === 'live_finished') resolve(msg.script)
     })
   })
@@ -118,9 +150,9 @@ function lookupBrowserType(options: Options): BrowserType {
   return browserType
 }
 
-async function launchContext(options:Options, headless:boolean, executablePath?:string, isClose = false): Promise<{ browser: Browser, browserName: string, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, context: BrowserContext }> {
+async function launchContext(options: Options, headless: boolean, executablePath?: string, isClose = false): Promise<{ browser: Browser, browserName: string, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, context: BrowserContext }> {
   const browserType = lookupBrowserType(options)
-  const launchOptions :any = {
+  const launchOptions: any = {
     headless,
     executablePath,
   }
@@ -132,7 +164,7 @@ async function launchContext(options:Options, headless:boolean, executablePath?:
     if (options.proxyBypass) launchOptions.proxy.bypass = options.proxyBypass
   }
 
-  const contextOptions :any = options.device ? { ...cherry.devices[options.device] } : {}
+  const contextOptions: any = options.device ? { ...cherry.devices[options.device] } : {}
 
   if (!headless) { contextOptions.deviceScaleFactor = os.platform() === 'darwin' ? 2 : 1 }
   // In headful mode, use host device scale factor for things to look nice.
@@ -196,7 +228,7 @@ async function launchContext(options:Options, headless:boolean, executablePath?:
     await browser.close()
   }
   context.on('page', (page) => {
-    page.on('dialog', () => {}) // Prevent dialogs from being automatically dismissed.
+    page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
 
     page.on('close', () => {
       const hasPage = browser.contexts().some((context) => context.pages().length > 0)
