@@ -29,6 +29,7 @@ export type ActionName =
   'setInputFiles';
 
 export type ActionBase = {
+  id:string;
   name: ActionName,
   signals: Signal[],
 };

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import uniqueSelector from '@cypress/unique-selector'
+import { nanoid } from 'nanoid'
 import type * as actions from '../recorder/recorderActions'
 import type InjectedScript from '../../injected/injectedScript'
 import { generateSelector, querySelector } from '../../injected/selectorGenerator'
@@ -27,6 +29,7 @@ declare module globalThis {
   let _playwrightRecorderState: () => Promise<UIState>
   let _playwrightRecorderSetSelector: (selector: string) => Promise<void>
   let _playwrightRefreshOverlay: () => void
+  let _fix_action:(ss:any)=>void
 }
 
 export class Recorder {
@@ -144,6 +147,30 @@ export class Recorder {
     return true
   }
 
+  /**
+   * @method 获取元素所有的定位符
+   */
+  private getElementSigns(dom: HTMLElement) {
+    const signs:string[] = []
+    const addSign = (sign) => { if (sign) signs.push(sign) }
+    // 首先以playwright原生方式获取，其中可以取得 text类似的数据格式，通常情况下比较优异，但相对我们得解析这种格式
+    addSign(generateSelector(this._injectedScript, dom, true).selector)
+    //  除此之外采用cypress的生成方式
+    addSign(uniqueSelector(dom))
+    // xpath
+    addSign(this._injectedScript.getElementXPath(dom, true))
+    addSign(this._injectedScript.getElementXPath(dom, false))
+    console.log(dom, '->转化的signs:', signs)
+    return signs
+  }
+
+  private getDomSignInfo(dom: HTMLElement) {
+    return {
+      tagName: dom.tagName,
+      innerText: dom.innerText,
+    }
+  }
+
   private _onClick(event: MouseEvent) {
     console.log('触发了click', event)
     if (this._mode === 'inspecting') { globalThis._playwrightRecorderSetSelector(this._hoveredModel ? this._hoveredModel.selector : '') }
@@ -165,7 +192,9 @@ export class Recorder {
     const checkbox = asCheckbox(this._deepEventTarget(event))
     if (checkbox) {
       // Interestingly, inputElement.checked is reversed inside this event handler.
+      // 每个行动都需要添加唯一id
       this._performAction({
+        id: nanoid(7),
         name: checkbox.checked ? 'check' : 'uncheck',
         selector,
         signals: [],
@@ -173,7 +202,8 @@ export class Recorder {
       return
     }
 
-    this._performAction({
+    const _action: actions.Action = {
+      id: nanoid(7),
       name: 'click',
       selector,
       position: positionForEvent(event),
@@ -181,7 +211,17 @@ export class Recorder {
       button: buttonForEvent(event),
       modifiers: modifiersForEvent(event),
       clickCount: event.detail,
-    })
+    }
+
+    // 修正前提我们需要获取到这个元素所有的sign
+    const signs = this.getElementSigns(this._deepEventTarget(event))
+    // 仅获取到这些还不够，需要提取点当前内容做参考
+    const domInfo = this.getDomSignInfo(this._deepEventTarget(event))
+    // 除次之外还需要知道为那个命令所修复
+    // 现在我们合并需要得到的所有
+    globalThis._fix_action(signs)
+    // 在它提交前，我们针对每个命令进行特殊修正  _performAction or  _playwrightRecorderRecordAction
+    this._performAction(_action)
   }
 
   private _shouldIgnoreMouseEvent(event: MouseEvent): boolean {
@@ -275,6 +315,7 @@ export class Recorder {
 
       if (elementType === 'file') {
         globalThis._playwrightRecorderRecordAction({
+          id: nanoid(7),
           name: 'setInputFiles',
           selector,
           signals: [],
@@ -289,6 +330,7 @@ export class Recorder {
         return
       }
       globalThis._playwrightRecorderRecordAction({
+        id: nanoid(7),
         name: 'fill',
         selector,
         signals: [],
@@ -300,6 +342,7 @@ export class Recorder {
       const selectElement = target as HTMLSelectElement
       if (this._actionInProgress(event)) { return }
       this._performAction({
+        id: nanoid(7),
         name: 'select',
         selector: this._hoveredModel!.selector,
         options: [...selectElement.selectedOptions].map((option) => option.value),
@@ -359,6 +402,7 @@ export class Recorder {
       const checkbox = asCheckbox(this._deepEventTarget(event))
       if (checkbox) {
         this._performAction({
+          id: nanoid(7),
           name: checkbox.checked ? 'uncheck' : 'check',
           selector,
           signals: [],
@@ -370,6 +414,7 @@ export class Recorder {
 
     // 输入中文时会触发这个，实际上再输入时不应该触发这里
     this._performAction({
+      id: nanoid(7),
       name: 'press',
       selector,
       signals: [],
@@ -391,12 +436,11 @@ export class Recorder {
   }
 
   private async _performAction(action: actions.Action) {
-    console.log('中文触发这里', action)
     // this._clearHighlight()
+    console.log('寻找action标签', action)
     this._performingAction = true
     await globalThis._playwrightRecorderPerformAction(action).catch(() => {})
     this._performingAction = false
-    console.log('中文触发结束')
     // Action could have changed DOM, update hovered model selectors.
     // this._updateModelForHoveredElement()
     // If that was a keyboard action, it similarly requires new selectors for active model.

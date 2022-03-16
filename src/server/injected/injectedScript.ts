@@ -132,6 +132,31 @@ export class InjectedScript {
     return generateSelector(this, targetElement, true).selector
   }
 
+  /**
+ * @method 通过元素获取xpath
+ */
+  getElementXPath(element: HTMLElement, ignoreId:boolean = false): string {
+    if (ignoreId && element.id !== '') return `//*[@id="${element.id}"]`
+    if (element === document.body) return element.tagName.toLowerCase()
+    let ix = 0
+    const siblings = element.parentElement?.children
+    for (let i = 0; siblings != undefined && i < siblings.length; i++) {
+      const sibling = siblings[i]
+      if (sibling === element && element.parentElement != null) {
+        return (
+          `${this.getElementXPath(element.parentElement)
+          }/${
+            element.tagName.toLowerCase()
+          }[${
+            ix + 1
+          }]`
+        )
+      }
+      if (sibling.nodeType === 1 && sibling.tagName === element.tagName) ix++
+    }
+    return ''
+  }
+
   querySelector(selector: ParsedSelector, root: Node, strict: boolean): Element | undefined {
     if (!(root as any).querySelector) { throw this.createStacklessError('Node is not queryable.') }
     this._evaluator.begin()
