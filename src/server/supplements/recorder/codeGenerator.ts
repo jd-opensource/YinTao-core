@@ -31,7 +31,7 @@ export class CodeGenerator extends EventEmitter {
   private _lastAction: ActionInContext | null = null
   private _actions: ActionInContext[] = []
   private _enabled: boolean
-  private _options: LanguageGeneratorOptions
+  public _options: LanguageGeneratorOptions
 
   constructor(browserName: string, generateHeaders: boolean, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, deviceName: string | undefined, saveStorage: string | undefined) {
     super()
@@ -76,6 +76,10 @@ export class CodeGenerator extends EventEmitter {
   didPerformAction(actionInContext: ActionInContext) {
     if (!this._enabled) { return }
     const action = actionInContext.action
+    process.emit('message', {
+      type: 'lastAction',
+      action,
+    }, undefined)
     let eraseLastAction = false
     if (this._lastAction && this._lastAction.frame.pageAlias === actionInContext.frame.pageAlias) {
       const lastAction = this._lastAction.action

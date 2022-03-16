@@ -78,7 +78,8 @@ export class RecorderSupplement implements InstrumentationListener {
   }
 
   async install() {
-    const recorderApp = await RecorderApp.open(this._context._browser.options.sdkLanguage, !!this._context._browser.options.headful)
+    const recorderApp = await RecorderApp.open(this._context._browser.options.sdkLanguage, !!this._contextRecorder._generator._options.launchOptions
+      .headless)
     this._recorderApp = recorderApp
     recorderApp.once('close', () => {
       process.emit('message', {
@@ -278,7 +279,7 @@ class ContextRecorder extends EventEmitter {
     Change: 'change',
   }
 
-  private _generator: CodeGenerator
+  public _generator: CodeGenerator
   private _pageAliases = new Map<Page, string>()
   private _lastPopupOrdinal = 0
   private _lastDialogOrdinal = 0

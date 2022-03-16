@@ -81,10 +81,16 @@ export async function live(url: string, opts: any) {
   pagea.exposeBinding('_fix_action', (context:any, args) => {
     // 虽然修复需要时间，但并不需要等待
     console.log('收到了修正: fix_action', args)
-    // 这里发给相关的页面
-    // 核心逻辑以完成
     assistPage.evaluate((args) => {
+      // 使用辅助页面进行修正
+      // 首先需要保证playwight 的原生定位能得到修正
+      // 或者全部使用原生校验
       console.log('内部的函数', args)
+      const { signs, id, info } = args
+      for (const sign of signs) {
+        // console.log('sign')
+        // 尝试通过sign获取到对应的元素，需要相关方法
+      }
     }, args)
   })
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }

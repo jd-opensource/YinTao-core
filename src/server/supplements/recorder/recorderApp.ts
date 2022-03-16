@@ -113,7 +113,7 @@ export class RecorderApp extends EventEmitter implements IRecorderApp {
       args,
       noDefaultViewport: true,
       ignoreDefaultArgs: ['--enable-automation'],
-      headless: !!process.env.PWTEST_CLI_HEADLESS || (isUnderTest() && !headed),
+      headless: !!process.env.PWTEST_CLI_HEADLESS || headed,
       useWebSocket: !!process.env.PWTEST_RECORDER_PORT
     });
     const controller = new ProgressController(internalCallMetadata(), context._browser);

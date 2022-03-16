@@ -29,7 +29,7 @@ declare module globalThis {
   let _playwrightRecorderState: () => Promise<UIState>
   let _playwrightRecorderSetSelector: (selector: string) => Promise<void>
   let _playwrightRefreshOverlay: () => void
-  let _fix_action:(ss:any)=>void
+  let _fix_action:(info:any)=>void
 }
 
 export class Recorder {
@@ -171,6 +171,19 @@ export class Recorder {
     }
   }
 
+  // 获取修复的相关内容
+  private getActionFixInfo(id: string, dom: HTMLElement) {
+    // 修正前提我们需要获取到这个元素所有的sign
+    const signs = this.getElementSigns(dom)
+    // 仅获取到这些还不够，需要提取点当前内容做参考
+    const info = this.getDomSignInfo(dom)
+    return {
+      info,
+      signs,
+      id,
+    }
+  }
+
   private _onClick(event: MouseEvent) {
     console.log('触发了click', event)
     if (this._mode === 'inspecting') { globalThis._playwrightRecorderSetSelector(this._hoveredModel ? this._hoveredModel.selector : '') }
@@ -212,14 +225,8 @@ export class Recorder {
       modifiers: modifiersForEvent(event),
       clickCount: event.detail,
     }
-
-    // 修正前提我们需要获取到这个元素所有的sign
-    const signs = this.getElementSigns(this._deepEventTarget(event))
-    // 仅获取到这些还不够，需要提取点当前内容做参考
-    const domInfo = this.getDomSignInfo(this._deepEventTarget(event))
-    // 除次之外还需要知道为那个命令所修复
-    // 现在我们合并需要得到的所有
-    globalThis._fix_action(signs)
+    const actionFixInfo = this.getActionFixInfo(_action.id, this._deepEventTarget(event))
+    globalThis._fix_action(actionFixInfo)
     // 在它提交前，我们针对每个命令进行特殊修正  _performAction or  _playwrightRecorderRecordAction
     this._performAction(_action)
   }
