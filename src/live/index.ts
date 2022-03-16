@@ -76,8 +76,18 @@ export async function live(url: string, opts: any) {
     startRecording: true,
     outputFile: undefined,
   })
-  await openPage(context, url)
-  await openPage(assistContext, url)
+  const pagea = await openPage(context, url)
+  const assistPage = await openPage(assistContext, url)
+
+  pagea.exposeBinding('_fix_action', (context:any, args) => {
+    // 虽然修复需要时间，但并不需要等待
+    console.log('收到了修正: fix_action', args)
+    // 这里发给相关的页面
+    // 核心逻辑以完成
+    assistPage.evaluate((args)=>{
+      console.log('内部的函数', args)
+    }, args);
+})
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
 
   const script = await new Promise((resolve) => {

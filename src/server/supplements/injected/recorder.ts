@@ -27,6 +27,7 @@ declare module globalThis {
   let _playwrightRecorderState: () => Promise<UIState>
   let _playwrightRecorderSetSelector: (selector: string) => Promise<void>
   let _playwrightRefreshOverlay: () => void
+  let _fix_action:(ss:any)=>void
 }
 
 export class Recorder {
@@ -161,6 +162,7 @@ export class Recorder {
     // }
 
     const selector = this._activeElement && generateSelector(this._injectedScript, this._activeElement, true).selector
+    globalThis._fix_action(selector)
     if (selector === null) { throw new Error('not find selector! 165') }
     const checkbox = asCheckbox(this._deepEventTarget(event))
     if (checkbox) {
