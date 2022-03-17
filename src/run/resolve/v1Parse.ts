@@ -24,6 +24,7 @@ export default class V1Parse extends Resolver {
       dom: new Dom(this.control),
       sleep: __sleep,
       cookies: cookies.parse.bind(cookies),
+      locator: (sign,options)=>{return this.control.runContext?.locator(sign,options)} ,
       hint: () => { console.log('hint Temporary does not support!') },
       clearCookie: cookies.clearCookie.bind(cookies),
       execJavaScript: utils.execJavaScript.bind(utils),
