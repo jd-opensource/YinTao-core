@@ -16,7 +16,6 @@
 
 import * as fs from 'fs'
 import { EventEmitter } from 'events'
-import { nanoid } from 'nanoid'
 import * as actions from './recorder/recorderActions'
 import type * as channels from '../../protocol/channels'
 import { CodeGenerator, ActionInContext } from './recorder/codeGenerator'
@@ -382,7 +381,6 @@ class ContextRecorder extends EventEmitter {
         frame: this._describeMainFrame(page),
         committed: true,
         action: {
-          id: nanoid(7),
           name: 'closePage',
           signals: [],
         },
@@ -403,7 +401,6 @@ class ContextRecorder extends EventEmitter {
         frame: this._describeMainFrame(page),
         committed: true,
         action: {
-          id: nanoid(7),
           name: 'openPage',
           url: page.mainFrame().url(),
           signals: [],

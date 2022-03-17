@@ -27,7 +27,7 @@ type Options = {
   userAgent?: string;
 };
 
-export async function apiLive(url:string, opts:any) {
+export async function apiLive(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',
@@ -44,7 +44,7 @@ export async function apiLive(url:string, opts:any) {
   })
 
   const script = await new Promise((resolve) => {
-    process.on('message', (msg:any) => {
+    process.on('message', (msg: any) => {
       if (msg.type === 'api_live_finished') resolve(msg.script)
     })
   })
@@ -62,10 +62,7 @@ export async function live(url: string, opts: any) {
     // loadStorage: './state.json',
     device: undefined,
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
-  // 启动辅助浏览器
-  const assistContext = (await launchContext(options, false, undefined)).context
-  // const assistContext = (await launchContext(options, true, undefined)).context // 正式部署使用，true 为开启无痕
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined,false)
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -75,33 +72,10 @@ export async function live(url: string, opts: any) {
     startRecording: true,
     outputFile: undefined,
   })
-  const pagea = await openPage(context, url)
-  const assistPage = await openPage(assistContext, url)
-
-  // 不能在这里注册，录制时的新页面无法写入
-  pagea.exposeBinding('_fix_action', (context:any, args) => {
-    // 虽然修复需要时间，但并不需要等待
-    console.log('收到了修正: fix_action', args)
-    const { signs, id, info } = args
-    // 首先这种外侧肯定用不了,太慢而且含有检查
-    // 因此必须在页面内部实现，
-    // 先应该具备修复能力，在页面内修改ide中的内容
-    console.log('尝试检查', assistPage.$(signs[0]))
-    // assistPage.evaluate((args) => {
-    //   // 使用辅助页面进行修正
-    //   // 首先需要保证playwight 的原生定位能得到修正
-    //   // 或者全部使用原生校验
-    //   console.log('内部的函数', args)
-    //   for (const sign of signs) {
-    //     // console.log('sign')
-    //     // 尝试通过sign获取到对应的元素，需要相关方法
-    //   }
-    // }, args)
-  })
+  await openPage(context, url)
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
-
   const script = await new Promise((resolve) => {
-    process.on('message', (msg:any) => {
+    process.on('message', (msg: any) => {
       if (msg.type === 'live_finished') resolve(msg.script)
     })
   })
@@ -138,9 +112,9 @@ function lookupBrowserType(options: Options): BrowserType {
   return browserType
 }
 
-async function launchContext(options:Options, headless:boolean, executablePath?:string, isClose = false): Promise<{ browser: Browser, browserName: string, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, context: BrowserContext }> {
+async function launchContext(options: Options, headless: boolean, executablePath?: string, persistent: boolean = false, isClose = false): Promise<{ browser: Browser, browserName: string, launchOptions: LaunchOptions, contextOptions: BrowserContextOptions, context: BrowserContext }> {
   const browserType = lookupBrowserType(options)
-  const launchOptions :any = {
+  const launchOptions: any = {
     headless,
     executablePath,
   }
@@ -152,51 +126,61 @@ async function launchContext(options:Options, headless:boolean, executablePath?:
     if (options.proxyBypass) launchOptions.proxy.bypass = options.proxyBypass
   }
 
-  const contextOptions :any = options.device ? { ...cherry.devices[options.device] } : {}
-
+  const contextOptions: any = options.device ? { ...cherry.devices[options.device] } : {}
   if (!headless) { contextOptions.deviceScaleFactor = os.platform() === 'darwin' ? 2 : 1 }
   // In headful mode, use host device scale factor for things to look nice.
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
 
-  const browser = await browserType.launch(launchOptions) // Viewport size
-
-  // Viewport size
-  if (options.viewportSize) {
-    try {
-      const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
-      contextOptions.viewport = { width, height }
-    } catch (e) {
-      console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
-      process.exit(0)
-    }
-  }
-
-  if (options.geolocation) {
-    try {
-      const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
-      contextOptions.geolocation = {
-        latitude,
-        longitude,
+  let context,browser
+  if (persistent) { // 持久化
+    // 默认的持久化地址
+    const persistentPath = path.resolve(os.tmpdir(),'cherryDfSession')
+    console.log('默认持久地址:',persistentPath)
+    // /var/folders/9c/7d7rrpsx0vb6vx_jj1_0zs9c0000gn/T/cherryDfSession
+    context = await browserType.launchPersistentContext(persistentPath,{
+      headless:false
+    })
+    await context.pages()[0].close(); // 持久化总是保持一个多余的页面
+  } else {
+      browser = await browserType.launch(launchOptions) // Viewport size
+      // Viewport size
+      if (options.viewportSize) {
+        try {
+          const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
+          contextOptions.viewport = { width, height }
+        } catch (e) {
+          console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
+          process.exit(0)
+        }
       }
-    } catch (e) {
-      console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
-      process.exit(0)
-    }
-    contextOptions.permissions = ['geolocation']
+  
+      if (options.geolocation) {
+        try {
+          const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
+          contextOptions.geolocation = {
+            latitude,
+            longitude,
+          }
+        } catch (e) {
+          console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
+          process.exit(0)
+        }
+        contextOptions.permissions = ['geolocation']
+      }
+  
+      if (options.userAgent) { contextOptions.userAgent = options.userAgent }
+  
+      if (options.lang) { contextOptions.locale = options.lang }
+  
+      if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
+  
+      if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
+  
+      if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
+  
+      context = await browser.newContext(contextOptions)
   }
-
-  if (options.userAgent) { contextOptions.userAgent = options.userAgent }
-
-  if (options.lang) { contextOptions.locale = options.lang }
-
-  if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
-
-  if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
-
-  if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
-
-  const context = await browser.newContext(contextOptions)
   let closingBrowser = false
   async function closeBrowser() {
     // We can come here multiple times. For example, saving storage creates
@@ -213,10 +197,14 @@ async function launchContext(options:Options, headless:boolean, executablePath?:
         path: options.saveStorage,
       }).catch((e) => null)
     }
-    await browser.close()
+    if(persistent){
+      await context.close()
+    }else{
+      await browser.close()
+    }
   }
   context.on('page', (page) => {
-    page.on('dialog', () => {}) // Prevent dialogs from being automatically dismissed.
+    page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
 
     page.on('close', () => {
       const hasPage = browser.contexts().some((context) => context.pages().length > 0)
