@@ -1,6 +1,7 @@
 await page.create(`https://4399.com`)
 await sleep(1000)
 await page.to(`https://baidu.com`)
+await assert.custom("#su","inputValue","百度一下",0)
 await page.change(0)
 // 执行hover
 await dom.hover(`#s-top-left > div > a`)

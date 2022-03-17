@@ -4,6 +4,7 @@ import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
 import { Page as PageType } from '../../../types/types'
+import expect from 'expect'
 
 // 初版driver脚本解析
 export default class V1Parse extends Resolver {
@@ -26,6 +27,7 @@ export default class V1Parse extends Resolver {
       hint: () => { console.log('hint Temporary does not support!') },
       clearCookie: cookies.clearCookie.bind(cookies),
       execJavaScript: utils.execJavaScript.bind(utils),
+      assert: new assert(this.control),
       __cherryRun: {
         gid: this.testId,
       },
@@ -37,6 +39,37 @@ interface PageOptions {
     referer?: string;
     timeout?: number;
     waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+}
+
+class assert {
+  control:TestControl
+  constructor(testControl:TestControl) {
+    this.control = testControl
+  }
+
+  async custom(sign:string, attr:string,will:any,opreate:number){
+    const locator = this.control.runContext?.locator(sign);
+    if(!locator) throw new Error(`custom not find sign:', ${sign}`)
+    const result = await locator[attr]()
+    switch(opreate){
+      case 0:{
+        expect(result).toBe(will)
+        break
+      }
+      case 1:{
+        expect(result).not.toBe(will)
+        break
+      }
+      case 2:{
+        expect(result).toMatch(will)
+        break
+      }
+      case 3:{
+        expect(result).not.toMatch(will)
+        break
+      }
+    }
+  }
 }
 
 class Page {

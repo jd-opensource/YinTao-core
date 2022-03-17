@@ -62,7 +62,7 @@ export async function live(url: string, opts: any) {
     // loadStorage: './state.json',
     device: undefined,
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined,false)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
   await context._enableRecorder({
     language: 'test',
     launchOptions,
