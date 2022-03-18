@@ -7,7 +7,7 @@
     "build": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1",
     "publish": "npm publish --access public",
-    "chromium": "node lib/cli install chromium"
+    "chromium": "npx cherry install chromium"
   },
   "bin": {
     "cherry": "./cli.js"
