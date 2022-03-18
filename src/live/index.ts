@@ -7,6 +7,7 @@ import { BrowserType } from '../client/browserType'
 import { Browser } from '../client/browser'
 import { Page } from '../client/page'
 import { BrowserContextOptions, LaunchOptions } from '../client/types'
+import { ApiRecorder, ApiAction } from './actionApiRecorder'
 
 type Options = {
   browser: string;
@@ -34,13 +35,34 @@ export async function apiLive(url: string, opts: any) {
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
+    viewportSize: '1680,1024',
   }
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+  const apiRecorder = new ApiRecorder(opts)
+  const indexPage = await openPage(context, url)
 
-  const page = await openPage(context, url)
+  await apiRecorder.handlePage(indexPage)
 
-  page.on('request', (request) => {
-    console.log(`Request sent: ${request.url()}`)
+  await context._enableRecorder({
+    language: 'test',
+    launchOptions,
+    contextOptions,
+    device: options.device,
+    saveStorage: undefined,
+    startRecording: true,
+    outputFile: undefined,
+  })
+
+  // //打开一个空的浏览器
+  // await context.newPage()
+  // 新tab页打开
+  context.on('page', async (page:Page) => {
+    await apiRecorder.handlePage(page)
+  })
+  process.on('message', (msg: any) => {
+    if (msg.type === 'lastAction') {
+      apiRecorder.setLastAction(<ApiAction>msg.script)
+    }
   })
 
   const script = await new Promise((resolve) => {
@@ -48,9 +70,13 @@ export async function apiLive(url: string, opts: any) {
       if (msg.type === 'api_live_finished') resolve(msg.script)
     })
   })
-  console.log('存放的脚本', script)
+  console.log('脚本', script)
+
+  const recorderApis = await apiRecorder.getApis()
+  console.log('录制的接口：', recorderApis)
+
   context.close()
-  return script
+  return recorderApis
 }
 
 // 转移实现录制
@@ -132,54 +158,54 @@ async function launchContext(options: Options, headless: boolean, executablePath
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
 
-  let context,browser
+  let context; let browser
   if (persistent) { // 持久化
     // 默认的持久化地址
-    const persistentPath = path.resolve(os.tmpdir(),'cherryDfSession')
-    console.log('默认持久地址:',persistentPath)
+    const persistentPath = path.resolve(os.tmpdir(), 'cherryDfSession')
+    console.log('默认持久地址:', persistentPath)
     // /var/folders/9c/7d7rrpsx0vb6vx_jj1_0zs9c0000gn/T/cherryDfSession
-    context = await browserType.launchPersistentContext(persistentPath,{
-      headless:false
+    context = await browserType.launchPersistentContext(persistentPath, {
+      headless: false,
     })
-    await context.pages()[0].close(); // 持久化总是保持一个多余的页面
+    await context.pages()[0].close() // 持久化总是保持一个多余的页面
   } else {
-      browser = await browserType.launch(launchOptions) // Viewport size
-      // Viewport size
-      if (options.viewportSize) {
-        try {
-          const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
-          contextOptions.viewport = { width, height }
-        } catch (e) {
-          console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
-          process.exit(0)
-        }
+    browser = await browserType.launch(launchOptions) // Viewport size
+    // Viewport size
+    if (options.viewportSize) {
+      try {
+        const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
+        contextOptions.viewport = { width, height }
+      } catch (e) {
+        console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
+        process.exit(0)
       }
-  
-      if (options.geolocation) {
-        try {
-          const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
-          contextOptions.geolocation = {
-            latitude,
-            longitude,
-          }
-        } catch (e) {
-          console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
-          process.exit(0)
+    }
+
+    if (options.geolocation) {
+      try {
+        const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
+        contextOptions.geolocation = {
+          latitude,
+          longitude,
         }
-        contextOptions.permissions = ['geolocation']
+      } catch (e) {
+        console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
+        process.exit(0)
       }
-  
-      if (options.userAgent) { contextOptions.userAgent = options.userAgent }
-  
-      if (options.lang) { contextOptions.locale = options.lang }
-  
-      if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
-  
-      if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
-  
-      if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
-  
-      context = await browser.newContext(contextOptions)
+      contextOptions.permissions = ['geolocation']
+    }
+
+    if (options.userAgent) { contextOptions.userAgent = options.userAgent }
+
+    if (options.lang) { contextOptions.locale = options.lang }
+
+    if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
+
+    if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
+
+    if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
+
+    context = await browser.newContext(contextOptions)
   }
   let closingBrowser = false
   async function closeBrowser() {
@@ -197,9 +223,9 @@ async function launchContext(options: Options, headless: boolean, executablePath
         path: options.saveStorage,
       }).catch((e) => null)
     }
-    if(persistent){
+    if (persistent) {
       await context.close()
-    }else{
+    } else {
       await browser.close()
     }
   }

@@ -474,6 +474,19 @@ export class Page extends ChannelOwner<channels.PageChannel> implements api.Page
     return buffer
   }
 
+  async base64_screenshot(options: Omit<channels.PageScreenshotOptions, 'mask'> & { path?: string, mask?: Locator[] } = {}): Promise<string> {
+    const copy: channels.PageScreenshotOptions = { ...options, mask: undefined }
+    if (!copy.type) { copy.type = determineScreenshotType(options) }
+    if (options.mask) {
+      copy.mask = options.mask.map((locator) => ({
+        frame: locator._frame._channel,
+        selector: locator._selector,
+      }))
+    }
+    const result = await this._channel.screenshot(copy)
+    return result.binary
+  }
+
   async _expectScreenshot(options: ExpectScreenshotOptions): Promise<{ actual?: Buffer, previous?: Buffer, diff?: Buffer, errorMessage?: string, log?: string[]}> {
     const mask = options.screenshotOptions?.mask ? options.screenshotOptions?.mask.map((locator) => ({
       frame: locator._frame._channel,
