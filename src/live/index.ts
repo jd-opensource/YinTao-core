@@ -7,6 +7,7 @@ import { BrowserType } from '../client/browserType'
 import { Browser } from '../client/browser'
 import { Page } from '../client/page'
 import { BrowserContextOptions, LaunchOptions } from '../client/types'
+import { ApiRecorder } from './actionApiRecorder'
 
 type Options = {
   browser: string;
@@ -27,7 +28,13 @@ type Options = {
   userAgent?: string;
 };
 
-export async function apiLive(url:string, opts:any) {
+/**
+ * 接口（包含动作）录制
+ * @param url 
+ * @param opts {callback:Function}
+ * @returns 
+ */
+ export async function apiLive(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',
@@ -35,22 +42,42 @@ export async function apiLive(url:string, opts:any) {
     // loadStorage: './state.json',
     device: undefined,
   }
+  const apiRecorder = new ApiRecorder(opts)
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
-
-  const page = await openPage(context, url)
-
-  page.on('request', (request) => {
-    console.log(`Request sent: ${request.url()}`)
+  // 去掉playwright inspector
+  launchOptions.headless = true
+  await context._enableRecorder({
+    language: 'test',
+    launchOptions,
+    contextOptions,
+    device: options.device,
+    saveStorage: undefined,
+    startRecording: true,
+    outputFile: undefined
+  })
+  
+  const pagea = await openPage(context, url)
+  await apiRecorder.handlePage(pagea)
+  context.on('page', async (page:Page) => {
+    await apiRecorder.handlePage(page)
+  })
+  process.on('message', (msg: any) => {
+    if (msg.type === 'lastAction') {
+      apiRecorder.setLastAction(msg.action)
+    }
   })
 
-  const script = await new Promise((resolve) => {
-    process.on('message', (msg:any) => {
-      if (msg.type === 'api_live_finished') resolve(msg.script)
+  await new Promise((resolve) => {
+    process.on('message', (msg: any) => {
+      if (msg.type === 'live_finished') resolve(msg.script)
     })
   })
-  console.log('存放的脚本', script)
+
+  const recorderApis = await apiRecorder.getApis()
+  console.log('录制的接口：', recorderApis)
+
   context.close()
-  return script
+  return recorderApis
 }
 
 // 转移实现录制
@@ -64,7 +91,7 @@ export async function live(url: string, opts: any) {
   }
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
   // 启动辅助浏览器
-  const assistContext = (await launchContext(options, false, undefined)).context
+  const assistContext = (await launchContext(options, true, undefined)).context
   // const assistContext = (await launchContext(options, true, undefined)).context // 正式部署使用，true 为开启无痕
   await context._enableRecorder({
     language: 'test',
