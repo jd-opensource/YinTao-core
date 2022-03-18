@@ -41,9 +41,10 @@ type Options = {
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
+    executablePath: opts.executablePath
   }
   const apiRecorder = new ApiRecorder(opts)
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, options.executablePath, true)
   // 去掉playwright inspector
   launchOptions.headless = true
   await context._enableRecorder({
@@ -88,8 +89,9 @@ export async function live(url: string, opts: any) {
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
+    executablePath: opts.executablePath
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined,options.executablePath , true)
   await context._enableRecorder({
     language: 'test',
     launchOptions,
