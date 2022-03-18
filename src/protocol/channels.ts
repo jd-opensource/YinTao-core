@@ -1247,7 +1247,6 @@ export type BrowserContextRecorderSupplementEnableParams = {
   device?: string,
   saveStorage?: string,
   outputFile?: string,
-  justApi?: boolean,
 };
 export type BrowserContextRecorderSupplementEnableOptions = {
   language?: string,

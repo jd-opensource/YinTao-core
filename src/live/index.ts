@@ -7,7 +7,7 @@ import { BrowserType } from '../client/browserType'
 import { Browser } from '../client/browser'
 import { Page } from '../client/page'
 import { BrowserContextOptions, LaunchOptions } from '../client/types'
-import { ApiRecorder, ApiAction } from './actionApiRecorder'
+import { ApiRecorder } from './actionApiRecorder'
 
 type Options = {
   browser: string;
@@ -28,21 +28,24 @@ type Options = {
   userAgent?: string;
 };
 
-export async function apiLive(url: string, opts: any) {
+/**
+ * 接口（包含动作）录制
+ * @param url 
+ * @param opts {callback:Function}
+ * @returns 
+ */
+ export async function apiLive(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
-    viewportSize: '1680,1024',
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
   const apiRecorder = new ApiRecorder(opts)
-  const indexPage = await openPage(context, url)
-
-  await apiRecorder.handlePage(indexPage)
-
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
+  // 去掉playwright inspector
+  launchOptions.headless = true
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -50,27 +53,25 @@ export async function apiLive(url: string, opts: any) {
     device: options.device,
     saveStorage: undefined,
     startRecording: true,
-    outputFile: undefined,
+    outputFile: undefined
   })
-
-  // //打开一个空的浏览器
-  // await context.newPage()
-  // 新tab页打开
+  
+  const pagea = await openPage(context, url)
+  await apiRecorder.handlePage(pagea)
   context.on('page', async (page:Page) => {
     await apiRecorder.handlePage(page)
   })
   process.on('message', (msg: any) => {
     if (msg.type === 'lastAction') {
-      apiRecorder.setLastAction(<ApiAction>msg.script)
+      apiRecorder.setLastAction(msg.action)
     }
   })
 
-  const script = await new Promise((resolve) => {
+  await new Promise((resolve) => {
     process.on('message', (msg: any) => {
-      if (msg.type === 'api_live_finished') resolve(msg.script)
+      if (msg.type === 'live_finished') resolve(msg.script)
     })
   })
-  console.log('脚本', script)
 
   const recorderApis = await apiRecorder.getApis()
   console.log('录制的接口：', recorderApis)
