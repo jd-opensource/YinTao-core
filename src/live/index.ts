@@ -43,7 +43,7 @@ type Options = {
     device: undefined,
   }
   const apiRecorder = new ApiRecorder(opts)
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
   // 去掉playwright inspector
   launchOptions.headless = true
   await context._enableRecorder({
@@ -159,54 +159,54 @@ async function launchContext(options: Options, headless: boolean, executablePath
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
 
-  let context,browser
+  let context; let browser
   if (persistent) { // 持久化
     // 默认的持久化地址
-    const persistentPath = path.resolve(os.tmpdir(),'cherryDfSession')
-    console.log('默认持久地址:',persistentPath)
+    const persistentPath = path.resolve(os.tmpdir(), 'cherryDfSession')
+    console.log('默认持久地址:', persistentPath)
     // /var/folders/9c/7d7rrpsx0vb6vx_jj1_0zs9c0000gn/T/cherryDfSession
-    context = await browserType.launchPersistentContext(persistentPath,{
-      headless:false
+    context = await browserType.launchPersistentContext(persistentPath, {
+      headless: false,
     })
-    await context.pages()[0].close(); // 持久化总是保持一个多余的页面
+    await context.pages()[0].close() // 持久化总是保持一个多余的页面
   } else {
-      browser = await browserType.launch(launchOptions) // Viewport size
-      // Viewport size
-      if (options.viewportSize) {
-        try {
-          const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
-          contextOptions.viewport = { width, height }
-        } catch (e) {
-          console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
-          process.exit(0)
-        }
+    browser = await browserType.launch(launchOptions) // Viewport size
+    // Viewport size
+    if (options.viewportSize) {
+      try {
+        const [width, height] = options.viewportSize.split(',').map((n) => parseInt(n, 10))
+        contextOptions.viewport = { width, height }
+      } catch (e) {
+        console.log('Invalid window size format: use "width, height", for example --window-size=800,600')
+        process.exit(0)
       }
-  
-      if (options.geolocation) {
-        try {
-          const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
-          contextOptions.geolocation = {
-            latitude,
-            longitude,
-          }
-        } catch (e) {
-          console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
-          process.exit(0)
+    }
+
+    if (options.geolocation) {
+      try {
+        const [latitude, longitude] = options.geolocation.split(',').map((n) => parseFloat(n.trim()))
+        contextOptions.geolocation = {
+          latitude,
+          longitude,
         }
-        contextOptions.permissions = ['geolocation']
+      } catch (e) {
+        console.log('Invalid geolocation format: user lat, long, for example --geolocation="37.819722,-122.478611"')
+        process.exit(0)
       }
-  
-      if (options.userAgent) { contextOptions.userAgent = options.userAgent }
-  
-      if (options.lang) { contextOptions.locale = options.lang }
-  
-      if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
-  
-      if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
-  
-      if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
-  
-      context = await browser.newContext(contextOptions)
+      contextOptions.permissions = ['geolocation']
+    }
+
+    if (options.userAgent) { contextOptions.userAgent = options.userAgent }
+
+    if (options.lang) { contextOptions.locale = options.lang }
+
+    if (options.colorScheme) { contextOptions.colorScheme = options.colorScheme as 'dark' | 'light' }
+
+    if (options.loadStorage) { contextOptions.storageState = options.loadStorage }
+
+    if (options.ignoreHttpsErrors) { contextOptions.ignoreHTTPSErrors = true }
+
+    context = await browser.newContext(contextOptions)
   }
   let closingBrowser = false
   async function closeBrowser() {
@@ -224,9 +224,9 @@ async function launchContext(options: Options, headless: boolean, executablePath
         path: options.saveStorage,
       }).catch((e) => null)
     }
-    if(persistent){
+    if (persistent) {
       await context.close()
-    }else{
+    } else {
       await browser.close()
     }
   }
