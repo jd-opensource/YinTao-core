@@ -7,7 +7,7 @@ type ApiItem = {
     request?: {
         headers: { [key: string]: string; },
         method: string,
-        postData: null|string,
+        postData: null | string,
         params?: any,
     }
     response?: {
@@ -46,7 +46,7 @@ export class ApiRecorder {
     }
 
     async apiProxy(response: Response) {
-        const _r:Request = response.request()
+        const _r: Request = response.request()
         if (_r.resourceType() == 'xhr' || _r.resourceType() == 'fetch') {
             const responseCode: number = response.status()
             if (responseCode == 301 || responseCode == 302)
@@ -81,14 +81,14 @@ export class ApiRecorder {
     async handlePage(contextPage: Page) {
         this._lastPage = await this.buildLastPage(contextPage)
 
-        contextPage.on('response', async response => {
+        contextPage.on('response', async (response: Response) => {
             try {
                 await this.apiProxy(response)
             } catch (error) {
                 console.log(error)
             }
         })
-        contextPage.on('domcontentloaded',async page=> {
+        contextPage.on('domcontentloaded', async (page: Page) => {
             this._lastPage = await this.buildLastPage(page)
         })
         //url变化监听
@@ -101,11 +101,11 @@ export class ApiRecorder {
         return this._apis
     }
 
-    async buildLastPage(page:Page){
+    async buildLastPage(page: Page) {
         let pageTitle
         try {
             pageTitle = await page.title()
-        } catch(error){
+        } catch (error) {
             pageTitle = 'error'
             console.log(error)
         }
@@ -116,7 +116,7 @@ export class ApiRecorder {
             url: page.url()
         }
 
-        if (this._lastAction){
+        if (this._lastAction) {
             lastPage.action = this._lastAction
         }
 

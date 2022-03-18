@@ -17,7 +17,7 @@
 
 import { debugMode } from './utils'
 
-export const DEFAULT_TIMEOUT = 30000
+export const DEFAULT_TIMEOUT = 0
 
 export class TimeoutSettings {
   private _parent: TimeoutSettings | undefined

@@ -8,6 +8,7 @@ import { Browser } from '../client/browser'
 import { Page } from '../client/page'
 import { BrowserContextOptions, LaunchOptions } from '../client/types'
 import { ApiRecorder } from './actionApiRecorder'
+import { LaunchContext } from './contextBuilder'
 
 type Options = {
   browser: string;
@@ -34,7 +35,7 @@ type Options = {
  * @param opts {callback:Function}
  * @returns 
  */
- export async function apiLive(url: string, opts: any) {
+export async function apiLive(url: string, opts: any) {
   const options = {
     target: 'test',
     browser: 'chromium',
@@ -44,7 +45,8 @@ type Options = {
     executablePath: opts.executablePath
   }
   const apiRecorder = new ApiRecorder(opts)
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, options.executablePath, true)
+  const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)
+  const { context, launchOptions, contextOptions,homePage } = await launchContext.launch(url)
   // 去掉playwright inspector
   launchOptions.headless = true
   launchOptions.executablePath = options.executablePath
@@ -57,11 +59,10 @@ type Options = {
     startRecording: true,
     outputFile: undefined
   })
-  
-  const pagea = await openPage(context, url)
-  await apiRecorder.handlePage(pagea)
-  context.on('page', async (page:Page) => {
-    await page.waitForNavigation()
+
+  await apiRecorder.handlePage(homePage)
+  context.on('page', async (page: Page) => {
+    // await page.waitForNavigation()
     await apiRecorder.handlePage(page)
   })
   process.on('message', (msg: any) => {
@@ -93,7 +94,7 @@ export async function live(url: string, opts: any) {
     device: undefined,
     executablePath: opts.executablePath
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined,options.executablePath , true)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, options.executablePath, true)
   launchOptions.executablePath = options.executablePath
   await context._enableRecorder({
     language: 'test',
@@ -164,7 +165,7 @@ async function launchContext(options: Options, headless: boolean, executablePath
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
 
-  let context:BrowserContext; let browser
+  let context: BrowserContext; let browser
   if (persistent) { // 持久化
     // 默认的持久化地址
     const persistentPath = path.resolve(os.tmpdir(), 'cherryDfSession')
@@ -174,7 +175,7 @@ async function launchContext(options: Options, headless: boolean, executablePath
       headless: false,
       ...launchOptions
     })
-    await context.pages()[0].close() // 持久化总是保持一个多余的页面
+    // await context.pages()[0].close() // 持久化总是保持一个多余的页面
   } else {
     browser = await browserType.launch(launchOptions) // Viewport size
     // Viewport size
@@ -240,10 +241,10 @@ async function launchContext(options: Options, headless: boolean, executablePath
     page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
     page.on('close', () => {
       let hasPage
-      if( !persistent ) {
+      if (!persistent) {
         hasPage = browser.contexts().some((context) => context.pages().length > 0)
-      }else{
-        hasPage =  context.pages().length  > 0
+      } else {
+        hasPage = context.pages().length > 0
       }
       if (hasPage) return // Avoid the error when the last page is closed because the browser has been closed.
       // if (isClose) {
