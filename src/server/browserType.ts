@@ -169,6 +169,7 @@ export abstract class BrowserType extends SdkObject {
     // "Cannot access 'browserServer' before initialization" if something went wrong.
     let transport: ConnectionTransport | undefined
     let browserProcess: BrowserProcess | undefined
+    console.log('___executable', executable)
     const { launchedProcess, gracefullyClose, kill } = await launchProcess({
       command: executable,
       args: browserArguments,

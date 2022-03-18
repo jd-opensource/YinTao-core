@@ -96,7 +96,7 @@ export class RecorderApp extends EventEmitter implements IRecorderApp {
     await mainFrame.goto(internalCallMetadata(), 'https://playwright/index.html');
   }
 
-  static async open(sdkLanguage: string, headed: boolean): Promise<IRecorderApp> {
+  static async open(sdkLanguage: string, options: any): Promise<IRecorderApp> {
     if (process.env.PW_CODEGEN_NO_INSPECTOR)
       return new HeadlessRecorderApp();
     const recorderPlaywright = (require('../../playwright').createPlaywright as typeof import('../../playwright').createPlaywright)('javascript', true);
@@ -111,9 +111,10 @@ export class RecorderApp extends EventEmitter implements IRecorderApp {
     const context = await recorderPlaywright.chromium.launchPersistentContext(internalCallMetadata(), '', {
       channel: findChromiumChannel(sdkLanguage),
       args,
+      executablePath: options.executablePath,
       noDefaultViewport: true,
       ignoreDefaultArgs: ['--enable-automation'],
-      headless: !!process.env.PWTEST_CLI_HEADLESS || headed,
+      headless: !!process.env.PWTEST_CLI_HEADLESS ||  !!options?.headless,
       useWebSocket: !!process.env.PWTEST_RECORDER_PORT
     });
     const controller = new ProgressController(internalCallMetadata(), context._browser);

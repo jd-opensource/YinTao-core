@@ -47,6 +47,7 @@ type Options = {
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, options.executablePath, true)
   // 去掉playwright inspector
   launchOptions.headless = true
+  launchOptions.executablePath = options.executablePath
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -92,6 +93,7 @@ export async function live(url: string, opts: any) {
     executablePath: opts.executablePath
   }
   const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined,options.executablePath , true)
+  launchOptions.executablePath = options.executablePath
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -161,7 +163,7 @@ async function launchContext(options: Options, headless: boolean, executablePath
   // In headless, keep things the way it works in Playwright by default.
   // Assume high-dpi on MacOS. TODO: this is not perfect.
 
-  let context; let browser
+  let context:BrowserContext; let browser
   if (persistent) { // 持久化
     // 默认的持久化地址
     const persistentPath = path.resolve(os.tmpdir(), 'cherryDfSession')
@@ -169,6 +171,7 @@ async function launchContext(options: Options, headless: boolean, executablePath
     // /var/folders/9c/7d7rrpsx0vb6vx_jj1_0zs9c0000gn/T/cherryDfSession
     context = await browserType.launchPersistentContext(persistentPath, {
       headless: false,
+      ...launchOptions
     })
     await context.pages()[0].close() // 持久化总是保持一个多余的页面
   } else {
@@ -234,12 +237,16 @@ async function launchContext(options: Options, headless: boolean, executablePath
   }
   context.on('page', (page) => {
     page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
-
     page.on('close', () => {
-      const hasPage = browser.contexts().some((context) => context.pages().length > 0)
+      let hasPage
+      if( !persistent ) {
+        hasPage = browser.contexts().some((context) => context.pages().length > 0)
+      }else{
+        hasPage =  context.pages().length  > 0
+      }
       if (hasPage) return // Avoid the error when the last page is closed because the browser has been closed.
       // if (isClose) {
-      closeBrowser().catch(() => null) // 这里会关闭进程，如果调度不想处理这里，需要解开注释内容
+      closeBrowser().catch(() => null)
       // }
     })
   })
