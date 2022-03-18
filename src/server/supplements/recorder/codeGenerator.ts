@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { nanoid } from 'nanoid'
 import { EventEmitter } from 'events'
 import type { BrowserContextOptions, LaunchOptions } from '../../../..'
 import { Frame } from '../../frames'
@@ -51,16 +50,6 @@ export class CodeGenerator extends EventEmitter {
     this._lastAction = null
     this._actions = []
     this.emit('change')
-  }
-
-  updateActionSelector(id:string, selector:string) {
-    const index = this._actions.findIndex((i) => i.action.id === id)
-    // todo 应该限定拥有selector的类型
-    // @ts-ignore
-    if (this._actions[index].action && this._actions[index].action.selector) {
-      // @ts-ignore
-      this._actions[index].action.selector = selector
-    }
   }
 
   setEnabled(enabled: boolean) {
@@ -153,7 +142,6 @@ export class CodeGenerator extends EventEmitter {
         },
         committed: true,
         action: {
-          id: nanoid(7),
           name: 'navigate',
           url: frame.url(),
           signals: [],

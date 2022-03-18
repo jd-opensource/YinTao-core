@@ -1,42 +1,38 @@
-await page.create(`https://baidu.com`)
-await page.change(0)
-await page.to(`http://ybfw-t.jd.com/ownerAccount/serviceProder/list`)
 
-await dom.set(`zhouyan100`,`#username`)
-await dom.set(`xinxibu456`,`#password`)
+// Go to https://www.baidu.com/
+await page.to('https://www.baidu.com/');
 
-await dom.click(`#formsubmitButton`)
+// Go to https://devexpress.github.io/testcafe/example/
+await page.to('https://devexpress.github.io/testcafe/example/');
 
-await dom.click(`(//*[string()='新 增'])[2]`)
-await sleep(`1000`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/input[1]`)
-// await dom.click(`(//*[string()='延保双服务商供货价'])[18]`)
-await dom.click('//html//body//div[5]//div[1]//div[1]//ul//li[1]//span')
+// Click [data-testid="name-input"]
+await dom.click('[data-testid="name-input"]');
 
-// await assert.custom(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/input[1]`,`延保双服务商供货价`,`innerText`,2)
-// await sleep(`1000`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[2]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`3`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[2]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`2`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[2]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[3]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`3`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[3]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`2`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[3]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[4]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`3`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[4]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`2`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[4]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[5]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`3`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[5]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`2`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[5]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/input[1]`)
-// await dom.click(`(//*[string()='固定比例'])[16]`)
-await dom.click(`//html//body//div[6]//div[1]//div[1]//ul//li[2]//span`)
+// Fill [data-testid="name-input"]
+await dom.fill('[data-testid="name-input"]','123213');
 
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[7]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set(`1`,`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[1]/div[7]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[2]/div[1]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set('2022-03-10',`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[2]/div[1]/div[1]/div[1]/div[1]/input[1]`)
-await dom.click(`//body/div[3]/div[1]/div[2]/div[1]/div[1]/form[1]/div[2]/div[2]/div[1]/div[1]/div[1]/input[1]`)
-await dom.set('2022-03-10',`body > div.el-dialog__wrapper > div > div.el-dialog__body > div > div > form > div:nth-child(2) > div:nth-child(2) > div > div > div > input`)
-// await dom.click(`//*[string()='31']`)
-await dom.click(`(//*[string()='确 定'])[2]`)
-await sleep(`2000`)
+// Check [data-testid="remote-testing-checkbox"]
+await locator('[data-testid="remote-testing-checkbox"]').check();
+
+// Check [data-testid="reusing-js-code-checkbox"]
+await locator('[data-testid="reusing-js-code-checkbox"]').check();
+
+// Click text=Running tests in background and/or in parallel in multiple browsers
+await dom.click('text=Running tests in background and/or in parallel in multiple browsers');
+
+// Click text=I have tried TestCafe
+await dom.click('text=I have tried TestCafe');
+
+// Click span
+await dom.click('span');
+
+// Click text=MacOS
+await dom.click('text=MacOS');
+
+// Click [data-testid="comments-area"]
+await dom.click('[data-testid="comments-area"]');
+
+// Fill [data-testid="comments-area"]
+await dom.fill('[data-testid="comments-area"]','222');
+
+await sleep(3000)
