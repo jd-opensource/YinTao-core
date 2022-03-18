@@ -7,6 +7,7 @@ import TestControl from '../../test_control/testControl'
 import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
 import V1Parse from '../resolve/v1Parse'
+import { LaunchOptions } from '../../../index'
 
 export const VirtualFile = 'virtual_test.js'
 
@@ -15,10 +16,12 @@ export default class Compiler {
   id:string
   resolver?: Resolver
   control?: TestControl
-  constructor(code:string, analyse:string = 'v1') {
+  _launchOption?: LaunchOptions
+  constructor(code:string, option: LaunchOptions, analyse:string = 'v1') {
     this.code = code
     this.id = createGuid()
     this.compileCode()
+    this._launchOption = option
   }
 
   /**
@@ -30,8 +33,8 @@ export default class Compiler {
       browserCore = cherry.chromium
     }
     const launchOptions = {
-      headless: false,
-      executablePath: undefined,
+      headless: this._launchOption?.headless || false,
+      executablePath: this._launchOption?.executablePath || undefined,
     }
     const browser = await browserCore.launch(launchOptions)
     // 设置测试控制器
