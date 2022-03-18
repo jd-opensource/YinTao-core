@@ -25,10 +25,11 @@ export class serviceImpl {
   /**
    * @method 运行脚本，需要先新建一个独立浏览器，这时候无法获取到url，但是需要先开浏览器，然后通过运行后续命令打开目标页面
    */
-  static runScript(req, res, next) :void {
+  static async runScript(req, res, next) {
     const args: RunConfig = req.body
     delete args.executablePath // 远程禁止指定执行路径
-    run(args.script, args)
+    const result = await run(args.script, args)
+    res.json(result)
   }
 
   /**
