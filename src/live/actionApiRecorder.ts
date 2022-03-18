@@ -1,17 +1,17 @@
-import { Frame } from "../client/frame";
 import { Page } from "../client/page";
+import { Response, Request } from "../../types/types";
 import { Action, actionTitle } from "../server/supplements/recorder/recorderActions";
 
 type ApiItem = {
     url?: string,
     request?: {
-        headers: string,
+        headers: { [key: string]: string; },
         method: string,
-        postData: string,
+        postData: null|string,
         params?: any,
     }
     response?: {
-        headers: string,
+        headers: { [key: string]: string; },
         status: number,
         text: string,
     },
@@ -45,8 +45,8 @@ export class ApiRecorder {
         }
     }
 
-    async apiProxy(response) {
-        const _r = response.request()
+    async apiProxy(response: Response) {
+        const _r:Request = response.request()
         if (_r.resourceType() == 'xhr' || _r.resourceType() == 'fetch') {
             const responseCode: number = response.status()
             if (responseCode == 301 || responseCode == 302)
@@ -55,7 +55,7 @@ export class ApiRecorder {
 
             const apiItem: ApiItem = {
                 request: {
-                    headers: _r.headers(),
+                    headers: await _r.allHeaders(),
                     method: _r.method(),
                     params: urlParams,
                     postData: _r.postData(),
@@ -101,11 +101,19 @@ export class ApiRecorder {
         return this._apis
     }
 
-    async buildLastPage(pageOrFrame){
+    async buildLastPage(page:Page){
+        let pageTitle
+        try {
+            pageTitle = await page.title()
+        } catch(error){
+            pageTitle = 'error'
+            console.log(error)
+        }
+
         let lastPage: ApiPage = {
             // screenshot: await contextPage.base64_screenshot(),
-            title: await pageOrFrame.title(),
-            url: pageOrFrame.url()
+            title: pageTitle,
+            url: page.url()
         }
 
         if (this._lastAction){
