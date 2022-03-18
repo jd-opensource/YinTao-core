@@ -101,7 +101,7 @@ export class ApiRecorder {
         return this._apis
     }
 
-    async buildLastPage(pageOrFrame){
+    async buildLastPage(pageOrFrame: Page){
         let lastPage: ApiPage = {
             // screenshot: await contextPage.base64_screenshot(),
             title: await pageOrFrame.title(),

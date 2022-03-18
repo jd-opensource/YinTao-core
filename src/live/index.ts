@@ -61,7 +61,6 @@ type Options = {
   const pagea = await openPage(context, url)
   await apiRecorder.handlePage(pagea)
   context.on('page', async (page:Page) => {
-    await page.waitForNavigation()
     await apiRecorder.handlePage(page)
   })
   process.on('message', (msg: any) => {
