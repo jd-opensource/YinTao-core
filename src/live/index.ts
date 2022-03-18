@@ -37,7 +37,7 @@ export async function apiLive(url: string, opts: any) {
     device: undefined,
     viewportSize: '1680,1024',
   }
-  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined)
+  const { context, launchOptions, contextOptions } = await launchContext(options, !!undefined, undefined, true)
   const apiRecorder = new ApiRecorder(opts)
   const indexPage = await openPage(context, url)
 
