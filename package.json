@@ -17,6 +17,7 @@
   "dependencies": {
     "@babel/core": "^7.17.5",
     "@cypress/unique-selector": "^0.4.4",
+    "body-parser": "^1.19.2",
     "callsite-record": "^4.1.4",
     "chalk": "^5.0.0",
     "colors": "^1.4.0",
@@ -25,6 +26,7 @@
     "electron": "^17.1.0",
     "error-stack-parser": "^2.0.7",
     "expect": "^27.5.1",
+    "express": "^4.17.3",
     "extract-zip": "^2.0.1",
     "https-proxy-agent": "^5.0.0",
     "indent-string": "^1.2.2",

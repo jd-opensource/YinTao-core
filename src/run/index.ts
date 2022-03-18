@@ -15,7 +15,7 @@ interface Result {
 export async function run(code: string, opts: any = null) :Promise<Result> {
   const launchOptions :LaunchOptions = {
     executablePath: opts.executablePath,
-    headless: opts.headless
+    headless: opts.headless,
   }
   // 拿到脚本先编译, 以检查错误。
   const result: Result = {

@@ -1,6 +1,7 @@
 import { Command, program } from 'commander'
 import { apiLive, live } from '../live'
 import { runFile } from '../run'
+import httpControlServer from '../server/http'
 import { Executable, Registry } from '../utils/registry'
 import { getPlaywrightVersion, spawnAsync } from '../utils/utils'
 
@@ -16,6 +17,7 @@ function commandWithOpenOptions(command: string, description: string, options: a
     .option('--device <deviceName>', 'emulate device, for example  "iPhone 11"')
     .option('--geolocation <coordinates>', 'specify geolocation coordinates, for example "37.819722,-122.478611"')
     .option('--ignore-https-errors', 'ignore https errors')
+    .option('--port <port>', 'http server port')
     .option('--load-storage <filename>', 'load context storage state from the file, previously saved with --save-storage')
     .option('--lang <language>', 'specify language / locale, for example "en-GB"')
     .option('--proxy-server <proxy>', 'specify proxy server, for example "http://myproxy:3128" or "socks5://myproxy:8080"')
@@ -74,6 +76,17 @@ commandWithOpenOptions('browsers', 'get local browsers', [])
 Examples:
 
 $ browsers`)
+
+commandWithOpenOptions('server', 'start remote server', [])
+  .action((data, options) => {
+    const { port = 80 } = data
+    httpControlServer(port)
+    console.log('执行这里', port)
+  })
+  .addHelpText('afterAll', `
+Examples:
+
+$ server 80`)
 
 program
   .command('install [browser...]')
