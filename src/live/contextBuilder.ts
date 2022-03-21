@@ -30,15 +30,13 @@ export class LaunchContext {
     private _headless: boolean = false
     private _executablePath?: string
     private _persistent: boolean = false
-    private _isClose: boolean = false
     private _browserClosed: boolean = false
 
-    constructor(options: Options, headless: boolean, executablePath?: string, persistent: boolean = false, isClose = false) {
+    constructor(options: Options, headless: boolean, executablePath?: string, persistent: boolean = false) {
         this._options = options
         this._headless = headless
         this._executablePath = executablePath
         this._persistent = persistent
-        this._isClose = isClose
     }
     async launch(url: string | undefined) {
         const browserType = this._lookupBrowserType()
@@ -78,16 +76,9 @@ export class LaunchContext {
         context.on('page', (page) => {
             page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
             page.on('close', async () => {
-                let hasPage = false
-                if (!this._persistent) {
-                    hasPage = browser.contexts().some((context) => context.pages().length > 0)
-                } else {
-                    hasPage = context.pages().length > 0
-                }
+                const hasPage = this._persistent ? context.pages().length > 0 : browser.contexts().some(context => context.pages().length > 0)
                 if (hasPage) return // Avoid the error when the last page is closed because the browser has been closed.
-                // if (isClose) {
-                await this._closeBrowser(context, browser).catch(() => null)
-                // }
+                await this._closeBrowser(context, browser).catch(e => console.log(e))
             })
         })
     }
@@ -189,7 +180,7 @@ export class LaunchContext {
             await browser.close()
         }
     }
-    
+
     async _openPage(context: BrowserContext, url: string | undefined): Promise<Page> {
         let page: Page
         if (context.pages().length > 0) {
