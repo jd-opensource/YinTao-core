@@ -36,6 +36,19 @@
         {
             "type": "pwa-node",
             "request": "launch",
+            "name": "server",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            "args": [ "server","--port=8777"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
             "name": "apiLive",
             "skipFiles": [
                 "<node_internals>/**"

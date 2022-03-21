@@ -1,4 +1,5 @@
 import stripBom from 'strip-bom'
+import { LaunchOptions } from '../../types/types'
 import guardTimeExecution from '../utils/guard-time-execution'
 import { readFile } from '../utils/suger'
 import Compiler from './compiler'
@@ -12,6 +13,10 @@ interface Result {
 }
 
 export async function run(code: string, opts: any = null) :Promise<Result> {
+  const launchOptions :LaunchOptions = {
+    executablePath: opts.executablePath,
+    headless: opts.headless,
+  }
   // 拿到脚本先编译, 以检查错误。
   const result: Result = {
     duration: 0,
@@ -19,7 +24,7 @@ export async function run(code: string, opts: any = null) :Promise<Result> {
     msg: '',
     divertor: [],
   }
-  const compiler = new Compiler(code)
+  const compiler = new Compiler(code, launchOptions)
   await guardTimeExecution(
     async () => await compiler.runCompiledCode().catch((e:Error) => {
       result.success = false
