@@ -101,7 +101,6 @@ export class ApiRecorder {
         return this._apis
     }
 
-<<<<<<< HEAD
     async buildLastPage(page: Page) {
         let pageTitle
         try {
@@ -111,9 +110,6 @@ export class ApiRecorder {
             console.log(error)
         }
 
-=======
-    async buildLastPage(pageOrFrame: Page){
->>>>>>> master
         let lastPage: ApiPage = {
             // screenshot: await contextPage.base64_screenshot(),
             title: pageTitle,
