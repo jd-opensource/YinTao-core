@@ -23,16 +23,10 @@ await dom.click('text=Running tests in background and/or in parallel in multiple
 // Click text=I have tried TestCafe
 await dom.click('text=I have tried TestCafe');
 
+await page.screenshot("test-1.jpg")
 // Click span
 await dom.click('span');
 
+await page.screenshot("test-2.jpg")
 // Click text=MacOS
-await dom.click('text=MacOS');
-
-// Click [data-testid="comments-area"]
-await dom.click('[data-testid="comments-area"]');
-
-// Fill [data-testid="comments-area"]
-await dom.fill('[data-testid="comments-area"]','222');
-
-await sleep(3000)
+await asyncReport('sd')

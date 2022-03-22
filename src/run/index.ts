@@ -12,10 +12,29 @@ interface Result {
   log?:string
 }
 
-export async function run(code: string, opts: any = null) :Promise<Result> {
-  const launchOptions :LaunchOptions = {
+export interface RunOptions extends LaunchOptions{
+  remoteReport?:{
+    result?:string
+    log?:string
+    image?:string
+  },
+  hosts?:Map<string,string>
+  _startTime?:number
+}
+
+export async function run(code: string, opts: RunOptions={}) :Promise<Result> {
+  // 测试远程上报
+  opts.remoteReport= {
+    result:'http://127.0.0.1:8088',
+    image:'http://127.0.0.1:8089',
+  }
+  
+  const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     headless: opts.headless,
+    remoteReport: opts.remoteReport,
+    hosts: opts.hosts,
+    _startTime: new Date().getTime()
   }
   // 拿到脚本先编译, 以检查错误。
   const result: Result = {

@@ -7,7 +7,9 @@ import TestControl from '../../test_control/testControl'
 import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
 import V1Parse from '../resolve/v1Parse'
-import { LaunchOptions } from '../../../index'
+import { RunOptions } from '..'
+import { LaunchOptions } from '../../client/types'
+import { DnsAnalysisServer } from '../../server/dnsServer'
 
 export const VirtualFile = 'virtual_test.js'
 
@@ -16,12 +18,14 @@ export default class Compiler {
   id:string
   resolver?: Resolver
   control?: TestControl
-  _launchOption?: LaunchOptions
-  constructor(code:string, option: LaunchOptions, analyse:string = 'v1') {
+  _runOption: RunOptions
+  dnsServer?: any
+
+  constructor(code:string, option: RunOptions, analyse:string = 'v1') {
     this.code = code
     this.id = createGuid()
     this.compileCode()
-    this._launchOption = option
+    this._runOption = option
   }
 
   /**
@@ -32,9 +36,18 @@ export default class Compiler {
     if (browserType === 'chrome') {
       browserCore = cherry.chromium
     }
-    const launchOptions = {
-      headless: this._launchOption?.headless || false,
-      executablePath: this._launchOption?.executablePath || undefined,
+
+    const launchOptions : LaunchOptions = {
+      headless: this._runOption?.headless || false,
+      executablePath: this._runOption?.executablePath || undefined,
+    }
+
+    if(this._runOption.hosts){
+      // dns port
+      const dnsPort = 22
+      this.dnsServer = DnsAnalysisServer(dnsPort, this._runOption.hosts)
+      launchOptions.proxy = {server:`http://127.0.0.1:${dnsPort}`}
+      // 执行结束需要关闭dns服务
     }
     const browser = await browserCore.launch(launchOptions)
     // 设置测试控制器
@@ -42,7 +55,7 @@ export default class Compiler {
     cherry.testControl.set(this.id, this.control)
 
     // 这里需要传入解析版本
-    this.resolver = new V1Parse(this.control)
+    this.resolver = new V1Parse(this.control,this._runOption)
   }
 
   /**
@@ -72,6 +85,7 @@ export default class Compiler {
         }
       }
     } finally {
+      this.dnsServer?.close()
       await this.clearTest()
       console.log('run finished!')
     }
