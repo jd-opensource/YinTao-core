@@ -1,21 +1,15 @@
 import fs from 'fs'
 import path from 'path'
+import expect from 'expect'
+import axios from 'axios'
 import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
 import { Page as PageType } from '../../../types/types'
-import expect from 'expect'
 import { RunOptions } from '..'
-import { result } from 'lodash'
-import axios from 'axios'
 
 // 初版driver脚本解析
 
-
-// 存放测试执行时的中间数据
-interface ParseStorage {
-
-}
 export default class V1Parse extends Resolver {
   testId: string
   control: TestControl
@@ -29,7 +23,7 @@ export default class V1Parse extends Resolver {
     this.control = testControl
     this.runOptins = runOptins
     this.parseStorage = {
-      screenImages: []
+      screenImages: [],
     }
   }
 
@@ -38,10 +32,11 @@ export default class V1Parse extends Resolver {
     const utils = new Utils(this.control)
     return {
       page: new Page(this),
+      browser: new Browser(this),
       dom: new Dom(this.control),
       sleep: __sleep,
       cookies: cookies.parse.bind(cookies),
-      locator: (sign, options) => { return this.control.runContext?.locator(sign, options) },
+      locator: (sign, options) => this.control.runContext?.locator(sign, options),
       hint: () => { console.log('hint Temporary does not support!') },
       clearCookie: cookies.clearCookie.bind(cookies),
       asyncReport: asyncReport.bind(this),
@@ -67,7 +62,7 @@ class assert {
   }
 
   async custom(sign: string, attr: string, will: any, opreate: number) {
-    const locator = this.control.runContext?.locator(sign);
+    const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     const result = await locator[attr]()
     switch (opreate) {
@@ -93,13 +88,13 @@ class assert {
 
 /**
  * @method 远程上报case执行（用于合并任务进度上报）
- * @param this 
- * @param args 
+ * @param this
+ * @param args
  */
 async function asyncReport(this: any, ...args: any) {
   // @ts-ignore
   console.log('获取到的上报', this, args)
-  const { result, image } = this.runOptins?.remoteReport
+  const { result, image } = this.runOptins?.remoteReport || {}
   if (result) {
     // 首先想要回掉结果，前提是拿到执行结果
     // 我们怎么获取到执行结果
@@ -108,19 +103,19 @@ async function asyncReport(this: any, ...args: any) {
       success: true,
       msg: '',
       storage: {
-        args
+        args,
       },
       divertor: [],
     }
     console.log('回掉结果', resultData)
     axios.post(result, {
-      result: resultData
+      result: resultData,
     }, {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      timeout: 3000
-    }).then(res => {
+      timeout: 3000,
+    }).then((res) => {
       if (res.status === 200) {
         console.log('运行结果,远程上报完成!')
         // log && log.info(`remoteReport: ${remoteReport}. send success!`)
@@ -136,14 +131,14 @@ async function asyncReport(this: any, ...args: any) {
   }
   if (image) {
     const getImageType = (str) => {
-      var reg = /\.(png|jpg|gif|jpeg|webp)$/
+      const reg = /\.(png|jpg|gif|jpeg|webp)$/
       return str.match(reg)[1]
     }
     // 将要上传的图片
     console.log('将要上传的图片数组:', this.parseStorage.screenImages as Array<any>);
-    (this.parseStorage.screenImages as Array<any>).map(async imgPath => {
+    (this.parseStorage.screenImages as Array<any>).map(async (imgPath) => {
       const data = fs.readFileSync(imgPath)
-      const imgbase64 = 'data: image/' + getImageType(imgPath) + ';base64,' + data.toString('base64')
+      const imgbase64 = `data: image/${getImageType(imgPath)};base64,${data.toString('base64')}`
       await axios.post(
         image,
         {
@@ -151,7 +146,7 @@ async function asyncReport(this: any, ...args: any) {
           storage: {},
           name: '',
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       ).catch((e: Error) => {
         console.log('上报图片错误!', e)
         // log && log.error(`remoteReport error: ${e.message}`)
@@ -159,6 +154,20 @@ async function asyncReport(this: any, ...args: any) {
     })
     // 上传完毕要清除掉数组
     this.parseStorage.screenImages = []
+  }
+}
+
+class Browser {
+  control: TestControl
+  parse: any
+
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.parse = v1parse
+  }
+
+  on(event:string, callback:any) {
+    this.control.browserContext?.on(event as any, callback)
   }
 }
 
@@ -189,6 +198,13 @@ class Page {
     const page = await context.newPage()
     this.control.updatePage(page) //  这块后续看是否需要
     this.control.updateContext(page)
+  }
+
+  /**
+   * @method 设置页面宽高
+   */
+  async setViewSize(width: number, height: number) {
+    await this.control?.currentPage?.setViewportSize({ width, height })
   }
 
   async to(url: string, options?: PageOptions) {
@@ -228,11 +244,11 @@ class Page {
   }
 
   async changeIframe(index: number) {
-    if (this.control.runContext && (<PageType>this.control.runContext).frames) {
+    if (this.control.runContext && (<PageType> this.control.runContext).frames) {
       if (index == -1) {
         this.control.updateContext(this.control.currentPage as PageType)
       } else {
-        this.control.updateContext((<PageType>this.control.runContext).frames()[++index])
+        this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
       }
     } else {
       throw new Error('Unable to switch ifarme! not frames.')
