@@ -1,6 +1,7 @@
 import stripBom from 'strip-bom'
 import { LaunchOptions } from '../../types/types'
 import guardTimeExecution from '../utils/guard-time-execution'
+import { reportRunLog, reportRunResult } from '../utils/remoteReport'
 import { readFile } from '../utils/suger'
 import Compiler from './compiler'
 
@@ -9,6 +10,7 @@ interface Result {
   success:boolean,
   msg:string,
   divertor:any[],
+  storage?:any
   log?:string
 }
 
@@ -24,6 +26,7 @@ export interface RunOptions extends LaunchOptions{
     log?:string
     image?:string
   },
+  storage?: any
   hosts?:Map<string, string>
   _startTime?:number
 }
@@ -46,9 +49,16 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
   }
   const compiler = new Compiler(code, launchOptions)
   await guardTimeExecution(
-    async () => await compiler.runCompiledCode().catch((e:Error) => {
+    async () => await compiler.runCompiledCode().catch(async (e:Error) => {
       result.success = false
       result.msg = e.message
+      // 当执行失败并且为远程上报时，需要取异步报告错误，当次运行错误，放弃图片
+      if (launchOptions.remoteReport?.result) {
+        await reportRunResult(launchOptions.remoteReport?.result, opts.storage)
+      }
+      if (launchOptions.remoteReport?.log) {
+        await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), opts.storage)
+      }
     }),
     (elapsedTime) => {
       const duration = (elapsedTime[0] * 1000) + (elapsedTime[1] / 1000000)

@@ -104,21 +104,18 @@ async function asyncReport(this: V1Parse, ...args: any) {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
       msg: 'success',
-      storage: {
-        args,
-      },
       divertor: [],
     }
-    await reportRunResult(result, resultData)
+    await reportRunResult(result, resultData, { args })
   }
   if (image) {
-    await reportRunImage(image, this.parseStorage.screenImages)
+    await reportRunImage(image, this.parseStorage.screenImages, { args })
     // 上传完毕要清除掉数组
     this.parseStorage.screenImages = []
   }
 
   if (log) {
-    await reportRunLog(log, "")
+    await reportRunLog(log, "success", { args })
   }
 }
 

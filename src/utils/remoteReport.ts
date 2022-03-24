@@ -9,7 +9,8 @@ const getImageType = (str) => {
 /**
  * @method 远程报告运行结果
  */
-export async function reportRunResult(url:string, result:any) {
+export async function reportRunResult(url:string, result:any, storage?:any) {
+  result.storage = storage
   await axios.post(url, {
     result,
   }, {
@@ -31,7 +32,7 @@ export async function reportRunResult(url:string, result:any) {
 /**
  * @method 远程报告运行图片
  */
-export async function reportRunImage(url:string, imgs: ImgFile[], options?:{}) {
+export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) {
   // 将要上传的图片
   imgs.map(async (img) => {
     const imgbase64 = `data: image/${getImageType(img.name)};base64,${img.buffer.toString('base64')}`
@@ -39,7 +40,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], options?:{}) {
       url,
       {
         image: imgbase64,
-        storage: options,
+        storage,
         name: img.name,
       },
       { timeout: 3000 },
@@ -52,12 +53,12 @@ export async function reportRunImage(url:string, imgs: ImgFile[], options?:{}) {
 /**
  * @method 远程报告运行日志
  */
-export async function reportRunLog(url:string, logBody:string) {
+export async function reportRunLog(url:string, logBody:string, storage?:any) {
   // log 其实获取不到运行结果,正真的报错也不会到这里来
   const FormData = require('form-data')
   const param = new FormData()
   param.append("logFile", "neiorng")
-  param.append('storage', JSON.stringify({ storage: 'storage' }))
+  param.append('storage', JSON.stringify({ storage }))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
     console.log('日志上报出错', e)
   })
