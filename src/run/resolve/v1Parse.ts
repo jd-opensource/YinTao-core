@@ -5,7 +5,7 @@ import axios from 'axios'
 import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
-import { Page as PageType } from '../../../types/types'
+import { Page as PageType, Route, Request } from '../../../types/types'
 import { RunOptions } from '..'
 
 // 初版driver脚本解析
@@ -168,6 +168,12 @@ class Browser {
 
   on(event:string, callback:any) {
     this.control.browserContext?.on(event as any, callback)
+  }
+
+  route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
+    times?: number;
+  }) {
+    this.control.browserContext?.route(url, handler, options)
   }
 }
 
