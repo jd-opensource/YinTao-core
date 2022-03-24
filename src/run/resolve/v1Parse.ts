@@ -1,4 +1,5 @@
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import expect from 'expect'
 import axios from 'axios'
@@ -6,16 +7,17 @@ import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
 import { Page as PageType, Route, Request } from '../../../types/types'
-import { RunOptions } from '..'
+import { ImgFile, RunOptions } from '..'
+import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
 // 初版driver脚本解析
 
 export default class V1Parse extends Resolver {
   testId: string
   control: TestControl
-  private runOptins
+  runOptins: RunOptions
   parseStorage: {
-    screenImages: []
+    screenImages: ImgFile[]
   }
   constructor(testControl: TestControl, runOptins: RunOptions) {
     super()
@@ -35,6 +37,7 @@ export default class V1Parse extends Resolver {
       browser: new Browser(this),
       dom: new Dom(this.control),
       sleep: __sleep,
+      axios,
       cookies: cookies.parse.bind(cookies),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
       hint: () => { console.log('hint Temporary does not support!') },
@@ -91,69 +94,31 @@ class assert {
  * @param this
  * @param args
  */
-async function asyncReport(this: any, ...args: any) {
+async function asyncReport(this: V1Parse, ...args: any) {
   // @ts-ignore
-  console.log('获取到的上报', this, args)
-  const { result, image } = this.runOptins?.remoteReport || {}
+  const { result, image, log } = this.runOptins?.remoteReport || {}
   if (result) {
     // 首先想要回掉结果，前提是拿到执行结果
     // 我们怎么获取到执行结果
     const resultData = {
-      duration: new Date().getTime() - this.runOptins._startTime,
+      duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
-      msg: '',
+      msg: 'success',
       storage: {
         args,
       },
       divertor: [],
     }
-    console.log('回掉结果', resultData)
-    axios.post(result, {
-      result: resultData,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 3000,
-    }).then((res) => {
-      if (res.status === 200) {
-        console.log('运行结果,远程上报完成!')
-        // log && log.info(`remoteReport: ${remoteReport}. send success!`)
-      } else {
-        console.log('上报错误!')
-        // log && log.error(`remoteReport error code:${res.status}`)
-      }
-    }).catch((e: Error) => {
-      console.log('上报错误!', e)
-      // log && log.error(`remoteReport error: ${e.message}`)
-    })
-    // 这里不会出错，如果出错了会在执行监听哪里抛出，因此在这里抛出的结果都是执行成功的
+    await reportRunResult(result, resultData)
   }
   if (image) {
-    const getImageType = (str) => {
-      const reg = /\.(png|jpg|gif|jpeg|webp)$/
-      return str.match(reg)[1]
-    }
-    // 将要上传的图片
-    console.log('将要上传的图片数组:', this.parseStorage.screenImages as Array<any>);
-    (this.parseStorage.screenImages as Array<any>).map(async (imgPath) => {
-      const data = fs.readFileSync(imgPath)
-      const imgbase64 = `data: image/${getImageType(imgPath)};base64,${data.toString('base64')}`
-      await axios.post(
-        image,
-        {
-          image: imgbase64,
-          storage: {},
-          name: '',
-        },
-        { timeout: 3000 },
-      ).catch((e: Error) => {
-        console.log('上报图片错误!', e)
-        // log && log.error(`remoteReport error: ${e.message}`)
-      })
-    })
+    await reportRunImage(image, this.parseStorage.screenImages)
     // 上传完毕要清除掉数组
     this.parseStorage.screenImages = []
+  }
+
+  if (log) {
+    await reportRunLog(log, "")
   }
 }
 
@@ -179,7 +144,7 @@ class Browser {
 
 class Page {
   control: TestControl
-  parse: any
+  parse: V1Parse
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
@@ -225,8 +190,15 @@ class Page {
   }
 
   async screenshot(imgPath: string) {
-    this.parse.parseStorage.screenImages.push(path.resolve(imgPath))
-    await this.control.currentPage?.screenshot({ path: imgPath, type: 'jpeg' })
+    // 服务运行不落磁盘
+    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
+    if (buffer) {
+      this.parse.parseStorage.screenImages.push({
+        path: path.resolve(imgPath),
+        buffer,
+        name: path.basename(imgPath),
+      })
+    }
   }
 
   async back() {

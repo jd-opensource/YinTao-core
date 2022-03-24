@@ -81,7 +81,6 @@ commandWithOpenOptions('server', 'start remote server', [])
   .action((data, options) => {
     const { port = 80 } = data
     httpControlServer(port)
-    console.log('执行这里', port)
   })
   .addHelpText('afterAll', `
 Examples:
