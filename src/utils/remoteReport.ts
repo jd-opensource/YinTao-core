@@ -60,7 +60,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   const FormData = require('form-data')
   const param = new FormData()
   param.append("logFile", "neiorng")
-  param.append('storage', JSON.stringify({ storage }))
+  param.append('storage', JSON.stringify(storage))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
     console.log('reportRunLog error', e)
   })
