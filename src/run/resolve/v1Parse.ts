@@ -7,7 +7,7 @@ import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
 import { Page as PageType, Route, Request } from '../../../types/types'
-import { ImgFile, RunOptions } from '..'
+import { ImgFile, Result, RunOptions } from '..'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
 // 初版driver脚本解析
@@ -114,9 +114,10 @@ async function asyncReport(this: V1Parse, ...args: any) {
   if (result) {
     // 首先想要回掉结果，前提是拿到执行结果
     // 我们怎么获取到执行结果
-    const resultData = {
+    const resultData: Result = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
+      code: 2000,
       msg: 'success',
       divertor: [],
     }

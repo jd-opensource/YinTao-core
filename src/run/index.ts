@@ -5,13 +5,17 @@ import { reportRunLog, reportRunResult } from '../utils/remoteReport'
 import { readFile } from '../utils/suger'
 import Compiler from './compiler'
 
-interface Result {
+export interface Result {
   duration:number,
   success:boolean,
   msg:string,
   divertor:any[],
   storage?:any
   log?:string
+  /**
+   * @code 4021 脚本编译错误 4044 脚本执行错误 2000执行成功
+   */
+  code:number
 }
 
 export interface ImgFile {
@@ -46,12 +50,14 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
     success: true,
     msg: '',
     divertor: [],
+    code: 2000,
   }
   const compiler = new Compiler(code, launchOptions)
   await guardTimeExecution(
     async () => await compiler.runCompiledCode().catch(async (e:Error) => {
       result.success = false
       result.msg = e.message
+      result.code = 4044
       // 当执行失败并且为远程上报时，需要取异步报告错误，当次运行错误，放弃图片
       if (launchOptions.remoteReport?.result) {
         await reportRunResult(launchOptions.remoteReport?.result, opts.storage)
