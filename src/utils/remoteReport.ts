@@ -11,14 +11,16 @@ const getImageType = (str) => {
  */
 export async function reportRunResult(url:string, result:any, storage?:any) {
   result.storage = storage
-  await axios.post(url, {
+  await axios.post(
+    url,
     result,
-  }, {
-    headers: {
-      'Content-Type': 'application/json',
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 3000,
     },
-    timeout: 3000,
-  }).then((res) => {
+  ).then((res) => {
     if (res.status === 200) {
       console.log('reportRunResult success!')
     } else {
