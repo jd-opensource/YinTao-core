@@ -20,12 +20,12 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
     timeout: 3000,
   }).then((res) => {
     if (res.status === 200) {
-      console.log('运行结果,远程上报完成!')
+      console.log('reportRunResult success!')
     } else {
-      console.log('上报错误!')
+      console.log('reportRunResult error code')
     }
   }).catch((e: Error) => {
-    console.log('上报错误!', e)
+    console.log('reportRunResult catch error!', e)
   })
 }
 
@@ -45,7 +45,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
       },
       { timeout: 3000 },
     ).catch((e: Error) => {
-      console.log('上报图片错误!', e)
+      console.log('reportRunImage error!', e)
     })
   })
 }
@@ -60,7 +60,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   param.append("logFile", "neiorng")
   param.append('storage', JSON.stringify({ storage }))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
-    console.log('日志上报出错', e)
+    console.log('reportRunLog error', e)
   })
-  console.log('日志上报完毕')
+  console.log('reportRunLog success')
 }
