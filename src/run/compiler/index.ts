@@ -9,7 +9,6 @@ import Resolver from '../resolve/resolver'
 import V1Parse from '../resolve/v1Parse'
 import { RunOptions } from '..'
 import { LaunchOptions } from '../../client/types'
-import { DnsAnalysisServer } from '../../server/dnsServer'
 
 export const VirtualFile = 'virtual_test.js'
 
@@ -42,20 +41,15 @@ export default class Compiler {
       executablePath: this._runOption?.executablePath || undefined,
     }
 
-    if(this._runOption.hosts){
-      // dns port
-      const dnsPort = 22
-      this.dnsServer = DnsAnalysisServer(dnsPort, this._runOption.hosts)
-      launchOptions.proxy = {server:`http://127.0.0.1:${dnsPort}`}
-      // 执行结束需要关闭dns服务
-    }
+    // hostDns {server}
+    launchOptions.proxy = this._runOption.proxy
     const browser = await browserCore.launch(launchOptions)
     // 设置测试控制器
     this.control = new TestControl(this.id, browser)
     cherry.testControl.set(this.id, this.control)
 
     // 这里需要传入解析版本
-    this.resolver = new V1Parse(this.control,this._runOption)
+    this.resolver = new V1Parse(this.control, this._runOption)
   }
 
   /**

@@ -31,7 +31,6 @@ export interface RunOptions extends LaunchOptions{
     image?:string
   },
   storage?: any
-  hosts?:Map<string, string>
   _startTime?:number
 }
 
@@ -41,8 +40,8 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
     executablePath: opts.executablePath,
     headless: opts.headless,
     remoteReport: opts.remoteReport,
-    hosts: opts.hosts,
     storage: opts.storage,
+    proxy: opts.proxy,
     _startTime: new Date().getTime(),
   }
   // 拿到脚本先编译, 以检查错误。

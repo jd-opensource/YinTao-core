@@ -39,7 +39,6 @@
     "parse5": "^6.0.1",
     "pixelmatch": "^5.2.1",
     "proper-lockfile": "^4.1.2",
-    "proxy-chain": "^1.0.4",
     "proxy-from-env": "^1.1.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
