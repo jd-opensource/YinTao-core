@@ -59,7 +59,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   // log 其实获取不到运行结果,正真的报错也不会到这里来
   const FormData = require('form-data')
   const param = new FormData()
-  param.append("logFile", "neiorng")
+  param.append("logFile", logBody)
   param.append('storage', JSON.stringify(storage))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
     console.log('reportRunLog error', e)

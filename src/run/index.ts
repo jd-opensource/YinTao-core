@@ -60,7 +60,7 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
       result.code = 4044
       // 当执行失败并且为远程上报时，需要取异步报告错误，当次运行错误，放弃图片
       if (launchOptions.remoteReport?.result) {
-        await reportRunResult(launchOptions.remoteReport?.result, opts.storage)
+        await reportRunResult(launchOptions.remoteReport?.result, result, opts.storage)
       }
       if (launchOptions.remoteReport?.log) {
         await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), opts.storage)
