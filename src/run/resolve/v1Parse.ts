@@ -121,16 +121,16 @@ async function asyncReport(this: V1Parse, ...args: any) {
       msg: 'success',
       divertor: [],
     }
-    await reportRunResult(result, resultData, { args })
+    await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
   }
   if (image) {
-    await reportRunImage(image, this.parseStorage.screenImages, { args })
+    await reportRunImage(image, this.parseStorage.screenImages, { args, ...this.runOptins.storage })
     // 上传完毕要清除掉数组
     this.parseStorage.screenImages = []
   }
 
   if (log) {
-    await reportRunLog(log, "success", { args })
+    await reportRunLog(log, "success", { args, ...this.runOptins.storage })
   }
 }
 

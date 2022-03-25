@@ -42,6 +42,7 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
     headless: opts.headless,
     remoteReport: opts.remoteReport,
     hosts: opts.hosts,
+    storage: opts.storage,
     _startTime: new Date().getTime(),
   }
   // 拿到脚本先编译, 以检查错误。
