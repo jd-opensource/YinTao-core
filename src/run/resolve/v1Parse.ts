@@ -15,17 +15,12 @@ export default class V1Parse extends Resolver {
   testId: string
   control: TestControl
   runOptins: RunOptions
-  parseStorage: {
-    screenImages: ImgFile[]
-  }
+
   constructor(testControl: TestControl, runOptins: RunOptions) {
     super()
     this.testId = testControl.id
     this.control = testControl
     this.runOptins = runOptins
-    this.parseStorage = {
-      screenImages: [],
-    }
   }
 
   registerGlobalApi() {
@@ -124,13 +119,18 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
   }
   if (image) {
-    await reportRunImage(image, this.parseStorage.screenImages, { args, ...this.runOptins.storage })
+    await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
     // 上传完毕要清除掉数组
-    this.parseStorage.screenImages = []
+    this.runOptins._screenImages = []
   }
 
   if (log) {
     await reportRunLog(log, "success", { args, ...this.runOptins.storage })
+  }
+
+  // 去除已上报的case
+  if (this.runOptins.storage && this.runOptins.storage.__caseList) {
+    this.runOptins.storage.__caseList.shift()
   }
 }
 
@@ -205,7 +205,7 @@ class Page {
     // 服务运行不落磁盘
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
-      this.parse.parseStorage.screenImages.push({
+      this.parse.runOptins._screenImages.push({
         path: path.resolve(imgPath),
         buffer,
         name: path.basename(imgPath),

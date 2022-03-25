@@ -1,24 +1,8 @@
-import { run } from "../../run"
+import { run, RunOptions } from "../../run"
 
 export interface PagePaginationInfe { // 分页
   current: number
   limit: number
-}
-
-/**
- * 运行参数
- */
-export type RunConfig = {
-  browser?: string // 浏览器
-  script: string
-  filePath?: string // 由script自动生成(临时)
-  storage?: any
-  executablePath?:string
-  hosts:Map<string, string>
-  remoteReport: {
-      result: string
-      image: string
-  }
 }
 
 export class serviceImpl {
@@ -26,9 +10,9 @@ export class serviceImpl {
    * @method 运行脚本，需要先新建一个独立浏览器，这时候无法获取到url，但是需要先开浏览器，然后通过运行后续命令打开目标页面
    */
   static async runScript(req, res, next) {
-    const args: RunConfig = req.body
+    const args: RunOptions = req.body
     delete args.executablePath // 远程禁止指定执行路径
-    const result = await run(args.script, args)
+    const result = await run(args.script || '', args)
     res.json(result)
   }
 

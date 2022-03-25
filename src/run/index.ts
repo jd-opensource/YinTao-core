@@ -1,7 +1,7 @@
 import stripBom from 'strip-bom'
 import { LaunchOptions } from '../../types/types'
 import guardTimeExecution from '../utils/guard-time-execution'
-import { reportRunLog, reportRunResult } from '../utils/remoteReport'
+import { reportRunImage, reportRunLog, reportRunResult } from '../utils/remoteReport'
 import { readFile } from '../utils/suger'
 import Compiler from './compiler'
 
@@ -30,11 +30,16 @@ export interface RunOptions extends LaunchOptions{
     log?:string
     image?:string
   },
+  script?:string
   storage?: any
   _startTime?:number
+  _screenImages: ImgFile[] // 单次运行时的截图
 }
 
-export async function run(code: string, opts: RunOptions = {}) :Promise<Result> {
+export async function run(code: string, opts: RunOptions = {
+  _screenImages:[],
+  script:''
+}) :Promise<Result> {
   // 测试远程上报
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
@@ -43,6 +48,7 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
     storage: opts.storage,
     proxy: opts.proxy,
     _startTime: new Date().getTime(),
+    _screenImages: []
   }
   // 拿到脚本先编译, 以检查错误。
   const result: Result = {
@@ -59,11 +65,21 @@ export async function run(code: string, opts: RunOptions = {}) :Promise<Result> 
       result.msg = e.message
       result.code = 4044
       // 当执行失败并且为远程上报时，需要取异步报告错误，当次运行错误，放弃图片
-      if (launchOptions.remoteReport?.result) {
-        await reportRunResult(launchOptions.remoteReport?.result, result, opts.storage)
-      }
-      if (launchOptions.remoteReport?.log) {
-        await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), opts.storage)
+      if(launchOptions.remoteReport) {
+        const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
+        const storage =  {
+          ...opts.storage,
+          args:[caseId]
+        }
+        if (launchOptions.remoteReport?.result) {
+          await reportRunResult(launchOptions.remoteReport?.result, result, storage)
+        }
+        if (launchOptions.remoteReport?.image) {
+          await reportRunImage(launchOptions.remoteReport?.image,launchOptions._screenImages, storage)
+        }
+        if (launchOptions.remoteReport?.log) {
+          await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), storage)
+        }
       }
     }),
     (elapsedTime) => {
