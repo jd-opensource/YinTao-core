@@ -11,7 +11,6 @@ import { ImgFile, RunOptions } from '..'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
 // 初版driver脚本解析
-
 export default class V1Parse extends Resolver {
   testId: string
   control: TestControl
@@ -62,6 +61,21 @@ class assert {
   control: TestControl
   constructor(testControl: TestControl) {
     this.control = testControl
+  }
+
+  async all(text:string) {
+    const locator = this.control.runContext?.locator('body')
+    expect(await locator?.innerHTML()).toContain(text)
+  }
+
+  async location(url:string) {
+    const pageUrl = this.control.runContext?.url()
+    expect(pageUrl).toBe(url)
+  }
+
+  async title(title:string) {
+    const pageTitle = await this.control.currentPage?.title()
+    expect(pageTitle).toBe(title)
   }
 
   async custom(sign: string, attr: string, will: any, opreate: number) {
