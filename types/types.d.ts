@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ChildProcess } from 'child_process'
-import { EventEmitter } from 'events'
-import { Readable } from 'stream'
-import { ReadStream } from 'fs'
-import { Protocol } from './protocol'
-import {
-  Serializable, EvaluationArgument, PageFunction, PageFunctionOn, SmartHandle, ElementHandleForTag, BindingSource,
-} from './structs'
+import { Protocol } from './protocol';
+import { ChildProcess } from 'child_process';
+import { EventEmitter } from 'events';
+import { Readable } from 'stream';
+import { ReadStream } from 'fs';
+import { Serializable, EvaluationArgument, PageFunction, PageFunctionOn, SmartHandle, ElementHandleForTag, BindingSource } from './structs';
 import TestControl from '../src/test_control/testControl'
 
 type PageWaitForSelectorOptionsNotHidden = PageWaitForSelectorOptions & {
@@ -891,6 +889,12 @@ export interface Page {
    * [freeze](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#never_blocking) waiting for the dialog, and
    * actions like click will never finish.
    *
+   * ```js
+   * page.on('dialog', dialog => {
+   *   dialog.accept();
+   * });
+   * ```
+   *
    * > NOTE: When no [page.on('dialog')](https://playwright.dev/docs/api/class-page#page-event-dialog) listeners are present,
    * all dialogs are automatically dismissed.
    */
@@ -945,6 +949,17 @@ export interface Page {
 
   /**
    * Emitted when an uncaught exception happens within the page.
+   *
+   * ```js
+   * // Log all uncaught errors to the terminal
+   * page.on('pageerror', exception => {
+   *   console.log(`Uncaught exception: "${exception}"`);
+   * });
+   *
+   * // Navigate to a page with an exception.
+   * await page.goto('data:text/html,<script>throw new Error("Test")</script>');
+   * ```
+   *
    */
   on(event: 'pageerror', listener: (error: Error) => void): this;
 
@@ -984,6 +999,12 @@ export interface Page {
 
   /**
    * Emitted when a request fails, for example by timing out.
+   *
+   * ```js
+   * page.on('requestfailed', request => {
+   *   console.log(request.url() + ' ' + request.failure().errorText);
+   * });
+   * ```
    *
    * > NOTE: HTTP Error responses, such as 404 or 503, are still successful responses from HTTP standpoint, so request will
    * complete with [page.on('requestfinished')](https://playwright.dev/docs/api/class-page#page-event-request-finished) event
@@ -1164,6 +1185,12 @@ export interface Page {
    * [freeze](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#never_blocking) waiting for the dialog, and
    * actions like click will never finish.
    *
+   * ```js
+   * page.on('dialog', dialog => {
+   *   dialog.accept();
+   * });
+   * ```
+   *
    * > NOTE: When no [page.on('dialog')](https://playwright.dev/docs/api/class-page#page-event-dialog) listeners are present,
    * all dialogs are automatically dismissed.
    */
@@ -1218,6 +1245,17 @@ export interface Page {
 
   /**
    * Emitted when an uncaught exception happens within the page.
+   *
+   * ```js
+   * // Log all uncaught errors to the terminal
+   * page.on('pageerror', exception => {
+   *   console.log(`Uncaught exception: "${exception}"`);
+   * });
+   *
+   * // Navigate to a page with an exception.
+   * await page.goto('data:text/html,<script>throw new Error("Test")</script>');
+   * ```
+   *
    */
   addListener(event: 'pageerror', listener: (error: Error) => void): this;
 
@@ -1257,6 +1295,12 @@ export interface Page {
 
   /**
    * Emitted when a request fails, for example by timing out.
+   *
+   * ```js
+   * page.on('requestfailed', request => {
+   *   console.log(request.url() + ' ' + request.failure().errorText);
+   * });
+   * ```
    *
    * > NOTE: HTTP Error responses, such as 404 or 503, are still successful responses from HTTP standpoint, so request will
    * complete with [page.on('requestfinished')](https://playwright.dev/docs/api/class-page#page-event-request-finished) event
@@ -1668,7 +1712,7 @@ export interface Page {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -1689,7 +1733,7 @@ export interface Page {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -1789,7 +1833,7 @@ export interface Page {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
@@ -1805,7 +1849,7 @@ export interface Page {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -1994,7 +2038,7 @@ export interface Page {
      * Emulates `'prefers-colors-scheme'` media feature, supported values are `'light'`, `'dark'`, `'no-preference'`. Passing
      * `null` disables color scheme emulation.
      */
-    colorScheme?: null|'light'|'dark'|'no-preference';
+    colorScheme?: null|"light"|"dark"|"no-preference";
 
     /**
      * Emulates `'forced-colors'` media feature, supported values are `'active'` and `'none'`. Passing `null` disables forced
@@ -2002,19 +2046,19 @@ export interface Page {
      *
      * > NOTE: It's not supported in WebKit, see [here](https://bugs.webkit.org/show_bug.cgi?id=225281) in their issue tracker.
      */
-    forcedColors?: null|'active'|'none';
+    forcedColors?: null|"active"|"none";
 
     /**
      * Changes the CSS media type of the page. The only allowed values are `'screen'`, `'print'` and `null`. Passing `null`
      * disables CSS media emulation.
      */
-    media?: null|'screen'|'print';
+    media?: null|"screen"|"print";
 
     /**
      * Emulates `'prefers-reduced-motion'` media feature, supported values are `'reduce'`, `'no-preference'`. Passing `null`
      * disables reduced motion emulation.
      */
-    reducedMotion?: null|'reduce'|'no-preference';
+    reducedMotion?: null|"reduce"|"no-preference";
   }): Promise<void>;
 
   /**
@@ -2221,7 +2265,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -2249,7 +2293,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -2301,7 +2345,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -2331,7 +2375,7 @@ export interface Page {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * A point to use relative to the top-left corner of element padding box. If not specified, uses some visible point of the
@@ -2844,11 +2888,14 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
-   * API testing helper associated with this page. Requests made with this API will use page cookies.
+   * API testing helper associated with this page. This method returns the same instance as
+   * [browserContext.request](https://playwright.dev/docs/api/class-browsercontext#browser-context-request) on the page's
+   * context. See [browserContext.request](https://playwright.dev/docs/api/class-browsercontext#browser-context-request) for
+   * more details.
    */
   request: APIRequestContext;
 
@@ -3095,7 +3142,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<void>;
 
   /**
@@ -3267,7 +3314,7 @@ export interface Page {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -3531,6 +3578,12 @@ export interface Page {
    * [freeze](https://developer.mozilla.org/en-US/docs/Web/JavaScript/EventLoop#never_blocking) waiting for the dialog, and
    * actions like click will never finish.
    *
+   * ```js
+   * page.on('dialog', dialog => {
+   *   dialog.accept();
+   * });
+   * ```
+   *
    * > NOTE: When no [page.on('dialog')](https://playwright.dev/docs/api/class-page#page-event-dialog) listeners are present,
    * all dialogs are automatically dismissed.
    */
@@ -3585,6 +3638,17 @@ export interface Page {
 
   /**
    * Emitted when an uncaught exception happens within the page.
+   *
+   * ```js
+   * // Log all uncaught errors to the terminal
+   * page.on('pageerror', exception => {
+   *   console.log(`Uncaught exception: "${exception}"`);
+   * });
+   *
+   * // Navigate to a page with an exception.
+   * await page.goto('data:text/html,<script>throw new Error("Test")</script>');
+   * ```
+   *
    */
   waitForEvent(event: 'pageerror', optionsOrPredicate?: { predicate?: (error: Error) => boolean | Promise<boolean>, timeout?: number } | ((error: Error) => boolean | Promise<boolean>)): Promise<Error>;
 
@@ -3625,6 +3689,12 @@ export interface Page {
   /**
    * Emitted when a request fails, for example by timing out.
    *
+   * ```js
+   * page.on('requestfailed', request => {
+   *   console.log(request.url() + ' ' + request.failure().errorText);
+   * });
+   * ```
+   *
    * > NOTE: HTTP Error responses, such as 404 or 503, are still successful responses from HTTP standpoint, so request will
    * complete with [page.on('requestfinished')](https://playwright.dev/docs/api/class-page#page-event-request-finished) event
    * and not with [page.on('requestfailed')](https://playwright.dev/docs/api/class-page#page-event-request-failed). A request
@@ -3656,6 +3726,7 @@ export interface Page {
    */
   waitForEvent(event: 'worker', optionsOrPredicate?: { predicate?: (worker: Worker) => boolean | Promise<boolean>, timeout?: number } | ((worker: Worker) => boolean | Promise<boolean>)): Promise<Worker>;
 
+
   /**
    * Returns when the required load state has been reached.
    *
@@ -3686,7 +3757,7 @@ export interface Page {
    * - `'networkidle'` - wait until there are no network connections for at least `500` ms.
    * @param options
    */
-  waitForLoadState(state?: 'load'|'domcontentloaded'|'networkidle', options?: {
+  waitForLoadState(state?: "load"|"domcontentloaded"|"networkidle", options?: {
     /**
      * Maximum operation time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be
      * changed by using the
@@ -3750,7 +3821,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -3873,7 +3944,7 @@ export interface Page {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<void>;
 
   /**
@@ -4680,7 +4751,7 @@ export interface Frame {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -4701,7 +4772,7 @@ export interface Frame {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -4768,7 +4839,7 @@ export interface Frame {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
@@ -4784,7 +4855,7 @@ export interface Frame {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -5099,7 +5170,7 @@ export interface Frame {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -5127,7 +5198,7 @@ export interface Frame {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * A point to use relative to the top-left corner of element padding box. If not specified, uses some visible point of the
@@ -5617,7 +5688,7 @@ export interface Frame {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<void>;
 
   /**
@@ -5710,7 +5781,7 @@ export interface Frame {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -5904,7 +5975,7 @@ export interface Frame {
    * - `'networkidle'` - wait until there are no network connections for at least `500` ms.
    * @param options
    */
-  waitForLoadState(state?: 'load'|'domcontentloaded'|'networkidle', options?: {
+  waitForLoadState(state?: "load"|"domcontentloaded"|"networkidle", options?: {
     /**
      * Maximum operation time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be
      * changed by using the
@@ -5960,7 +6031,7 @@ export interface Frame {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<null|Response>;
 
   /**
@@ -6002,7 +6073,7 @@ export interface Frame {
      * - `'networkidle'` - consider operation to be finished when there are no network connections for at least `500` ms.
      * - `'commit'` - consider operation to be finished when network response is received and the document started loading.
      */
-    waitUntil?: 'load'|'domcontentloaded'|'networkidle'|'commit';
+    waitUntil?: "load"|"domcontentloaded"|"networkidle"|"commit";
   }): Promise<void>;}
 
 /**
@@ -6480,7 +6551,7 @@ export interface BrowserContext {
     /**
      * Optional.
      */
-    sameSite?: 'Strict'|'Lax'|'None';
+    sameSite?: "Strict"|"Lax"|"None";
   }>): Promise<void>;
 
   /**
@@ -6614,7 +6685,6 @@ export interface BrowserContext {
    * - `'midi'`
    * - `'midi-sysex'` (system-exclusive midi)
    * - `'notifications'`
-   * - `'push'`
    * - `'camera'`
    * - `'microphone'`
    * - `'background-sync'`
@@ -6843,7 +6913,7 @@ export interface BrowserContext {
 
       secure: boolean;
 
-      sameSite: 'Strict'|'Lax'|'None';
+      sameSite: "Strict"|"Lax"|"None";
     }>;
 
     origins: Array<{
@@ -7692,7 +7762,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -7713,7 +7783,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -7773,7 +7843,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
@@ -7789,7 +7859,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -7928,7 +7998,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * A point to use relative to the top-left corner of element padding box. If not specified, uses some visible point of the
@@ -8072,8 +8142,17 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
      * depending on their duration:
      * - finite animations are fast-forwarded to completion, so they'll fire `transitionend` event.
      * - infinite animations are canceled to initial state, and then played over after the screenshot.
+     *
+     * Defaults to `"allow"` that leaves animations untouched.
      */
-    animations?: 'disabled';
+    animations?: "disabled"|"allow";
+
+    /**
+     * When set to `"ready"`, screenshot will wait for
+     * [`document.fonts.ready`](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready) promise to resolve in all
+     * frames. Defaults to `"nowait"`.
+     */
+    fonts?: "ready"|"nowait";
 
     /**
      * Specify locators that should be masked when the screenshot is taken. Masked elements will be overlayed with a pink box
@@ -8100,6 +8179,13 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
     quality?: number;
 
     /**
+     * When set to `"css"`, screenshot will have a single pixel per each css pixel on the page. For high-dpi devices, this will
+     * keep screenshots small. Using `"device"` option will produce a single pixel per each device pixel, so screenhots of
+     * high-dpi devices will be twice as large or even larger. Defaults to `"device"`.
+     */
+    size?: "css"|"device";
+
+    /**
      * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
      * using the
      * [browserContext.setDefaultTimeout(timeout)](https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout)
@@ -8110,7 +8196,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
     /**
      * Specify screenshot type, defaults to `png`.
      */
-    type?: 'png'|'jpeg';
+    type?: "png"|"jpeg";
   }): Promise<Buffer>;
 
   /**
@@ -8367,7 +8453,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -8507,8 +8593,8 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
   /**
    * Returns when the element satisfies the `state`.
    *
-   * Depending on the `state` parameter, this method waits for one of the [actionability](https://playwright.dev/docs/actionability) checks to pass.
-   * This method throws when the element is detached while waiting, unless waiting for the `"hidden"` state.
+   * Depending on the `state` parameter, this method waits for one of the [actionability](https://playwright.dev/docs/actionability) checks to
+   * pass. This method throws when the element is detached while waiting, unless waiting for the `"hidden"` state.
    * - `"visible"` Wait until the element is [visible](https://playwright.dev/docs/actionability#visible).
    * - `"hidden"` Wait until the element is [not visible](https://playwright.dev/docs/actionability#visible) or
    *   [not attached](https://playwright.dev/docs/actionability#attached). Note that waiting for hidden does not throw when the element detaches.
@@ -8522,7 +8608,7 @@ export interface ElementHandle<T=Node> extends JSHandle<T> {
    * @param state A state to wait for, see below for more details.
    * @param options
    */
-  waitForElementState(state: 'visible'|'hidden'|'stable'|'enabled'|'disabled'|'editable', options?: {
+  waitForElementState(state: "visible"|"hidden"|"stable"|"enabled"|"disabled"|"editable", options?: {
     /**
      * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
      * using the
@@ -8763,7 +8849,7 @@ export interface Locator {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -8784,7 +8870,7 @@ export interface Locator {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -8844,7 +8930,7 @@ export interface Locator {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
@@ -8860,7 +8946,7 @@ export interface Locator {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -9141,7 +9227,7 @@ export interface Locator {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * A point to use relative to the top-left corner of element padding box. If not specified, uses some visible point of the
@@ -9321,7 +9407,7 @@ export interface Locator {
   }): Locator;
 
   /**
-   * Returns locator to the n-th matching element.
+   * Returns locator to the n-th matching element. It's zero based, `nth(0)` selects the first element.
    * @param index
    */
   nth(index: number): Locator;
@@ -9636,7 +9722,7 @@ export interface Locator {
      * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
      * modifiers back. If not specified, currently pressed modifiers are used.
      */
-    modifiers?: Array<'Alt'|'Control'|'Meta'|'Shift'>;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
 
     /**
      * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
@@ -9805,7 +9891,7 @@ export interface Locator {
      * - `'hidden'` - wait for element to be either detached from DOM, or have an empty bounding box or `visibility:hidden`.
      *   This is opposite to the `'visible'` option.
      */
-    state?: 'attached'|'detached'|'visible'|'hidden';
+    state?: "attached"|"detached"|"visible"|"hidden";
 
     /**
      * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
@@ -9972,7 +10058,7 @@ export interface BrowserType<Unused = {}> {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'light'`.
      */
-    colorScheme?: 'light'|'dark'|'no-preference';
+    colorScheme?: "light"|"dark"|"no-preference";
 
     /**
      * Specify device scale factor (can be thought of as dpr). Defaults to `1`.
@@ -10016,7 +10102,7 @@ export interface BrowserType<Unused = {}> {
      *
      * > NOTE: It's not supported in WebKit, see [here](https://bugs.webkit.org/show_bug.cgi?id=225281) in their issue tracker.
      */
-    forcedColors?: 'active'|'none';
+    forcedColors?: "active"|"none";
 
     geolocation?: {
       /**
@@ -10195,7 +10281,7 @@ export interface BrowserType<Unused = {}> {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'no-preference'`.
      */
-    reducedMotion?: 'reduce'|'no-preference';
+    reducedMotion?: "reduce"|"no-preference";
 
     /**
      * Emulates consistent window screen size available inside web page via `window.screen`. Is only used when the `viewport`
@@ -10576,7 +10662,8 @@ export interface Accessibility {
    *     return node;
    *   for (const child of node.children || []) {
    *     const foundNode = findFocusedNode(child);
-   *     return foundNode;
+   *     if (foundNode)
+   *       return foundNode;
    *   }
    *   return null;
    * }
@@ -10614,8 +10701,8 @@ type AccessibilityNode = {
   readonly?: boolean;
   required?: boolean;
   selected?: boolean;
-  checked?: boolean|'mixed';
-  pressed?: boolean|'mixed';
+  checked?: boolean|"mixed";
+  pressed?: boolean|"mixed";
   level?: number;
   valuemin?: number;
   valuemax?: number;
@@ -10626,9 +10713,9 @@ type AccessibilityNode = {
   children?: AccessibilityNode[];
 }
 
-export const devices: Devices & DeviceDescriptor[]
+export const devices: Devices & DeviceDescriptor[];
 
-// @ts-ignore this will be any if electron is not installed
+//@ts-ignore this will be any if electron is not installed
 type ElectronType = typeof import('electron');
 
 /**
@@ -10840,6 +10927,7 @@ export interface ElectronApplication {
    */
   waitForEvent(event: 'window', optionsOrPredicate?: { predicate?: (page: Page) => boolean | Promise<boolean>, timeout?: number } | ((page: Page) => boolean | Promise<boolean>)): Promise<Page>;
 
+
   /**
    * Convenience method that returns all the opened windows.
    */
@@ -10889,7 +10977,7 @@ export type AndroidKey =
   'Home' |
   'Back' |
   'Call' | 'EndCall' |
-  '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' |
+  '0' |  '1' |  '2' |  '3' |  '4' |  '5' |  '6' |  '7' |  '8' |  '9' |
   'Star' | 'Pound' | '*' | '#' |
   'DialUp' | 'DialDown' | 'DialLeft' | 'DialRight' | 'DialCenter' |
   'VolumeUp' | 'VolumeDown' |
@@ -10933,13 +11021,13 @@ export type AndroidKey =
   'Copy' |
   'Paste';
 
-export const _electron: Electron
-export const _android: Android
-
+export const _electron: Electron;
+export const _android: Android;
 export const testControl: Map<string, TestControl>
 
 // This is required to not export everything by default. See https://github.com/Microsoft/TypeScript/issues/19545#issuecomment-340490459
-export {}
+export {};
+
 
 /**
  * Playwright has **experimental** support for Android automation. This includes Chrome for Android and Android WebView.
@@ -11120,7 +11208,7 @@ export interface AndroidDevice {
    * @param direction Fling direction.
    * @param options
    */
-  fling(selector: AndroidSelector, direction: 'down'|'up'|'left'|'right', options?: {
+  fling(selector: AndroidSelector, direction: "down"|"up"|"left"|"right", options?: {
     /**
      * Optional speed of the fling in pixels per second.
      */
@@ -11190,7 +11278,7 @@ export interface AndroidDevice {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'light'`.
      */
-    colorScheme?: 'light'|'dark'|'no-preference';
+    colorScheme?: "light"|"dark"|"no-preference";
 
     /**
      * Optional package name to launch instead of default Chrome for Android.
@@ -11214,7 +11302,7 @@ export interface AndroidDevice {
      *
      * > NOTE: It's not supported in WebKit, see [here](https://bugs.webkit.org/show_bug.cgi?id=225281) in their issue tracker.
      */
-    forcedColors?: 'active'|'none';
+    forcedColors?: "active"|"none";
 
     geolocation?: {
       /**
@@ -11338,7 +11426,7 @@ export interface AndroidDevice {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'no-preference'`.
      */
-    reducedMotion?: 'reduce'|'no-preference';
+    reducedMotion?: "reduce"|"no-preference";
 
     /**
      * Emulates consistent window screen size available inside web page via `window.screen`. Is only used when the `viewport`
@@ -11529,7 +11617,7 @@ export interface AndroidDevice {
    * @param percent Distance to scroll as a percentage of the widget's size.
    * @param options
    */
-  scroll(selector: AndroidSelector, direction: 'down'|'up'|'left'|'right', percent: number, options?: {
+  scroll(selector: AndroidSelector, direction: "down"|"up"|"left"|"right", percent: number, options?: {
     /**
      * Optional speed of the scroll in pixels per second.
      */
@@ -11568,7 +11656,7 @@ export interface AndroidDevice {
    * @param percent Distance to swipe as a percentage of the widget's size.
    * @param options
    */
-  swipe(selector: AndroidSelector, direction: 'down'|'up'|'left'|'right', percent: number, options?: {
+  swipe(selector: AndroidSelector, direction: "down"|"up"|"left"|"right", percent: number, options?: {
     /**
      * Optional speed of the swipe in pixels per second.
      */
@@ -11614,7 +11702,7 @@ export interface AndroidDevice {
      * - default - wait for element to be present.
      * - `'gone'` - wait for element to not be present.
      */
-    state?: 'gone';
+    state?: "gone";
 
     /**
      * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
@@ -11629,6 +11717,7 @@ export interface AndroidDevice {
    * Emitted when a new WebView instance is detected.
    */
   waitForEvent(event: 'webview', optionsOrPredicate?: { predicate?: (androidWebView: AndroidWebView) => boolean | Promise<boolean>, timeout?: number } | ((androidWebView: AndroidWebView) => boolean | Promise<boolean>)): Promise<AndroidWebView>;
+
 
   /**
    * This method waits until [AndroidWebView] matching the `selector` is opened and returns it. If there is already an open
@@ -11827,9 +11916,10 @@ export interface AndroidWebView {
 }
 
 /**
- * Exposes API that can be used for the Web API testing. Each Playwright browser context has a APIRequestContext instance
- * attached which shares cookies with the page context. Its also possible to create a new APIRequestContext instance
- * manually. For more information see [here](https://playwright.dev/docs/class-apirequestcontext).
+ * Exposes API that can be used for the Web API testing. This class is used for creating [APIRequestContext] instance which
+ * in turn can be used for sending web requests. An instance of this class can be obtained via
+ * [playwright.request](https://playwright.dev/docs/api/class-playwright#playwright-request). For more information see
+ * [APIRequestContext].
  */
 export interface APIRequest {
   /**
@@ -11926,7 +12016,7 @@ export interface APIRequest {
 
         secure: boolean;
 
-        sameSite: 'Strict'|'Lax'|'None';
+        sameSite: "Strict"|"Lax"|"None";
       }>;
 
       origins: Array<{
@@ -11954,9 +12044,28 @@ export interface APIRequest {
 
 /**
  * This API is used for the Web API testing. You can use it to trigger API endpoints, configure micro-services, prepare
- * environment or the service to your e2e test. When used on [Page] or a [BrowserContext], this API will automatically use
- * the cookies from the corresponding [BrowserContext]. This means that if you log in using this API, your e2e test will be
- * logged in and vice versa.
+ * environment or the service to your e2e test.
+ *
+ * Each Playwright browser context has associated with it [APIRequestContext] instance which shares cookie storage with the
+ * browser context and can be accessed via
+ * [browserContext.request](https://playwright.dev/docs/api/class-browsercontext#browser-context-request) or
+ * [page.request](https://playwright.dev/docs/api/class-page#page-request). It is also possible to create a new
+ * APIRequestContext instance manually by calling
+ * [apiRequest.newContext([options])](https://playwright.dev/docs/api/class-apirequest#api-request-new-context).
+ *
+ * **Cookie management**
+ *
+ * [APIRequestContext] retuned by
+ * [browserContext.request](https://playwright.dev/docs/api/class-browsercontext#browser-context-request) and
+ * [page.request](https://playwright.dev/docs/api/class-page#page-request) shares cookie storage with the corresponding
+ * [BrowserContext]. Each API request will have `Cookie` header populated with the values from the browser context. If the
+ * API response contains `Set-Cookie` header it will automatically update [BrowserContext] cookies and requests made from
+ * the page will pick them up. This means that if you log in using this API, your e2e test will be logged in and vice
+ * versa.
+ *
+ * If you want API requests to not interfere with the browser cookies you shoud create a new [APIRequestContext] by calling
+ * [apiRequest.newContext([options])](https://playwright.dev/docs/api/class-apirequest#api-request-new-context). Such
+ * `APIRequestContext` object will have its own isolated cookie storage.
  *
  */
 export interface APIRequestContext {
@@ -12428,7 +12537,7 @@ export interface APIRequestContext {
 
       secure: boolean;
 
-      sameSite: 'Strict'|'Lax'|'None';
+      sameSite: "Strict"|"Lax"|"None";
     }>;
 
     origins: Array<{
@@ -12660,7 +12769,7 @@ export interface Browser extends EventEmitter {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'light'`.
      */
-    colorScheme?: 'light'|'dark'|'no-preference';
+    colorScheme?: "light"|"dark"|"no-preference";
 
     /**
      * Specify device scale factor (can be thought of as dpr). Defaults to `1`.
@@ -12679,7 +12788,7 @@ export interface Browser extends EventEmitter {
      *
      * > NOTE: It's not supported in WebKit, see [here](https://bugs.webkit.org/show_bug.cgi?id=225281) in their issue tracker.
      */
-    forcedColors?: 'active'|'none';
+    forcedColors?: "active"|"none";
 
     geolocation?: {
       /**
@@ -12833,7 +12942,7 @@ export interface Browser extends EventEmitter {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'no-preference'`.
      */
-    reducedMotion?: 'reduce'|'no-preference';
+    reducedMotion?: "reduce"|"no-preference";
 
     /**
      * Emulates consistent window screen size available inside web page via `window.screen`. Is only used when the `viewport`
@@ -12888,7 +12997,7 @@ export interface Browser extends EventEmitter {
         /**
          * sameSite flag
          */
-        sameSite: 'Strict'|'Lax'|'None';
+        sameSite: "Strict"|"Lax"|"None";
       }>;
 
       /**
@@ -12964,8 +13073,8 @@ export interface Browser extends EventEmitter {
 
   /**
    * > NOTE: This API controls [Chromium Tracing](https://www.chromium.org/developers/how-tos/trace-event-profiling-tool)
-   * which is a low-level chromium-specific debugging tool. API to control [Playwright Tracing](../trace-viewer) could be
-   * found [here](https://playwright.dev/docs/class-tracing).
+   * which is a low-level chromium-specific debugging tool. API to control [Playwright Tracing](https://playwright.dev/docs/trace-viewer) could be
+   * found [here](https://playwright.dev/docs/api/class-tracing).
    *
    * You can use [browser.startTracing([page, options])](https://playwright.dev/docs/api/class-browser#browser-start-tracing)
    * and [browser.stopTracing()](https://playwright.dev/docs/api/class-browser#browser-stop-tracing) to create a trace file
@@ -12999,8 +13108,8 @@ export interface Browser extends EventEmitter {
 
   /**
    * > NOTE: This API controls [Chromium Tracing](https://www.chromium.org/developers/how-tos/trace-event-profiling-tool)
-   * which is a low-level chromium-specific debugging tool. API to control [Playwright Tracing](../trace-viewer) could be
-   * found [here](https://playwright.dev/docs/class-tracing).
+   * which is a low-level chromium-specific debugging tool. API to control [Playwright Tracing](https://playwright.dev/docs/trace-viewer) could be
+   * found [here](https://playwright.dev/docs/api/class-tracing).
    *
    * Returns the buffer with trace data.
    */
@@ -13065,7 +13174,33 @@ export interface BrowserServer {
 
 /**
  * [ConsoleMessage] objects are dispatched by page via the
- * [page.on('console')](https://playwright.dev/docs/api/class-page#page-event-console) event.
+ * [page.on('console')](https://playwright.dev/docs/api/class-page#page-event-console) event. For each console messages
+ * logged in the page there will be corresponding event in the Playwright context.
+ *
+ * ```js
+ * // Listen for all console logs
+ * page.on('console', msg => console.log(msg.text()))
+ *
+ * // Listen for all console events and handle errors
+ * page.on('console', msg => {
+ *   if (msg.type() === 'error')
+ *     console.log(`Error text: "${msg.text()}"`);
+ * });
+ *
+ * // Get the next console log
+ * const [msg] = await Promise.all([
+ *   page.waitForEvent('console'),
+ *   // Issue console.log inside the page
+ *   page.evaluate(() => {
+ *     console.log('hello', 42, { foo: 'bar' });
+ *   }),
+ * ]);
+ *
+ * // Deconstruct console log arguments
+ * await msg.args[0].jsonValue() // hello
+ * await msg.args[1].jsonValue() // 42
+ * ```
+ *
  */
 export interface ConsoleMessage {
   /**
@@ -13449,7 +13584,7 @@ export interface Electron {
      * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
      * to `'light'`.
      */
-    colorScheme?: 'light'|'dark'|'no-preference';
+    colorScheme?: "light"|"dark"|"no-preference";
 
     /**
      * Current working directory to launch application from.
@@ -13737,7 +13872,7 @@ export interface FrameLocator {
   }): Locator;
 
   /**
-   * Returns locator to the n-th matching frame.
+   * Returns locator to the n-th matching frame. It's zero based, `nth(0)` selects the first frame.
    * @param index
    */
   nth(index: number): FrameLocator;
@@ -13925,7 +14060,7 @@ export interface Logger {
    * @param name logger name
    * @param severity
    */
-  isEnabled(name: string, severity: 'verbose'|'info'|'warning'|'error'): boolean;
+  isEnabled(name: string, severity: "verbose"|"info"|"warning"|"error"): boolean;
 
   /**
    * @param name logger name
@@ -13934,7 +14069,7 @@ export interface Logger {
    * @param args message arguments
    * @param hints optional formatting hints
    */
-  log(name: string, severity: 'verbose'|'info'|'warning'|'error', message: string|Error, args: Array<Object>, hints: {
+  log(name: string, severity: "verbose"|"info"|"warning"|"error", message: string|Error, args: Array<Object>, hints: {
     /**
      * Optional preferred logger color.
      */
@@ -13973,7 +14108,7 @@ export interface Mouse {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -14000,7 +14135,7 @@ export interface Mouse {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
@@ -14016,7 +14151,7 @@ export interface Mouse {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -14045,7 +14180,7 @@ export interface Mouse {
     /**
      * Defaults to `left`.
      */
-    button?: 'left'|'right'|'middle';
+    button?: "left"|"right"|"middle";
 
     /**
      * defaults to 1. See [UIEvent.detail].
@@ -14067,28 +14202,28 @@ export interface Mouse {
 /**
  * This object can be used to launch or connect to Chromium, returning instances of [Browser].
  */
-export const chromium: BrowserType
+export const chromium: BrowserType;
 
 /**
  * This object can be used to launch or connect to Firefox, returning instances of [Browser].
  */
-export const firefox: BrowserType
+export const firefox: BrowserType;
 
 /**
  * Exposes API that can be used for the Web API testing.
  */
-export const request: APIRequest
+export const request: APIRequest;
 
 /**
  * Selectors can be used to install custom selector engines. See [Working with selectors](https://playwright.dev/docs/selectors) for more
  * information.
  */
-export const selectors: Selectors
+export const selectors: Selectors;
 
 /**
  * This object can be used to launch or connect to WebKit, returning instances of [Browser].
  */
-export const webkit: BrowserType
+export const webkit: BrowserType;
 /**
  * Whenever the page sends a request for a network resource the following sequence of events are emitted by [Page]:
  * - [page.on('request')](https://playwright.dev/docs/api/class-page#page-event-request) emitted when the request is
@@ -14588,6 +14723,15 @@ export interface Route {
      * If set, equals to setting `Content-Type` response header.
      */
     contentType?: string;
+
+    /**
+     * Wheb set to "allow" or omitted, the fulfilled response will have
+     * ["Access-Control-Allow-Origin"](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin)
+     * header set to request's origin. If the option is set to "none" then
+     * [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) headers won't be added to the response. Note that all
+     * CORS headers configured via `headers` option will take precedence.
+     */
+    cors?: "allow"|"none";
 
     /**
      * Response headers. Header values will be converted to a string.
@@ -15091,7 +15235,7 @@ export interface BrowserContextOptions {
    * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
    * to `'light'`.
    */
-  colorScheme?: 'light'|'dark'|'no-preference';
+  colorScheme?: "light"|"dark"|"no-preference";
 
   /**
    * Specify device scale factor (can be thought of as dpr). Defaults to `1`.
@@ -15110,7 +15254,7 @@ export interface BrowserContextOptions {
    *
    * > NOTE: It's not supported in WebKit, see [here](https://bugs.webkit.org/show_bug.cgi?id=225281) in their issue tracker.
    */
-  forcedColors?: 'active'|'none';
+  forcedColors?: "active"|"none";
 
   geolocation?: Geolocation;
 
@@ -15245,7 +15389,7 @@ export interface BrowserContextOptions {
    * [page.emulateMedia([options])](https://playwright.dev/docs/api/class-page#page-emulate-media) for more details. Defaults
    * to `'no-preference'`.
    */
-  reducedMotion?: 'reduce'|'no-preference';
+  reducedMotion?: "reduce"|"no-preference";
 
   /**
    * Emulates consistent window screen size available inside web page via `window.screen`. Is only used when the `viewport`
@@ -15300,7 +15444,7 @@ export interface BrowserContextOptions {
       /**
        * sameSite flag
        */
-      sameSite: 'Strict'|'Lax'|'None';
+      sameSite: "Strict"|"Lax"|"None";
     }>;
 
     /**
@@ -15585,8 +15729,17 @@ export interface LocatorScreenshotOptions {
    * depending on their duration:
    * - finite animations are fast-forwarded to completion, so they'll fire `transitionend` event.
    * - infinite animations are canceled to initial state, and then played over after the screenshot.
+   *
+   * Defaults to `"allow"` that leaves animations untouched.
    */
-  animations?: 'disabled';
+  animations?: "disabled"|"allow";
+
+  /**
+   * When set to `"ready"`, screenshot will wait for
+   * [`document.fonts.ready`](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready) promise to resolve in all
+   * frames. Defaults to `"nowait"`.
+   */
+  fonts?: "ready"|"nowait";
 
   /**
    * Specify locators that should be masked when the screenshot is taken. Masked elements will be overlayed with a pink box
@@ -15613,6 +15766,13 @@ export interface LocatorScreenshotOptions {
   quality?: number;
 
   /**
+   * When set to `"css"`, screenshot will have a single pixel per each css pixel on the page. For high-dpi devices, this will
+   * keep screenshots small. Using `"device"` option will produce a single pixel per each device pixel, so screenhots of
+   * high-dpi devices will be twice as large or even larger. Defaults to `"device"`.
+   */
+  size?: "css"|"device";
+
+  /**
    * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
    * using the
    * [browserContext.setDefaultTimeout(timeout)](https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout)
@@ -15623,7 +15783,7 @@ export interface LocatorScreenshotOptions {
   /**
    * Specify screenshot type, defaults to `png`.
    */
-  type?: 'png'|'jpeg';
+  type?: "png"|"jpeg";
 }
 
 interface ElementHandleWaitForSelectorOptions {
@@ -15636,7 +15796,7 @@ interface ElementHandleWaitForSelectorOptions {
    * - `'hidden'` - wait for element to be either detached from DOM, or have an empty bounding box or `visibility:hidden`.
    *   This is opposite to the `'visible'` option.
    */
-  state?: 'attached'|'detached'|'visible'|'hidden';
+  state?: "attached"|"detached"|"visible"|"hidden";
 
   /**
    * When true, the call requires selector to resolve to a single element. If given selector resolves to more then one
@@ -15671,7 +15831,7 @@ export interface Cookie {
 
   secure: boolean;
 
-  sameSite: 'Strict'|'Lax'|'None';
+  sameSite: "Strict"|"Lax"|"None";
 }
 
 interface PageWaitForSelectorOptions {
@@ -15684,7 +15844,7 @@ interface PageWaitForSelectorOptions {
    * - `'hidden'` - wait for element to be either detached from DOM, or have an empty bounding box or `visibility:hidden`.
    *   This is opposite to the `'visible'` option.
    */
-  state?: 'attached'|'detached'|'visible'|'hidden';
+  state?: "attached"|"detached"|"visible"|"hidden";
 
   /**
    * When true, the call requires selector to resolve to a single element. If given selector resolves to more then one
@@ -15706,7 +15866,7 @@ interface PageWaitForFunctionOptions {
    * If `polling` is `'raf'`, then `pageFunction` is constantly executed in `requestAnimationFrame` callback. If `polling` is
    * a number, then it is treated as an interval in milliseconds at which the function would be executed. Defaults to `raf`.
    */
-  polling?: number|'raf';
+  polling?: number|"raf";
 
   /**
    * maximum time to wait for in milliseconds. Defaults to `30000` (30 seconds). Pass `0` to disable timeout. The default
@@ -15722,8 +15882,10 @@ export interface PageScreenshotOptions {
    * depending on their duration:
    * - finite animations are fast-forwarded to completion, so they'll fire `transitionend` event.
    * - infinite animations are canceled to initial state, and then played over after the screenshot.
+   *
+   * Defaults to `"allow"` that leaves animations untouched.
    */
-  animations?: 'disabled';
+  animations?: "disabled"|"allow";
 
   /**
    * An object which specifies clipping of the resulting image. Should have the following fields:
@@ -15749,6 +15911,13 @@ export interface PageScreenshotOptions {
      */
     height: number;
   };
+
+  /**
+   * When set to `"ready"`, screenshot will wait for
+   * [`document.fonts.ready`](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready) promise to resolve in all
+   * frames. Defaults to `"nowait"`.
+   */
+  fonts?: "ready"|"nowait";
 
   /**
    * When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Defaults to
@@ -15781,6 +15950,13 @@ export interface PageScreenshotOptions {
   quality?: number;
 
   /**
+   * When set to `"css"`, screenshot will have a single pixel per each css pixel on the page. For high-dpi devices, this will
+   * keep screenshots small. Using `"device"` option will produce a single pixel per each device pixel, so screenhots of
+   * high-dpi devices will be twice as large or even larger. Defaults to `"device"`.
+   */
+  size?: "css"|"device";
+
+  /**
    * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
    * using the
    * [browserContext.setDefaultTimeout(timeout)](https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout)
@@ -15791,125 +15967,125 @@ export interface PageScreenshotOptions {
   /**
    * Specify screenshot type, defaults to `png`.
    */
-  type?: 'png'|'jpeg';
+  type?: "png"|"jpeg";
 }
 
 type Devices = {
-  'Blackberry PlayBook': DeviceDescriptor;
-  'Blackberry PlayBook landscape': DeviceDescriptor;
-  'BlackBerry Z30': DeviceDescriptor;
-  'BlackBerry Z30 landscape': DeviceDescriptor;
-  'Galaxy Note 3': DeviceDescriptor;
-  'Galaxy Note 3 landscape': DeviceDescriptor;
-  'Galaxy Note II': DeviceDescriptor;
-  'Galaxy Note II landscape': DeviceDescriptor;
-  'Galaxy S III': DeviceDescriptor;
-  'Galaxy S III landscape': DeviceDescriptor;
-  'Galaxy S5': DeviceDescriptor;
-  'Galaxy S5 landscape': DeviceDescriptor;
-  'Galaxy S8': DeviceDescriptor;
-  'Galaxy S8 landscape': DeviceDescriptor;
-  'Galaxy S9+': DeviceDescriptor;
-  'Galaxy S9+ landscape': DeviceDescriptor;
-  'Galaxy Tab S4': DeviceDescriptor;
-  'Galaxy Tab S4 landscape': DeviceDescriptor;
-  'iPad (gen 6)': DeviceDescriptor;
-  'iPad (gen 6) landscape': DeviceDescriptor;
-  'iPad (gen 7)': DeviceDescriptor;
-  'iPad (gen 7) landscape': DeviceDescriptor;
-  'iPad Mini': DeviceDescriptor;
-  'iPad Mini landscape': DeviceDescriptor;
-  'iPad Pro 11': DeviceDescriptor;
-  'iPad Pro 11 landscape': DeviceDescriptor;
-  'iPhone 6': DeviceDescriptor;
-  'iPhone 6 landscape': DeviceDescriptor;
-  'iPhone 6 Plus': DeviceDescriptor;
-  'iPhone 6 Plus landscape': DeviceDescriptor;
-  'iPhone 7': DeviceDescriptor;
-  'iPhone 7 landscape': DeviceDescriptor;
-  'iPhone 7 Plus': DeviceDescriptor;
-  'iPhone 7 Plus landscape': DeviceDescriptor;
-  'iPhone 8': DeviceDescriptor;
-  'iPhone 8 landscape': DeviceDescriptor;
-  'iPhone 8 Plus': DeviceDescriptor;
-  'iPhone 8 Plus landscape': DeviceDescriptor;
-  'iPhone SE': DeviceDescriptor;
-  'iPhone SE landscape': DeviceDescriptor;
-  'iPhone X': DeviceDescriptor;
-  'iPhone X landscape': DeviceDescriptor;
-  'iPhone XR': DeviceDescriptor;
-  'iPhone XR landscape': DeviceDescriptor;
-  'iPhone 11': DeviceDescriptor;
-  'iPhone 11 landscape': DeviceDescriptor;
-  'iPhone 11 Pro': DeviceDescriptor;
-  'iPhone 11 Pro landscape': DeviceDescriptor;
-  'iPhone 11 Pro Max': DeviceDescriptor;
-  'iPhone 11 Pro Max landscape': DeviceDescriptor;
-  'iPhone 12': DeviceDescriptor;
-  'iPhone 12 landscape': DeviceDescriptor;
-  'iPhone 12 Pro': DeviceDescriptor;
-  'iPhone 12 Pro landscape': DeviceDescriptor;
-  'iPhone 12 Pro Max': DeviceDescriptor;
-  'iPhone 12 Pro Max landscape': DeviceDescriptor;
-  'iPhone 12 Mini': DeviceDescriptor;
-  'iPhone 12 Mini landscape': DeviceDescriptor;
-  'iPhone 13': DeviceDescriptor;
-  'iPhone 13 landscape': DeviceDescriptor;
-  'iPhone 13 Pro': DeviceDescriptor;
-  'iPhone 13 Pro landscape': DeviceDescriptor;
-  'iPhone 13 Pro Max': DeviceDescriptor;
-  'iPhone 13 Pro Max landscape': DeviceDescriptor;
-  'iPhone 13 Mini': DeviceDescriptor;
-  'iPhone 13 Mini landscape': DeviceDescriptor;
-  'JioPhone 2': DeviceDescriptor;
-  'JioPhone 2 landscape': DeviceDescriptor;
-  'Kindle Fire HDX': DeviceDescriptor;
-  'Kindle Fire HDX landscape': DeviceDescriptor;
-  'LG Optimus L70': DeviceDescriptor;
-  'LG Optimus L70 landscape': DeviceDescriptor;
-  'Microsoft Lumia 550': DeviceDescriptor;
-  'Microsoft Lumia 550 landscape': DeviceDescriptor;
-  'Microsoft Lumia 950': DeviceDescriptor;
-  'Microsoft Lumia 950 landscape': DeviceDescriptor;
-  'Nexus 10': DeviceDescriptor;
-  'Nexus 10 landscape': DeviceDescriptor;
-  'Nexus 4': DeviceDescriptor;
-  'Nexus 4 landscape': DeviceDescriptor;
-  'Nexus 5': DeviceDescriptor;
-  'Nexus 5 landscape': DeviceDescriptor;
-  'Nexus 5X': DeviceDescriptor;
-  'Nexus 5X landscape': DeviceDescriptor;
-  'Nexus 6': DeviceDescriptor;
-  'Nexus 6 landscape': DeviceDescriptor;
-  'Nexus 6P': DeviceDescriptor;
-  'Nexus 6P landscape': DeviceDescriptor;
-  'Nexus 7': DeviceDescriptor;
-  'Nexus 7 landscape': DeviceDescriptor;
-  'Nokia Lumia 520': DeviceDescriptor;
-  'Nokia Lumia 520 landscape': DeviceDescriptor;
-  'Nokia N9': DeviceDescriptor;
-  'Nokia N9 landscape': DeviceDescriptor;
-  'Pixel 2': DeviceDescriptor;
-  'Pixel 2 landscape': DeviceDescriptor;
-  'Pixel 2 XL': DeviceDescriptor;
-  'Pixel 2 XL landscape': DeviceDescriptor;
-  'Pixel 3': DeviceDescriptor;
-  'Pixel 3 landscape': DeviceDescriptor;
-  'Pixel 4': DeviceDescriptor;
-  'Pixel 4 landscape': DeviceDescriptor;
-  'Pixel 4a (5G)': DeviceDescriptor;
-  'Pixel 4a (5G) landscape': DeviceDescriptor;
-  'Pixel 5': DeviceDescriptor;
-  'Pixel 5 landscape': DeviceDescriptor;
-  'Moto G4': DeviceDescriptor;
-  'Moto G4 landscape': DeviceDescriptor;
-  'Desktop Chrome HiDPI': DeviceDescriptor;
-  'Desktop Edge HiDPI': DeviceDescriptor;
-  'Desktop Firefox HiDPI': DeviceDescriptor;
-  'Desktop Safari': DeviceDescriptor;
-  'Desktop Chrome': DeviceDescriptor;
-  'Desktop Edge': DeviceDescriptor;
-  'Desktop Firefox': DeviceDescriptor;
+  "Blackberry PlayBook": DeviceDescriptor;
+  "Blackberry PlayBook landscape": DeviceDescriptor;
+  "BlackBerry Z30": DeviceDescriptor;
+  "BlackBerry Z30 landscape": DeviceDescriptor;
+  "Galaxy Note 3": DeviceDescriptor;
+  "Galaxy Note 3 landscape": DeviceDescriptor;
+  "Galaxy Note II": DeviceDescriptor;
+  "Galaxy Note II landscape": DeviceDescriptor;
+  "Galaxy S III": DeviceDescriptor;
+  "Galaxy S III landscape": DeviceDescriptor;
+  "Galaxy S5": DeviceDescriptor;
+  "Galaxy S5 landscape": DeviceDescriptor;
+  "Galaxy S8": DeviceDescriptor;
+  "Galaxy S8 landscape": DeviceDescriptor;
+  "Galaxy S9+": DeviceDescriptor;
+  "Galaxy S9+ landscape": DeviceDescriptor;
+  "Galaxy Tab S4": DeviceDescriptor;
+  "Galaxy Tab S4 landscape": DeviceDescriptor;
+  "iPad (gen 6)": DeviceDescriptor;
+  "iPad (gen 6) landscape": DeviceDescriptor;
+  "iPad (gen 7)": DeviceDescriptor;
+  "iPad (gen 7) landscape": DeviceDescriptor;
+  "iPad Mini": DeviceDescriptor;
+  "iPad Mini landscape": DeviceDescriptor;
+  "iPad Pro 11": DeviceDescriptor;
+  "iPad Pro 11 landscape": DeviceDescriptor;
+  "iPhone 6": DeviceDescriptor;
+  "iPhone 6 landscape": DeviceDescriptor;
+  "iPhone 6 Plus": DeviceDescriptor;
+  "iPhone 6 Plus landscape": DeviceDescriptor;
+  "iPhone 7": DeviceDescriptor;
+  "iPhone 7 landscape": DeviceDescriptor;
+  "iPhone 7 Plus": DeviceDescriptor;
+  "iPhone 7 Plus landscape": DeviceDescriptor;
+  "iPhone 8": DeviceDescriptor;
+  "iPhone 8 landscape": DeviceDescriptor;
+  "iPhone 8 Plus": DeviceDescriptor;
+  "iPhone 8 Plus landscape": DeviceDescriptor;
+  "iPhone SE": DeviceDescriptor;
+  "iPhone SE landscape": DeviceDescriptor;
+  "iPhone X": DeviceDescriptor;
+  "iPhone X landscape": DeviceDescriptor;
+  "iPhone XR": DeviceDescriptor;
+  "iPhone XR landscape": DeviceDescriptor;
+  "iPhone 11": DeviceDescriptor;
+  "iPhone 11 landscape": DeviceDescriptor;
+  "iPhone 11 Pro": DeviceDescriptor;
+  "iPhone 11 Pro landscape": DeviceDescriptor;
+  "iPhone 11 Pro Max": DeviceDescriptor;
+  "iPhone 11 Pro Max landscape": DeviceDescriptor;
+  "iPhone 12": DeviceDescriptor;
+  "iPhone 12 landscape": DeviceDescriptor;
+  "iPhone 12 Pro": DeviceDescriptor;
+  "iPhone 12 Pro landscape": DeviceDescriptor;
+  "iPhone 12 Pro Max": DeviceDescriptor;
+  "iPhone 12 Pro Max landscape": DeviceDescriptor;
+  "iPhone 12 Mini": DeviceDescriptor;
+  "iPhone 12 Mini landscape": DeviceDescriptor;
+  "iPhone 13": DeviceDescriptor;
+  "iPhone 13 landscape": DeviceDescriptor;
+  "iPhone 13 Pro": DeviceDescriptor;
+  "iPhone 13 Pro landscape": DeviceDescriptor;
+  "iPhone 13 Pro Max": DeviceDescriptor;
+  "iPhone 13 Pro Max landscape": DeviceDescriptor;
+  "iPhone 13 Mini": DeviceDescriptor;
+  "iPhone 13 Mini landscape": DeviceDescriptor;
+  "JioPhone 2": DeviceDescriptor;
+  "JioPhone 2 landscape": DeviceDescriptor;
+  "Kindle Fire HDX": DeviceDescriptor;
+  "Kindle Fire HDX landscape": DeviceDescriptor;
+  "LG Optimus L70": DeviceDescriptor;
+  "LG Optimus L70 landscape": DeviceDescriptor;
+  "Microsoft Lumia 550": DeviceDescriptor;
+  "Microsoft Lumia 550 landscape": DeviceDescriptor;
+  "Microsoft Lumia 950": DeviceDescriptor;
+  "Microsoft Lumia 950 landscape": DeviceDescriptor;
+  "Nexus 10": DeviceDescriptor;
+  "Nexus 10 landscape": DeviceDescriptor;
+  "Nexus 4": DeviceDescriptor;
+  "Nexus 4 landscape": DeviceDescriptor;
+  "Nexus 5": DeviceDescriptor;
+  "Nexus 5 landscape": DeviceDescriptor;
+  "Nexus 5X": DeviceDescriptor;
+  "Nexus 5X landscape": DeviceDescriptor;
+  "Nexus 6": DeviceDescriptor;
+  "Nexus 6 landscape": DeviceDescriptor;
+  "Nexus 6P": DeviceDescriptor;
+  "Nexus 6P landscape": DeviceDescriptor;
+  "Nexus 7": DeviceDescriptor;
+  "Nexus 7 landscape": DeviceDescriptor;
+  "Nokia Lumia 520": DeviceDescriptor;
+  "Nokia Lumia 520 landscape": DeviceDescriptor;
+  "Nokia N9": DeviceDescriptor;
+  "Nokia N9 landscape": DeviceDescriptor;
+  "Pixel 2": DeviceDescriptor;
+  "Pixel 2 landscape": DeviceDescriptor;
+  "Pixel 2 XL": DeviceDescriptor;
+  "Pixel 2 XL landscape": DeviceDescriptor;
+  "Pixel 3": DeviceDescriptor;
+  "Pixel 3 landscape": DeviceDescriptor;
+  "Pixel 4": DeviceDescriptor;
+  "Pixel 4 landscape": DeviceDescriptor;
+  "Pixel 4a (5G)": DeviceDescriptor;
+  "Pixel 4a (5G) landscape": DeviceDescriptor;
+  "Pixel 5": DeviceDescriptor;
+  "Pixel 5 landscape": DeviceDescriptor;
+  "Moto G4": DeviceDescriptor;
+  "Moto G4 landscape": DeviceDescriptor;
+  "Desktop Chrome HiDPI": DeviceDescriptor;
+  "Desktop Edge HiDPI": DeviceDescriptor;
+  "Desktop Firefox HiDPI": DeviceDescriptor;
+  "Desktop Safari": DeviceDescriptor;
+  "Desktop Chrome": DeviceDescriptor;
+  "Desktop Edge": DeviceDescriptor;
+  "Desktop Firefox": DeviceDescriptor;
   [key: string]: DeviceDescriptor;
 }
 

@@ -70,7 +70,7 @@ export async function live(url: string, opts: any) {
     executablePath: opts.executablePath
   }
   const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)
-  const { context, launchOptions, contextOptions } = await launchContext.launch(url)
+  const { browser, context, launchOptions, contextOptions } = await launchContext.launch(url)
 
   launchOptions.executablePath = options.executablePath
   await context._enableRecorder({
@@ -82,14 +82,14 @@ export async function live(url: string, opts: any) {
     startRecording: true,
     outputFile: undefined,
   })
-  if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
   const script = await new Promise((resolve) => {
     process.on('message', (msg: any) => {
       if (msg.type === 'live_finished') resolve(msg.script)
     })
   })
   console.log('脚本', script)
-  context.close()
+  await context.close()
+  await browser.close()
   return script
 }
 

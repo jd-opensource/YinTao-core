@@ -30,6 +30,7 @@ export type InitializerTraits<T> =
     T extends ElectronApplicationChannel ? ElectronApplicationInitializer :
     T extends ElectronChannel ? ElectronInitializer :
     T extends CDPSessionChannel ? CDPSessionInitializer :
+    T extends WritableStreamChannel ? WritableStreamInitializer :
     T extends StreamChannel ? StreamInitializer :
     T extends ArtifactChannel ? ArtifactInitializer :
     T extends TracingChannel ? TracingInitializer :
@@ -66,6 +67,7 @@ export type EventsTraits<T> =
     T extends ElectronApplicationChannel ? ElectronApplicationEvents :
     T extends ElectronChannel ? ElectronEvents :
     T extends CDPSessionChannel ? CDPSessionEvents :
+    T extends WritableStreamChannel ? WritableStreamEvents :
     T extends StreamChannel ? StreamEvents :
     T extends ArtifactChannel ? ArtifactEvents :
     T extends TracingChannel ? TracingEvents :
@@ -102,6 +104,7 @@ export type EventTargetTraits<T> =
     T extends ElectronApplicationChannel ? ElectronApplicationEventTarget :
     T extends ElectronChannel ? ElectronEventTarget :
     T extends CDPSessionChannel ? CDPSessionEventTarget :
+    T extends WritableStreamChannel ? WritableStreamEventTarget :
     T extends StreamChannel ? StreamEventTarget :
     T extends ArtifactChannel ? ArtifactEventTarget :
     T extends TracingChannel ? TracingEventTarget :
@@ -1072,6 +1075,7 @@ export interface BrowserContextChannel extends BrowserContextEventTarget, EventT
   recorderSupplementEnable(params: BrowserContextRecorderSupplementEnableParams, metadata?: Metadata): Promise<BrowserContextRecorderSupplementEnableResult>;
   newCDPSession(params: BrowserContextNewCDPSessionParams, metadata?: Metadata): Promise<BrowserContextNewCDPSessionResult>;
   harExport(params?: BrowserContextHarExportParams, metadata?: Metadata): Promise<BrowserContextHarExportResult>;
+  createTempFile(params: BrowserContextCreateTempFileParams, metadata?: Metadata): Promise<BrowserContextCreateTempFileResult>;
 }
 export type BrowserContextBindingCallEvent = {
   binding: BindingCallChannel,
@@ -1274,6 +1278,15 @@ export type BrowserContextHarExportParams = {};
 export type BrowserContextHarExportOptions = {};
 export type BrowserContextHarExportResult = {
   artifact: ArtifactChannel,
+};
+export type BrowserContextCreateTempFileParams = {
+  name: string,
+};
+export type BrowserContextCreateTempFileOptions = {
+
+};
+export type BrowserContextCreateTempFileResult = {
+  writableStream: WritableStreamChannel,
 };
 
 export interface BrowserContextEvents {
@@ -1501,10 +1514,12 @@ export type PageExpectScreenshotParams = {
     threshold?: number,
   },
   screenshotOptions?: {
-    omitBackground?: boolean,
     fullPage?: boolean,
-    animations?: 'disabled',
     clip?: Rect,
+    omitBackground?: boolean,
+    animations?: 'disabled' | 'allow',
+    size?: 'css' | 'device',
+    fonts?: 'ready' | 'nowait',
     mask?: {
       frame: FrameChannel,
       selector: string,
@@ -1524,10 +1539,12 @@ export type PageExpectScreenshotOptions = {
     threshold?: number,
   },
   screenshotOptions?: {
-    omitBackground?: boolean,
     fullPage?: boolean,
-    animations?: 'disabled',
     clip?: Rect,
+    omitBackground?: boolean,
+    animations?: 'disabled' | 'allow',
+    size?: 'css' | 'device',
+    fonts?: 'ready' | 'nowait',
     mask?: {
       frame: FrameChannel,
       selector: string,
@@ -1545,10 +1562,12 @@ export type PageScreenshotParams = {
   timeout?: number,
   type?: 'png' | 'jpeg',
   quality?: number,
-  omitBackground?: boolean,
   fullPage?: boolean,
-  animations?: 'disabled',
   clip?: Rect,
+  omitBackground?: boolean,
+  animations?: 'disabled' | 'allow',
+  size?: 'css' | 'device',
+  fonts?: 'ready' | 'nowait',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -1558,10 +1577,12 @@ export type PageScreenshotOptions = {
   timeout?: number,
   type?: 'png' | 'jpeg',
   quality?: number,
-  omitBackground?: boolean,
   fullPage?: boolean,
-  animations?: 'disabled',
   clip?: Rect,
+  omitBackground?: boolean,
+  animations?: 'disabled' | 'allow',
+  size?: 'css' | 'device',
+  fonts?: 'ready' | 'nowait',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -1856,6 +1877,7 @@ export interface FrameChannel extends FrameEventTarget, Channel {
   selectOption(params: FrameSelectOptionParams, metadata?: Metadata): Promise<FrameSelectOptionResult>;
   setContent(params: FrameSetContentParams, metadata?: Metadata): Promise<FrameSetContentResult>;
   setInputFiles(params: FrameSetInputFilesParams, metadata?: Metadata): Promise<FrameSetInputFilesResult>;
+  setInputFilePaths(params: FrameSetInputFilePathsParams, metadata?: Metadata): Promise<FrameSetInputFilePathsResult>;
   tap(params: FrameTapParams, metadata?: Metadata): Promise<FrameTapResult>;
   textContent(params: FrameTextContentParams, metadata?: Metadata): Promise<FrameTextContentResult>;
   title(params?: FrameTitleParams, metadata?: Metadata): Promise<FrameTitleResult>;
@@ -2340,6 +2362,22 @@ export type FrameSetInputFilesOptions = {
   noWaitAfter?: boolean,
 };
 export type FrameSetInputFilesResult = void;
+export type FrameSetInputFilePathsParams = {
+  selector: string,
+  strict?: boolean,
+  localPaths?: string[],
+  streams?: WritableStreamChannel[],
+  timeout?: number,
+  noWaitAfter?: boolean,
+};
+export type FrameSetInputFilePathsOptions = {
+  strict?: boolean,
+  localPaths?: string[],
+  streams?: WritableStreamChannel[],
+  timeout?: number,
+  noWaitAfter?: boolean,
+};
+export type FrameSetInputFilePathsResult = void;
 export type FrameTapParams = {
   selector: string,
   strict?: boolean,
@@ -2625,6 +2663,7 @@ export interface ElementHandleChannel extends ElementHandleEventTarget, JSHandle
   selectOption(params: ElementHandleSelectOptionParams, metadata?: Metadata): Promise<ElementHandleSelectOptionResult>;
   selectText(params: ElementHandleSelectTextParams, metadata?: Metadata): Promise<ElementHandleSelectTextResult>;
   setInputFiles(params: ElementHandleSetInputFilesParams, metadata?: Metadata): Promise<ElementHandleSetInputFilesResult>;
+  setInputFilePaths(params: ElementHandleSetInputFilePathsParams, metadata?: Metadata): Promise<ElementHandleSetInputFilePathsResult>;
   tap(params: ElementHandleTapParams, metadata?: Metadata): Promise<ElementHandleTapResult>;
   textContent(params?: ElementHandleTextContentParams, metadata?: Metadata): Promise<ElementHandleTextContentResult>;
   type(params: ElementHandleTypeParams, metadata?: Metadata): Promise<ElementHandleTypeResult>;
@@ -2860,7 +2899,9 @@ export type ElementHandleScreenshotParams = {
   type?: 'png' | 'jpeg',
   quality?: number,
   omitBackground?: boolean,
-  animations?: 'disabled',
+  animations?: 'disabled' | 'allow',
+  size?: 'css' | 'device',
+  fonts?: 'ready' | 'nowait',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -2871,7 +2912,9 @@ export type ElementHandleScreenshotOptions = {
   type?: 'png' | 'jpeg',
   quality?: number,
   omitBackground?: boolean,
-  animations?: 'disabled',
+  animations?: 'disabled' | 'allow',
+  size?: 'css' | 'device',
+  fonts?: 'ready' | 'nowait',
   mask?: {
     frame: FrameChannel,
     selector: string,
@@ -2935,6 +2978,19 @@ export type ElementHandleSetInputFilesOptions = {
   noWaitAfter?: boolean,
 };
 export type ElementHandleSetInputFilesResult = void;
+export type ElementHandleSetInputFilePathsParams = {
+  localPaths?: string[],
+  streams?: WritableStreamChannel[],
+  timeout?: number,
+  noWaitAfter?: boolean,
+};
+export type ElementHandleSetInputFilePathsOptions = {
+  localPaths?: string[],
+  streams?: WritableStreamChannel[],
+  timeout?: number,
+  noWaitAfter?: boolean,
+};
+export type ElementHandleSetInputFilePathsResult = void;
 export type ElementHandleTapParams = {
   force?: boolean,
   noWaitAfter?: boolean,
@@ -3077,6 +3133,7 @@ export type RouteContinueResult = void;
 export type RouteFulfillParams = {
   status?: number,
   headers?: NameValue[],
+  cors?: 'allow' | 'none',
   body?: string,
   isBase64?: boolean,
   fetchResponseUid?: string,
@@ -3084,6 +3141,7 @@ export type RouteFulfillParams = {
 export type RouteFulfillOptions = {
   status?: number,
   headers?: NameValue[],
+  cors?: 'allow' | 'none',
   body?: string,
   isBase64?: boolean,
   fetchResponseUid?: string,
@@ -3411,6 +3469,29 @@ export type StreamCloseOptions = {};
 export type StreamCloseResult = void;
 
 export interface StreamEvents {
+}
+
+// ----------- WritableStream -----------
+export type WritableStreamInitializer = {};
+export interface WritableStreamEventTarget {
+}
+export interface WritableStreamChannel extends WritableStreamEventTarget, Channel {
+  _type_WritableStream: boolean;
+  write(params: WritableStreamWriteParams, metadata?: Metadata): Promise<WritableStreamWriteResult>;
+  close(params?: WritableStreamCloseParams, metadata?: Metadata): Promise<WritableStreamCloseResult>;
+}
+export type WritableStreamWriteParams = {
+  binary: Binary,
+};
+export type WritableStreamWriteOptions = {
+
+};
+export type WritableStreamWriteResult = void;
+export type WritableStreamCloseParams = {};
+export type WritableStreamCloseOptions = {};
+export type WritableStreamCloseResult = void;
+
+export interface WritableStreamEvents {
 }
 
 // ----------- CDPSession -----------
@@ -4156,6 +4237,7 @@ export const commandsWithTracingSnapshots = new Set([
   'Frame.selectOption',
   'Frame.setContent',
   'Frame.setInputFiles',
+  'Frame.setInputFilePaths',
   'Frame.tap',
   'Frame.textContent',
   'Frame.type',
@@ -4191,13 +4273,14 @@ export const commandsWithTracingSnapshots = new Set([
   'ElementHandle.selectOption',
   'ElementHandle.selectText',
   'ElementHandle.setInputFiles',
+  'ElementHandle.setInputFilePaths',
   'ElementHandle.tap',
   'ElementHandle.textContent',
   'ElementHandle.type',
   'ElementHandle.uncheck',
   'ElementHandle.waitForElementState',
-  'ElementHandle.waitForSelector',
-])
+  'ElementHandle.waitForSelector'
+]);
 
 export const pausesBeforeInputActions = new Set([
   'Frame.check',
@@ -4209,6 +4292,7 @@ export const pausesBeforeInputActions = new Set([
   'Frame.press',
   'Frame.selectOption',
   'Frame.setInputFiles',
+  'Frame.setInputFilePaths',
   'Frame.tap',
   'Frame.type',
   'Frame.uncheck',
@@ -4220,7 +4304,8 @@ export const pausesBeforeInputActions = new Set([
   'ElementHandle.press',
   'ElementHandle.selectOption',
   'ElementHandle.setInputFiles',
+  'ElementHandle.setInputFilePaths',
   'ElementHandle.tap',
   'ElementHandle.type',
-  'ElementHandle.uncheck',
-])
+  'ElementHandle.uncheck'
+]);

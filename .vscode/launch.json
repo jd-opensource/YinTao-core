@@ -69,7 +69,7 @@
                 "<node_internals>/**"
             ],
             "program": "lib//index.js",
-            "args": [ "install","firefox"],
+            "args": [ "install","chromium"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

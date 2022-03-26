@@ -14,28 +14,34 @@
  * limitations under the License.
  */
 
-import { Point, StackFrame, SerializedError } from './channels'
+ import { Point, StackFrame, SerializedError } from './channels';
 
-export type CallMetadata = {
-  id: string;
-  wallTime: number;
-  startTime: number;
-  endTime: number;
-  pauseStartTime?: number;
-  pauseEndTime?: number;
-  type: string;
-  method: string;
-  params: any;
-  apiName?: string;
-  internal?: boolean;
-  stack?: StackFrame[];
-  log: string[];
-  afterSnapshot?: string;
-  snapshots: { title: string, snapshotName: string }[];
-  error?: SerializedError;
-  result?: any;
-  point?: Point;
-  objectId?: string;
-  pageId?: string;
-  frameId?: string;
-};
+ export type CallMetadata = {
+   id: string;
+   wallTime: number;
+   startTime: number;
+   endTime: number;
+   pauseStartTime?: number;
+   pauseEndTime?: number;
+   type: string;
+   method: string;
+   params: any;
+   apiName?: string;
+   // Client is making an internal call that should not show up in
+   // the inspector or trace.
+   internal?: boolean;
+   // Service-side is making a call to itself, this metadata does not go
+   // through the dispatcher, so is always excluded from inspector / tracing.
+   isServerSide?: boolean;
+   stack?: StackFrame[];
+   log: string[];
+   afterSnapshot?: string;
+   snapshots: { title: string, snapshotName: string }[];
+   error?: SerializedError;
+   result?: any;
+   point?: Point;
+   objectId?: string;
+   pageId?: string;
+   frameId?: string;
+ };
+ 

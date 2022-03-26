@@ -25,7 +25,7 @@ import { tOptional } from '../protocol/validatorPrimitives'
 import { kBrowserOrContextClosedError } from '../utils/errors'
 import { CallMetadata, SdkObject } from '../server/instrumentation'
 import { rewriteErrorMessage } from '../utils/stackTrace'
-import type PlaywrightDispatcher from './playwrightDispatcher'
+import type { PlaywrightDispatcher } from './playwrightDispatcher'
 
 export const dispatcherSymbol = Symbol('dispatcher')
 

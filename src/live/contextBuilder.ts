@@ -31,12 +31,14 @@ export class LaunchContext {
     private _executablePath?: string
     private _persistent: boolean = false
     private _browserClosed: boolean = false
+    private _statePath:string
 
     constructor(options: Options, headless: boolean, executablePath?: string, persistent: boolean = false) {
         this._options = options
         this._headless = headless
         this._executablePath = executablePath
         this._persistent = persistent
+        this._statePath = path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json')
     }
     async launch(url: string | undefined) {
         const browserType = this._lookupBrowserType()
@@ -44,19 +46,11 @@ export class LaunchContext {
         const contextOptions = this._buildContextOptions()
 
         let context: BrowserContext
-        let browser: Browser | any = undefined
-        if (this._persistent) {
-            // 默认的持久化地址
-            const persistentPath = path.resolve(os.tmpdir(), 'cherryDfSession')
-            context = await browserType.launchPersistentContext(persistentPath, {
-                headless: false,
-                ...launchOptions
-            })
-            // await context.pages()[0].close() // 持久化总是保持一个多余的页面
-        } else {
-            browser = await browserType.launch(launchOptions) // Viewport size
-            context = await browser.newContext(contextOptions)
-        }
+        const browser = await browserType.launch(launchOptions) // Viewport size
+        if (this._persistent && fs.existsSync(this._statePath) !== false) {
+            contextOptions.storageState = this._statePath
+        } 
+        context = await browser.newContext(contextOptions)
         //监听关闭事件
         this._bindEvent(context, browser)
         //打开新页面
@@ -66,6 +60,7 @@ export class LaunchContext {
         delete contextOptions.deviceScaleFactor
         return {
             browserName: browserType.name(),
+            browser,
             context,
             contextOptions,
             launchOptions,
@@ -73,10 +68,17 @@ export class LaunchContext {
         }
     }
     _bindEvent(context: BrowserContext, browser: Browser) {
-        context.on('page', (page) => {
+        const _this = this
+        context.on('page', async (page) => {
+            if (_this._persistent) { // update auth
+                // 后期调整 respost
+                console.log('update auth')
+                await context.storageState({ path: _this._statePath });
+            }
             page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
             page.on('close', async () => {
-                const hasPage = this._persistent ? context.pages().length > 0 : browser.contexts().some(context => context.pages().length > 0)
+                console.log('page close',context.pages())
+                const hasPage = browser.contexts().some(context => context.pages().length > 0);
                 if (hasPage) return // Avoid the error when the last page is closed because the browser has been closed.
                 await this._closeBrowser(context, browser).catch(e => console.log(e))
             })
@@ -159,7 +161,7 @@ export class LaunchContext {
 
         return contextOptions
     }
-    async _closeBrowser(context: BrowserContext, browser: Browser) {
+    async _closeBrowser(context: BrowserContext, browser?: Browser) {
         // We can come here multiple times. For example, saving storage creates
         // a temporary page and we call closeBrowser again when that page closes.
         if (this._browserClosed) return
@@ -175,9 +177,10 @@ export class LaunchContext {
             }).catch((e) => null)
         }
         if (this._persistent) {
+            console.log('_persistent',context.pages())
             await context.close()
         } else {
-            await browser.close()
+            await browser?.close()
         }
     }
 

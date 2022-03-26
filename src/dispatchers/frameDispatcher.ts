@@ -23,6 +23,7 @@ import { ElementHandleDispatcher } from './elementHandlerDispatcher'
 import { parseArgument, serializeResult } from './jsHandleDispatcher'
 import { ResponseDispatcher, RequestDispatcher } from './networkDispatchers'
 import { CallMetadata } from '../server/instrumentation'
+import { WritableStreamDispatcher } from './writableStreamDispatcher';
 
 export const _a = 0
 export class FrameDispatcher extends Dispatcher<Frame, channels.FrameChannel> implements channels.FrameChannel {
@@ -201,8 +202,18 @@ export class FrameDispatcher extends Dispatcher<Frame, channels.FrameChannel> im
     return { values: await this._frame.selectOption(metadata, params.selector, elements, params.options || [], params) }
   }
 
-  async setInputFiles(params: channels.FrameSetInputFilesParams, metadata: CallMetadata): Promise<void> {
-    return await this._frame.setInputFiles(metadata, params.selector, params.files, params)
+  async setInputFiles(params: channels.FrameSetInputFilesParams, metadata: CallMetadata): Promise<channels.FrameSetInputFilesResult> {
+    return await this._frame.setInputFiles(metadata, params.selector, { files: params.files }, params);
+  }
+
+  async setInputFilePaths(params: channels.FrameSetInputFilePathsParams, metadata: CallMetadata): Promise<void> {
+    let { localPaths } = params;
+    if (!localPaths) {
+      if (!params.streams)
+        throw new Error('Neither localPaths nor streams is specified');
+      localPaths = params.streams.map(c => (c as WritableStreamDispatcher).path());
+    }
+    return await this._frame.setInputFiles(metadata, params.selector, { localPaths }, params);
   }
 
   async type(params: channels.FrameTypeParams, metadata: CallMetadata): Promise<void> {

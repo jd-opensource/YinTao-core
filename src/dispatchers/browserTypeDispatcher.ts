@@ -43,19 +43,19 @@ export class BrowserTypeDispatcher extends Dispatcher<BrowserType, channels.Brow
   }
 
   async launchPersistentContext(params: channels.BrowserTypeLaunchPersistentContextParams, metadata: CallMetadata): Promise<channels.BrowserTypeLaunchPersistentContextResult> {
-    const browserContext = await this._object.launchPersistentContext(metadata, params.userDataDir, params)
-    return { context: new BrowserContextDispatcher(this._scope, browserContext) }
+    const browserContext = await this._object.launchPersistentContext(metadata, params.userDataDir, params);
+    return { context: new BrowserContextDispatcher(this._scope, browserContext) };
   }
 
   async connectOverCDP(params: channels.BrowserTypeConnectOverCDPParams, metadata: CallMetadata): Promise<channels.BrowserTypeConnectOverCDPResult> {
-    const browser = await this._object.connectOverCDP(metadata, params.endpointURL, params, params.timeout)
-    const browserDispatcher = new BrowserDispatcher(this._scope, browser)
+    const browser = await this._object.connectOverCDP(metadata, params.endpointURL, params, params.timeout);
+    const browserDispatcher = new BrowserDispatcher(this._scope, browser);
     return {
       browser: browserDispatcher,
       defaultContext: browser._defaultContext ? new BrowserContextDispatcher(browserDispatcher._scope, browser._defaultContext) : undefined,
-    }
+    };
   }
-
+  
   async connect(params: channels.BrowserTypeConnectParams, metadata: CallMetadata): Promise<channels.BrowserTypeConnectResult> {
     const controller = new ProgressController(metadata, this._object)
     controller.setLogName('browser')

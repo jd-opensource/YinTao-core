@@ -30,7 +30,7 @@ import { SelectorsDispatcher } from './selectorsDispatcher'
 import { ConnectedBrowserDispatcher } from './browserDispatcher'
 import { createGuid } from '../utils/utils'
 
-export default class PlaywrightDispatcher extends Dispatcher<Playwright, channels.PlaywrightChannel> implements channels.PlaywrightChannel {
+export class PlaywrightDispatcher extends Dispatcher<Playwright, channels.PlaywrightChannel> implements channels.PlaywrightChannel {
   _type_Playwright
   private _browserDispatcher: ConnectedBrowserDispatcher | undefined
 

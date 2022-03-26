@@ -18,7 +18,7 @@
 
 import { DispatcherConnection, Root } from './dispatchers/dispatcher'
 import { createPlaywright } from './server/playwright'
-import PlaywrightDispatcher from './dispatchers/playwrightDispatcher'
+import { PlaywrightDispatcher } from './dispatchers/playwrightDispatcher'
 import type { Playwright as PlaywrightAPI } from './client/playwright'
 import { Connection } from './client/connection'
 import BrowserServerLauncherImpl from './browserServerImpl'

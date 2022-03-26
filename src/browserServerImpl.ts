@@ -14,64 +14,67 @@
  * limitations under the License.
  */
 
-import { EventEmitter } from 'ws'
-import { LaunchServerOptions, Logger } from './client/types'
-import { BrowserServerLauncher, BrowserServer } from './client/browserType'
-import { envObjectToArray } from './client/clientHelper'
-import { createGuid } from './utils/utils'
-import { ProtocolLogger } from './server/types'
-import { internalCallMetadata } from './server/instrumentation'
-import { createPlaywright } from './server/playwright'
-import { PlaywrightServer } from './remote/playwrightServer'
-import { helper } from './server/helper'
-import { rewriteErrorMessage } from './utils/stackTrace'
-
-export default class BrowserServerLauncherImpl implements BrowserServerLauncher {
-  private _browserName: 'chromium' | 'firefox' | 'webkit'
-
-  constructor(browserName: 'chromium' | 'firefox' | 'webkit') {
-    this._browserName = browserName
-  }
-
-  async launchServer(options: LaunchServerOptions = {}): Promise<BrowserServer> {
-    const playwright = createPlaywright('javascript')
-    // 1. Pre-launch the browser
-    const metadata = internalCallMetadata()
-    const browser = await playwright[this._browserName].launch(metadata, {
-      ...options,
-      ignoreDefaultArgs: Array.isArray(options.ignoreDefaultArgs) ? options.ignoreDefaultArgs : undefined,
-      ignoreAllDefaultArgs: !!options.ignoreDefaultArgs && !Array.isArray(options.ignoreDefaultArgs),
-      env: options.env ? envObjectToArray(options.env) : undefined,
-    }, toProtocolLogger(options.logger)).catch((e) => {
-      const log = helper.formatBrowserLogs(metadata.log)
-      rewriteErrorMessage(e, `${e.message} Failed to launch browser.${log}`)
-      throw e
-    })
-
-    let path = `/${createGuid()}`
-    if (options.wsPath) { path = options.wsPath.startsWith('/') ? options.wsPath : `/${options.wsPath}` }
-
-    // 2. Start the server
-    const server = new PlaywrightServer(path, Infinity, false, browser)
-    const wsEndpoint = await server.listen(options.port)
-
-    // 3. Return the BrowserServer interface
-    const browserServer = new EventEmitter() as (BrowserServer & EventEmitter)
-    browserServer.process = () => browser.options.browserProcess.process!
-    browserServer.wsEndpoint = () => wsEndpoint
-    browserServer.close = () => browser.options.browserProcess.close()
-    browserServer.kill = () => browser.options.browserProcess.kill();
-    (browserServer as any)._disconnectForTest = () => server.close()
-    browser.options.browserProcess.onclose = async (exitCode, signal) => {
-      server.close()
-      browserServer.emit('close', exitCode, signal)
-    }
-    return browserServer
-  }
-}
-
-function toProtocolLogger(logger: Logger | undefined): ProtocolLogger | undefined {
-  return logger ? (direction: 'send' | 'receive', message: object) => {
-    if (logger.isEnabled('protocol', 'verbose')) { logger.log('protocol', 'verbose', (direction === 'send' ? 'SEND ► ' : '◀ RECV ') + JSON.stringify(message), [], {}) }
-  } : undefined
-}
+ import { LaunchServerOptions, Logger } from './client/types';
+ import { EventEmitter } from 'ws';
+ import { BrowserServerLauncher, BrowserServer } from './client/browserType';
+ import { envObjectToArray } from './client/clientHelper';
+ import { createGuid } from './utils/utils';
+ import { ProtocolLogger } from './server/types';
+ import { serverSideCallMetadata } from './server/instrumentation';
+ import { createPlaywright } from './server/playwright';
+ import { PlaywrightServer } from './remote/playwrightServer';
+ import { helper } from './server/helper';
+ import { rewriteErrorMessage } from './utils/stackTrace';
+ 
+ export default class BrowserServerLauncherImpl implements BrowserServerLauncher {
+   private _browserName: 'chromium' | 'firefox' | 'webkit';
+ 
+   constructor(browserName: 'chromium' | 'firefox' | 'webkit') {
+     this._browserName = browserName;
+   }
+ 
+   async launchServer(options: LaunchServerOptions = {}): Promise<BrowserServer> {
+     const playwright = createPlaywright('javascript');
+     // 1. Pre-launch the browser
+     const metadata = serverSideCallMetadata();
+     const browser = await playwright[this._browserName].launch(metadata, {
+       ...options,
+       ignoreDefaultArgs: Array.isArray(options.ignoreDefaultArgs) ? options.ignoreDefaultArgs : undefined,
+       ignoreAllDefaultArgs: !!options.ignoreDefaultArgs && !Array.isArray(options.ignoreDefaultArgs),
+       env: options.env ? envObjectToArray(options.env) : undefined,
+     }, toProtocolLogger(options.logger)).catch(e => {
+       const log = helper.formatBrowserLogs(metadata.log);
+       rewriteErrorMessage(e, `${e.message} Failed to launch browser.${log}`);
+       throw e;
+     });
+ 
+     let path = `/${createGuid()}`;
+     if (options.wsPath)
+       path = options.wsPath.startsWith('/') ? options.wsPath : `/${options.wsPath}`;
+ 
+     // 2. Start the server
+     const server = new PlaywrightServer(path, Infinity, false, browser);
+     const wsEndpoint = await server.listen(options.port);
+ 
+     // 3. Return the BrowserServer interface
+     const browserServer = new EventEmitter() as (BrowserServer & EventEmitter);
+     browserServer.process = () => browser.options.browserProcess.process!;
+     browserServer.wsEndpoint = () => wsEndpoint;
+     browserServer.close = () => browser.options.browserProcess.close();
+     browserServer.kill = () => browser.options.browserProcess.kill();
+     (browserServer as any)._disconnectForTest = () => server.close();
+     browser.options.browserProcess.onclose = async (exitCode, signal) => {
+       server.close();
+       browserServer.emit('close', exitCode, signal);
+     };
+     return browserServer;
+   }
+ }
+ 
+ function toProtocolLogger(logger: Logger | undefined): ProtocolLogger | undefined {
+   return logger ? (direction: 'send' | 'receive', message: object) => {
+     if (logger.isEnabled('protocol', 'verbose'))
+       logger.log('protocol', 'verbose', (direction === 'send' ? 'SEND ► ' : '◀ RECV ') + JSON.stringify(message), [], {});
+   } : undefined;
+ }
+ 

@@ -34,25 +34,25 @@ export class Playwright extends SdkObject {
   readonly options: any
   private _allPages = new Set<any>() // page 类型
 
-  constructor(sdkLanguage: string, isInternal: boolean) {
-    super({ attribution: { isInternal }, instrumentation: createInstrumentation() } as any, undefined, 'Playwright')
+  constructor(sdkLanguage: string, isInternalPlaywright: boolean) {
+    super({ attribution: { isInternalPlaywright }, instrumentation: createInstrumentation() } as any, undefined, 'Playwright');
     this.instrumentation.addListener({
-      onPageOpen: (page) => this._allPages.add(page),
-      onPageClose: (page) => this._allPages.delete(page),
+      onPageOpen: page => this._allPages.add(page),
+      onPageClose: page => this._allPages.delete(page),
       onCallLog: (sdkObject: SdkObject, metadata: CallMetadata, logName: string, message: string) => {
-        debugLogger.log(logName as any, message)
-      },
-    }, null)
+        debugLogger.log(logName as any, message);
+      }
+    }, null);
     this.options = {
       rootSdkObject: this,
       selectors: new Selectors(),
-      sdkLanguage,
-    }
+      sdkLanguage: sdkLanguage,
+    };
     this.chromium = new Chromium(this.options)
-    // this.firefox = new Firefox(this.options)
-    // this.webkit = new WebKit(this.options)
-    // this.electron = new Electron(this.options)
-    // this.android = new Android(new AdbBackend(), this.options)
+    // this.firefox = new Firefox(this.options);
+    // this.webkit = new WebKit(this.options);
+    // this.electron = new Electron(this.options);
+    // this.android = new Android(new AdbBackend(), this.options);
     this.selectors = this.options.selectors
   }
 
@@ -61,6 +61,6 @@ export class Playwright extends SdkObject {
   }
 }
 
-export function createPlaywright(sdkLanguage: string, isInternal: boolean = false) {
-  return new Playwright(sdkLanguage, isInternal)
+export function createPlaywright(sdkLanguage: string, isInternalPlaywright: boolean = false) {
+  return new Playwright(sdkLanguage, isInternalPlaywright);
 }
