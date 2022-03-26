@@ -68,13 +68,7 @@ export class LaunchContext {
         }
     }
     _bindEvent(context: BrowserContext, browser: Browser) {
-        const _this = this
         context.on('page', async (page) => {
-            if (_this._persistent) { // update auth
-                // 后期调整 respost
-                console.log('update auth')
-                await context.storageState({ path: _this._statePath });
-            }
             page.on('dialog', () => { }) // Prevent dialogs from being automatically dismissed.
             page.on('close', async () => {
                 console.log('page close',context.pages())

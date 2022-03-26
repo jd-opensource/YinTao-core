@@ -1,3 +1,5 @@
+import os from 'os'
+import path from 'path'
 import { Page } from '../client/page'
 import { ApiRecorder } from './actionApiRecorder'
 import { LaunchContext } from './contextBuilder'
@@ -29,7 +31,7 @@ export async function apiLive(url: string, opts: any) {
     launchOptions,
     contextOptions,
     device: options.device,
-    saveStorage: undefined,
+    saveStorage: path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json'),
     startRecording: true,
     outputFile: undefined
   })
@@ -65,6 +67,7 @@ export async function live(url: string, opts: any) {
     target: 'test',
     browser: 'chromium',
     timeout: '6666666',
+    saveStorage: path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json'),
     // loadStorage: './state.json',
     device: undefined,
     executablePath: opts.executablePath

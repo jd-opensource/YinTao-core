@@ -38,7 +38,7 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
 
   generateAction(actionInContext: ActionInContext): string {
     const action = actionInContext.action
-    if (this._isTest && (action.name === 'openPage' || action.name === 'closePage')) { return '' }
+    if (this._isTest && action.name === 'closePage') return ''
 
     const pageAlias = actionInContext.frame.pageAlias
     const formatter = new JavaScriptFormatter()
