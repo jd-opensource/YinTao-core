@@ -170,12 +170,8 @@ export class LaunchContext {
                 path: this._options.saveStorage,
             }).catch((e) => null)
         }
-        if (this._persistent) {
-            console.log('_persistent',context.pages())
-            await context.close()
-        } else {
-            await browser?.close()
-        }
+        await context.close()
+        await browser?.close()
     }
 
     async _openPage(context: BrowserContext, url: string | undefined): Promise<Page> {

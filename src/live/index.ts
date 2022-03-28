@@ -22,7 +22,7 @@ export async function apiLive(url: string, opts: any) {
   }
   const apiRecorder = new ApiRecorder(opts)
   const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)
-  const { context, launchOptions, contextOptions, homePage } = await launchContext.launch(url)
+  const { browser, context, launchOptions, contextOptions, homePage } = await launchContext.launch(url)
   // 去掉playwright inspector
   launchOptions.headless = true
   launchOptions.executablePath = options.executablePath
@@ -57,7 +57,8 @@ export async function apiLive(url: string, opts: any) {
   const recorderApis = await apiRecorder.getApis()
   console.log('录制的接口：', recorderApis)
 
-  context.close()
+  await context.close()
+  await browser.close()
   return recorderApis
 }
 
