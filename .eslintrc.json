@@ -15,6 +15,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "import/prefer-default-export":0,
         "linebreak-style":0,
         "quotes":0,
         "no-dupe-class-members":0,
