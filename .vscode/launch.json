@@ -21,6 +21,20 @@
         {
             "type": "pwa-node",
             "request": "launch",
+            "name": "run_mobile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            "args": [ "run","./tests/debug.js","--device=iPhone 11"],
+            // "args": [ "run","./tests/base.js"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
             "name": "live",
             "skipFiles": [
                 "<node_internals>/**"
@@ -29,6 +43,21 @@
             // "args": [ "live","https://devexpress.github.io/testcafe/example"],
             // "args": [ "live","http://t.268xue.com/front/showcoulist.json"],
             "args": [ "live","--timeout=666666666","https://baidu.com"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "live_mobile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "lib//index.js",
+            // "args": [ "live","https://devexpress.github.io/testcafe/example"],
+            // "args": [ "live","http://t.268xue.com/front/showcoulist.json"],
+            "args": [ "live","--timeout=666666666","https://baidu.com", "--device=iPhone 11"],
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]

@@ -71,7 +71,7 @@ export async function live(url: string, opts: any) {
     timeout: '6666666',
     saveStorage: path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json'),
     // loadStorage: './state.json',
-    device: undefined,
+    device: opts.device,
     executablePath: opts.executablePath,
   }
   const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)

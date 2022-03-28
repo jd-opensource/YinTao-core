@@ -6,6 +6,7 @@ import axios from 'axios'
 import TestControl from '../../test_control/testControl'
 import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
+import * as cherry from '../../../index'
 import { Page as PageType, Route, Request } from '../../../types/types'
 import { ImgFile, Result, RunOptions } from '..'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
@@ -157,11 +158,23 @@ class Browser {
 class Page {
   control: TestControl
   parse: V1Parse
+  defaultContextOptions: Object
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
+    this.defaultContextOptions = {}
   }
+
+  setDevice(name:string) {
+    // 设置名称
+    const deviceOptions = cherry.devices[name]
+    if (deviceOptions === undefined) {
+      throw new Error(`The lack of the preset ${name}`)
+    }
+    this.defaultContextOptions = { ...this.defaultContextOptions, ...deviceOptions }
+  }
+
   async create(url: string, options?: PageOptions) {
     // 这个控制器必须存在
     if (this.control == undefined) throw new Error('control not find by gid')
@@ -175,6 +188,7 @@ class Page {
   async _createContext() {
     const contextOptions = {
       deviceScaleFactor: 1,
+      ...this.defaultContextOptions,
     }
     const context = await this.control.browser.newContext(contextOptions)
     this.control.setBrowserContext(context)

@@ -82,7 +82,7 @@ export class LaunchContext {
     let name = options.browser
     if (options.device) {
       const device = cherry.devices[options.device]
-      name = device.defaultBrowserType
+      name = 'chromium' || device.defaultBrowserType // 目前仅chromium支持
     }
     let browserType: any
     switch (name) {
