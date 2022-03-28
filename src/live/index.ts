@@ -4,12 +4,11 @@ import { Page } from '../client/page'
 import { ApiRecorder } from './actionApiRecorder'
 import { LaunchContext } from './contextBuilder'
 
-
 /**
  * 接口（包含动作）录制
- * @param url 
+ * @param url
  * @param opts {callback:Function}
- * @returns 
+ * @returns
  */
 export async function apiLive(url: string, opts: any) {
   const options = {
@@ -18,11 +17,13 @@ export async function apiLive(url: string, opts: any) {
     timeout: '6666666',
     // loadStorage: './state.json',
     device: undefined,
-    executablePath: opts.executablePath
+    executablePath: opts.executablePath,
   }
   const apiRecorder = new ApiRecorder(opts)
   const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)
-  const { browser, context, launchOptions, contextOptions, homePage } = await launchContext.launch(url)
+  const {
+    browser, context, launchOptions, contextOptions, homePage,
+  } = await launchContext.launch(url)
   // 去掉playwright inspector
   launchOptions.headless = true
   launchOptions.executablePath = options.executablePath
@@ -33,7 +34,7 @@ export async function apiLive(url: string, opts: any) {
     device: options.device,
     saveStorage: path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json'),
     startRecording: true,
-    outputFile: undefined
+    outputFile: undefined,
   })
 
   if (process.env.PWTEST_CLI_EXIT) { await Promise.all(context.pages().map((p) => p.close())) }
@@ -71,10 +72,12 @@ export async function live(url: string, opts: any) {
     saveStorage: path.resolve(path.resolve(os.tmpdir(), 'cherryDfSession'), 'state.json'),
     // loadStorage: './state.json',
     device: undefined,
-    executablePath: opts.executablePath
+    executablePath: opts.executablePath,
   }
   const launchContext = new LaunchContext(options, !!undefined, options.executablePath, true)
-  const { browser, context, launchOptions, contextOptions } = await launchContext.launch(url)
+  const {
+    browser, context, launchOptions, contextOptions,
+  } = await launchContext.launch(url)
 
   launchOptions.executablePath = options.executablePath
   await context._enableRecorder({
@@ -96,4 +99,3 @@ export async function live(url: string, opts: any) {
   await browser.close()
   return script
 }
-
