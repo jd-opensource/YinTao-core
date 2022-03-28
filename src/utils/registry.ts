@@ -249,12 +249,12 @@ export class Registry {
       const installCommand = buildPlaywrightCLICommand(sdkLanguage, `install${installByDefault ? '' : ` ${name}`}`)
       if (!canAccessFile(e)) {
         const prettyMessage = [
-          'Looks like Playwright Test or Playwright was just installed or updated.',
+          'Looks like cherry Test or cherry was just installed or updated.',
           `Please run the following command to download new browser${installByDefault ? 's' : ''}:`,
           '',
           `    ${installCommand}`,
           '',
-          '<3 Playwright Team',
+          '<3 cherry Team',
         ].join('\n')
         throw new Error(`Executable doesn't exist at ${e}\n${wrapInASCIIBox(prettyMessage, 1)}`)
       }
@@ -681,7 +681,7 @@ export function buildPlaywrightCLICommand(sdkLanguage: string, parameters: strin
     case 'csharp':
       return `pwsh bin\\Debug\\netX\\playwright.ps1 ${parameters}`
     default:
-      return `npx playwright ${parameters}`
+      return `npx cherry ${parameters}`
   }
 }
 

@@ -175,14 +175,12 @@ export class LaunchContext {
   }
 
   async _openPage(context: BrowserContext, url: string | undefined): Promise<Page> {
-    let page: Page
-    if (context.pages().length > 0) {
-      page = context.pages()[0]
-    } else {
-      page = await context.newPage()
-    }
+    const page = await context.newPage()
     if (url) {
-      if (fs.existsSync(url)) { url = `file://${path.resolve(url)}` } else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) { url = `http://${url}` }
+      if (fs.existsSync(url))
+        url = `file://${path.resolve(url)}`
+      else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:'))
+        url = `http://${url}`
       await page.goto(url)
     }
     return page

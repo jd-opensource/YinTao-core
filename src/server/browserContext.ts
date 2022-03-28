@@ -354,25 +354,25 @@
        cookies: await this.cookies(),
        origins: []
      };
-     if (this._origins.size)  {
-       const internalMetadata = serverSideCallMetadata();
-       const page = await this.newPage(internalMetadata);
-       await page._setServerRequestInterceptor(handler => {
-         handler.fulfill({ body: '<html></html>' }).catch(() => {});
-       });
-       for (const origin of this._origins) {
-         const originStorage: types.OriginStorage = { origin, localStorage: [] };
-         const frame = page.mainFrame();
-         await frame.goto(internalMetadata, origin);
-         const storage = await frame.evaluateExpression(`({
-           localStorage: Object.keys(localStorage).map(name => ({ name, value: localStorage.getItem(name) })),
-         })`, false, undefined, 'utility');
-         originStorage.localStorage = storage.localStorage;
-         if (storage.localStorage.length)
-           result.origins.push(originStorage);
-       }
-       await page.close(internalMetadata);
-     }
+    //  if (this._origins.size)  {
+    //    const internalMetadata = serverSideCallMetadata();
+    //    const page = await this.newPage(internalMetadata);
+    //    await page._setServerRequestInterceptor(handler => {
+    //      handler.fulfill({ body: '<html></html>' }).catch(() => {});
+    //    });
+    //    for (const origin of this._origins) {
+    //      const originStorage: types.OriginStorage = { origin, localStorage: [] };
+    //      const frame = page.mainFrame();
+    //      await frame.goto(internalMetadata, origin);
+    //      const storage = await frame.evaluateExpression(`({
+    //        localStorage: Object.keys(localStorage).map(name => ({ name, value: localStorage.getItem(name) })),
+    //      })`, false, undefined, 'utility');
+    //      originStorage.localStorage = storage.localStorage;
+    //      if (storage.localStorage.length)
+    //        result.origins.push(originStorage);
+    //    }
+    //    await page.close(internalMetadata);
+    //  }
      return result;
    }
  

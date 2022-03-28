@@ -15,6 +15,8 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "nonblock-statement-body-position":0,
+        "curly":0,
         "import/prefer-default-export":0,
         "linebreak-style":0,
         "quotes":0,
