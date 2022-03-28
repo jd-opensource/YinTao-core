@@ -3,12 +3,13 @@ import os from 'os'
 import path from 'path'
 import expect from 'expect'
 import axios from 'axios'
-import TestControl from '../../test_control/testControl'
-import { __sleep } from '../../utils/suger'
 import Resolver from './resolver'
+import { Result, RunOptions } from '..'
 import * as cherry from '../../../index'
+import { __sleep } from '../../utils/suger'
+import TestControl from '../../test_control/testControl'
+import { download, mkdirIfNeeded } from '../../utils/utils'
 import { Page as PageType, Route, Request } from '../../../types/types'
-import { ImgFile, Result, RunOptions } from '..'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
 // 初版driver脚本解析
@@ -375,15 +376,25 @@ class Dom {
   }
 
   async upload(sign: string, files: string | string[]): Promise<void> {
+    let filePath:string
     if (files instanceof Array) {
       for (const _path of files) {
         if (fs.existsSync(_path) === false) {
           throw new Error(`Invalid file path: ${_path}`)
         }
       }
-    } else if (fs.existsSync(files) === false) {
-      throw new Error(`Invalid file path: ${files}`)
+    } else {
+      if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(files)) {
+        // 填写的为资源地址
+        // 将资源地址保存为本地文件
+        const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(files))
+        await mkdirIfNeeded(downloadPath)
+        await download(files, downloadPath)
+        files = downloadPath
+      } else if (fs.existsSync(files) === false) {
+        throw new Error(`Invalid file path: ${files}`)
+      }
+      await this.control?.runContext?.setInputFiles(sign, files)
     }
-    await this.control?.runContext?.setInputFiles(sign, files)
   }
 }
