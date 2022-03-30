@@ -4,8 +4,6 @@ await page.to('http://t.268xue.com/');
 await browser.on('request',(res)=>{
     // 监听页面请求
     console.log('url',res._initializer.url)
-    // console.log('method',res._initializer.method)
-    // console.log('headers',JSON.stringify(res._initializer.headers))
 })
 
 // 修改png接口数

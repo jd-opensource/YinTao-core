@@ -56,7 +56,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
  * @method 远程报告运行日志
  */
 export async function reportRunLog(url:string, logBody:string, storage?:any) {
-  // log 其实获取不到运行结果,正真的报错也不会到这里来
+  // log 获取不到运行结果,运行报错这里无法接收
   const FormData = require('form-data')
   const param = new FormData()
   param.append("logFile", logBody)

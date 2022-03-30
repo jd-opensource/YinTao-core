@@ -30,6 +30,8 @@ export default class V1Parse extends Resolver {
     const utils = new Utils(this.control)
     return {
       page: new Page(this),
+      keyboard: new Keyboard(this),
+      mouse: new Mouse(this),
       browser: new Browser(this),
       dom: new Dom(this.control),
       sleep: __sleep,
@@ -156,6 +158,107 @@ class Browser {
   }
 }
 
+class Keyboard {
+  control: TestControl
+  parse: V1Parse
+  defaultContextOptions: Object
+
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.parse = v1parse
+    this.defaultContextOptions = {}
+  }
+
+  async press(key: string, options?: {
+    /**
+     * Time to wait between `keydown` and `keyup` in milliseconds. Defaults to 0.
+     */
+    delay?: number;
+  }) {
+    await this.control.currentPage?.keyboard.press(key, options)
+  }
+
+  async down(key:string) {
+    await this.control.currentPage?.keyboard.down(key)
+  }
+
+  async up(key:string) {
+    await this.control.currentPage?.keyboard.up(key)
+  }
+
+  async type(text: string, options?: {
+    /**
+     * Time to wait between key presses in milliseconds. Defaults to 0.
+     */
+    delay?: number;
+  }) {
+    await this.control.currentPage?.keyboard.type(text, options)
+  }
+}
+
+class Mouse {
+  control: TestControl
+  parse: V1Parse
+  defaultContextOptions: Object
+
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.parse = v1parse
+    this.defaultContextOptions = {}
+  }
+
+  async click(x: number, y: number, options?: {
+    /**
+     * Defaults to `left`.
+     */
+    button?: "left"|"right"|"middle";
+
+    /**
+     * defaults to 1. See [UIEvent.detail].
+     */
+    clickCount?: number;
+
+    /**
+     * Time to wait between `mousedown` and `mouseup` in milliseconds. Defaults to 0.
+     */
+    delay?: number;
+  }) {
+    await this.control.currentPage?.mouse.click(x, y, options)
+  }
+
+  async down(options?: {
+    /**
+     * Defaults to `left`.
+     */
+    button?: "left"|"right"|"middle";
+
+    /**
+     * defaults to 1. See [UIEvent.detail].
+     */
+    clickCount?: number;
+  }) {
+    await this.control.currentPage?.mouse.down(options)
+  }
+
+  async up(options?: {
+    /**
+     * Defaults to `left`.
+     */
+    button?: "left"|"right"|"middle";
+
+    /**
+     * defaults to 1. See [UIEvent.detail].
+     */
+    clickCount?: number;
+  }) {
+    await this.control.currentPage?.mouse.up(options)
+  }
+
+  async wheel(deltaX: number, deltaY: number) {
+    await this.control.currentPage?.mouse.wheel(deltaX, deltaY)
+  }
+}
+
 class Page {
   control: TestControl
   parse: V1Parse
@@ -192,6 +295,8 @@ class Page {
       ...this.defaultContextOptions,
     }
     const context = await this.control.browser.newContext(contextOptions)
+    context.setDefaultTimeout(5000) // 5s
+    context.setDefaultNavigationTimeout(10000) // 10s
     this.control.setBrowserContext(context)
     const page = await context.newPage()
     this.control.updatePage(page) //  这块后续看是否需要
@@ -203,6 +308,10 @@ class Page {
    */
   async setViewSize(width: number, height: number) {
     await this.control?.currentPage?.setViewportSize({ width, height })
+  }
+
+  async refresh(options:PageOptions) {
+    this.control.currentPage?.reload(options)
   }
 
   async to(url: string, options?: PageOptions) {
@@ -376,7 +485,6 @@ class Dom {
   }
 
   async upload(sign: string, files: string | string[]): Promise<void> {
-    let filePath:string
     if (files instanceof Array) {
       for (const _path of files) {
         if (fs.existsSync(_path) === false) {
@@ -385,8 +493,10 @@ class Dom {
       }
     } else {
       if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(files)) {
-        // 填写的为资源地址
-        // 将资源地址保存为本地文件
+        /**
+         * todo: https://playwright.dev/docs/api/class-page#page-set-input-files
+         * 链接上传使用object避免落磁盘
+         */
         const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(files))
         await mkdirIfNeeded(downloadPath)
         await download(files, downloadPath)
