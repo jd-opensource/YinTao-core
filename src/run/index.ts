@@ -85,6 +85,7 @@ export async function run(code: string, opts: RunOptions = {
     (elapsedTime) => {
       const duration = (elapsedTime[0] * 1000) + (elapsedTime[1] / 1000000)
       result.duration = duration
+      result.storage = opts.storage
       console.log('time:', duration, 'ms') //  elapsedTime [秒，纳秒后缀]
     },
   )
