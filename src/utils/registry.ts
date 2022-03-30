@@ -67,7 +67,7 @@ const DOWNLOAD_PATHS = {
     mac11: 'builds/chromium/%s/chromium-mac.zip',
     'mac11-arm64': 'builds/chromium/%s/chromium-mac-arm64.zip',
     mac12: 'builds/chromium/%s/chromium-mac.zip',
-    'mac12-arm64': 'builds/chromium/%s/chromium-mac-arm64.zip',
+    'mac12-arm64': 'builds/chromium/%s/chromium-mac.zip', // fix electron build mac 适配
     win64: 'builds/chromium/%s/chromium-win64.zip',
   },
   'chromium-with-symbols': {
