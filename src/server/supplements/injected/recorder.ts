@@ -117,7 +117,6 @@ export class Recorder {
   }
 
   private _clearHighlight() {
-    console.log('一直在清除', '_clearHighlight')
     // this._hoveredModel = null
     // this._activeElement = null
     // this._updateHighlight()

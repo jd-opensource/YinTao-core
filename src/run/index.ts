@@ -63,8 +63,8 @@ export async function run(code: string, opts: RunOptions = {
     async () => await compiler.runCompiledCode().catch(async (e:Error) => {
       result.success = false
       result.msg = e.message
+      result.log = e.message
       result.code = 4044
-      // 当执行失败并且为远程上报时，需要取异步报告错误，当次运行错误，放弃图片
       if (launchOptions.remoteReport) {
         const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
         const storage = {
