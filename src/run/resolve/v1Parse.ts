@@ -357,13 +357,19 @@ class Page {
     await this.control.currentPage?.bringToFront()
   }
 
-  async changeIframe(index: number) {
-    if (this.control.runContext && (<PageType> this.control.runContext).frames) {
-      if (index == -1) {
-        this.control.updateContext(this.control.currentPage as PageType)
-      } else {
-        this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
+  async changeIframe(index: number| string) {
+    if (index == -1) { // 切出iframe
+      this.control.updateContext(this.control.currentPage as PageType)
+    }
+
+    if (typeof index === 'string') {
+      const frame = this.control.currentPage?.frame(index)
+      if (!frame) {
+        throw new Error(`miss iframe name: ${index}`)
       }
+      this.control.updateContext(frame)
+    } else if (this.control.runContext && (<PageType> this.control.runContext).frames) {
+      this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
     } else {
       throw new Error('Unable to switch ifarme! not frames.')
     }
@@ -482,6 +488,10 @@ class Dom {
 
   async fill(sign: string, value: string) {
     await this.control?.runContext?.fill(sign, value)
+  }
+
+  async select(sign:string, value: any) {
+    await this.control?.runContext?.selectOption(sign, value)
   }
 
   async upload(sign: string, files: string | string[]): Promise<void> {

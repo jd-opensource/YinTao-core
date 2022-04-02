@@ -1,12 +1,8 @@
-
-await page.create(`https://baidu.com`)
-await cookies("set",[{
-    "domain": ".jd.com",
-    "path": "/",
-    "name": "sso.jd.com",
-    "value": "BJ.0C006D078F6B8EB37A37777AD9EBF9BF9020220330165135",
-  }])
-await page.to(`http://jingxiao.jd.com`)
-await sleep(300000)
-await dom.click(`(//*[string()='推荐'])[3]`)
-await dom.click(`(//*[string()='离线大盘'])[3]`)
+await page.to("http://vsp.jd.com")
+await page.changeIframe("loginChildPage")
+await dom.click("[placeholder=\"请输入用户名\"]")
+await dom.fill("[placeholder=\"请输入用户名\"]","2222")
+await dom.click("[placeholder=\"密码\"]")
+await dom.fill("[placeholder=\"密码\"]","33333")
+await page.changeIframe(-1)
+await dom.click("div:nth-child(2) .item_img img")

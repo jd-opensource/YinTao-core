@@ -91,7 +91,8 @@ export default class Compiler {
   }
 
   async clearTest() {
-    await this.control?.browser.close()
+    // 不在等待浏览器关闭, 有时无法收到退出
+    this.control?.browser.close()
     cherry.testControl.delete(this.id)
   }
 }
