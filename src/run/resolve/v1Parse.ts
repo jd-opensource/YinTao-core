@@ -9,7 +9,9 @@ import * as cherry from '../../../index'
 import { __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
-import { Page as PageType, Route, Request } from '../../../types/types'
+import {
+  Page as PageType, Route, Request, Response,
+} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
 // 初版driver脚本解析
@@ -33,6 +35,7 @@ export default class V1Parse extends Resolver {
       keyboard: new Keyboard(this),
       mouse: new Mouse(this),
       browser: new Browser(this),
+      expect,
       dom: new Dom(this.control),
       sleep: __sleep,
       axios,
@@ -54,6 +57,27 @@ interface PageOptions {
   referer?: string;
   timeout?: number;
   waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' | 'commit';
+}
+
+/**
+ * warn: event Function must use this parcel
+ * export: window.on('ready',wrapHandler(callback))
+ */
+function wrapHandler(fn) {
+  return function (evt) {
+    new Promise((resolve) => {
+      resolve(fn(evt))
+    }).catch((e) => {
+      handleError(e)
+    })
+  }
+}
+
+function handleError(err) {
+  if (!(err instanceof Error)) {
+    err = Error(err)
+  }
+  console.log(`error handler: ${err.message}`, "yellow")
 }
 
 class assert {
@@ -148,13 +172,13 @@ class Browser {
   }
 
   on(event:string, callback:any) {
-    this.control.browserContext?.on(event as any, callback)
+    this.control.browserContext?.on(event as any, wrapHandler(callback))
   }
 
   route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
     times?: number;
   }) {
-    this.control.browserContext?.route(url, handler, options)
+    this.control.browserContext?.route(url, wrapHandler(handler), options)
   }
 }
 
@@ -277,6 +301,12 @@ class Page {
       throw new Error(`The lack of the preset ${name}`)
     }
     this.defaultContextOptions = { ...this.defaultContextOptions, ...deviceOptions }
+  }
+
+  async waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
+    timeout?: number;
+  }) {
+    return await this.control.currentPage?.waitForResponse(urlOrPredicate, options)
   }
 
   async create(url: string, options?: PageOptions) {
