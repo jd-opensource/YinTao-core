@@ -47,7 +47,7 @@ export class JavaScriptLanguageGenerator implements LanguageGenerator {
 
     if (action.name === 'openPage') {
       // formatter.add(`const ${pageAlias} = await context.newPage();`)
-      if (action.url && action.url !== 'about:blank' && action.url !== 'chrome://newtab/') { formatter.add(`await ${pageAlias}.goto(${quote(action.url)});`) }
+      if (action.url && action.url !== 'about:blank' && action.url !== 'chrome://newtab/') { formatter.add(`await ${pageAlias}.to(${quote(action.url)});`) }
       return formatter.format()
     }
 
