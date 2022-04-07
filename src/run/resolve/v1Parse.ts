@@ -172,6 +172,7 @@ class Browser {
   }
 
   on(event:string, callback:any) {
+    // Todo: callback可能抛出错误, 错误不会影响运行,但应该被接受并修改执行结果
     this.control.browserContext?.on(event as any, wrapHandler(callback))
   }
 
