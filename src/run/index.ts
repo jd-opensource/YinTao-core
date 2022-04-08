@@ -58,9 +58,32 @@ export async function run(code: string, opts: RunOptions = {
     divertor: [],
     code: 2000,
   }
-  const compiler = new Compiler(code, launchOptions)
+  let compiler
+  try {
+    compiler = new Compiler(code, launchOptions)
+  } catch (error) {
+    // 抛出编译错误
+    result.success = false
+    result.msg = error.message
+    result.log = error.message
+    result.code = 4025
+    if (launchOptions.remoteReport) {
+      const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
+      const storage = {
+        ...opts.storage,
+        args: [caseId],
+      }
+      if (launchOptions.remoteReport?.result) {
+        await reportRunResult(launchOptions.remoteReport?.result, result, storage)
+      }
+      if (launchOptions.remoteReport?.log) {
+        await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), storage)
+      }
+    }
+  }
   await guardTimeExecution(
     async () => await compiler.runCompiledCode().catch(async (e:Error) => {
+      // 抛出执行错误
       result.success = false
       result.msg = e.message
       result.log = e.message
