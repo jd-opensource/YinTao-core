@@ -20,7 +20,7 @@ import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import { ReadStream } from 'fs';
 import { Serializable, EvaluationArgument, PageFunction, PageFunctionOn, SmartHandle, ElementHandleForTag, BindingSource } from './structs';
-import TestControl from '../lib/test_control/testControl'
+import TestControl from '../src/test_control/testControl'
 
 type PageWaitForSelectorOptionsNotHidden = PageWaitForSelectorOptions & {
   state?: 'visible'|'attached';

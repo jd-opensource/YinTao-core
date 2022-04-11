@@ -38,6 +38,7 @@ export default class V1Parse extends Resolver {
       expect,
       dom: new Dom(this.control),
       sleep: __sleep,
+      os,
       axios,
       cookies: cookies.parse.bind(cookies),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
