@@ -38,7 +38,6 @@ export default class V1Parse extends Resolver {
       expect,
       dom: new Dom(this.control),
       sleep: __sleep,
-      os,
       axios,
       cookies: cookies.parse.bind(cookies),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
@@ -325,6 +324,7 @@ class Page {
     const contextOptions = {
       deviceScaleFactor: 1,
       ...this.defaultContextOptions,
+      hasTouch: false, // must false fix mobile https://jstp.m.jd.com/device/list don't click
     }
     const context = await this.control.browser.newContext(contextOptions)
     context.setDefaultTimeout(5000) // 5s
@@ -493,9 +493,9 @@ class Dom {
     this.control = testControl
   }
 
-  async click(sign: string) {
+  async click(sign: string, options:any) {
     // @ts-ignore
-    await this.control?.runContext?.click(sign)
+    await this.control?.runContext?.click(sign, options)
   }
 
   async set(value: string, sign: string) {

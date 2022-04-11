@@ -1,6 +1,13 @@
-// 跨平台截图测试
-await page.create(`https://jxsaas-pre.jd.com/login`);
-console.log('os', os.tmpdir() + '\\'+ 'nihao.jpg')
-await sleep(2000);
+await page.setDevice('iPhone 12 Pro')
+await page.to("https://baidu.com")
+await cookies("set",[{
+  "domain": ".jd.com",
+  "name": "pt_key",
+  "path": "/",
+  "value": "AAJiRrMDADC4YyVnFW1xXf5HHkQf2LQD4qYLF2uThSYqL8YcKjrDKI-yg7As2Ml8TkEp0WKrsxc",
+}])
+await page.to("https://jstp.m.jd.com/device/list")
+await dom.click("(//*[string()='海尔（Haier） 台式 洗衣机'])[1]/parent::div//span")
 
-await page.screenshot(os.tmpdir() + '\\'+ 'nihao.jpg')
+// await dom.click("text=删除设备")
+await sleep(200000) 
