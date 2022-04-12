@@ -86,9 +86,23 @@ class assert {
     this.control = testControl
   }
 
-  async all(text:string) {
-    const locator = this.control.runContext?.locator('body')
-    expect(await locator?.innerHTML()).toContain(text)
+  async all(text:string, times:number = 6) {
+    const _this = this
+    const __wait_call = async (func:()=> Promise<boolean>, number:number, sleep:number) => {
+      while (number > 0) {
+        number--
+        if (await func()) {
+          return
+        }
+        await __sleep(sleep)
+      }
+      throw new Error(`assert.all error: not find ${text}`)
+    }
+    await __wait_call(async () => {
+      const locator = _this.control.runContext?.locator('body')
+      const htmlText = await locator?.innerHTML() || ''
+      return htmlText.includes(text)
+    }, times, 500)
   }
 
   async location(url:string) {
