@@ -1,4 +1,5 @@
 // 引入babel 编译源代码
+import os from 'os'
 import { transform } from '@babel/core'
 import createCallsiteRecord from 'callsite-record'
 import runScript from './runScript'
@@ -65,6 +66,18 @@ export default class Compiler {
         filename: VirtualFile,
       })
       if (res.error !== undefined) {
+        if (os.type() === 'Linux') { // 远程执行,失败自动截图
+          const buffer = await this.control?.currentPage?.screenshot({ path: undefined, type: 'jpeg' })
+          if (buffer) {
+            const imgPath = 'auto_error.jpg'
+            this._runOption._screenImages.push({
+              path: imgPath,
+              buffer,
+              name: imgPath,
+            })
+          }
+        }
+        console.log('ewrrror debug,', res.error)
         // 调试时开放isCallsiteFrame,以抛出明细
         const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
         if (callsiteRecord !== null) {

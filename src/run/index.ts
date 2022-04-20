@@ -30,6 +30,7 @@ export interface RunOptions extends LaunchOptions{
     log?:string
     image?:string
   },
+  cookies:any[]
   script?:string
   storage?: any
   _startTime?:number
@@ -39,11 +40,13 @@ export interface RunOptions extends LaunchOptions{
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
+  cookies: [],
 }) :Promise<Result> {
   // 测试远程上报
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     headless: opts.headless,
+    cookies: opts.cookies || [],
     remoteReport: opts.remoteReport,
     storage: opts.storage,
     proxy: opts.proxy,
@@ -80,9 +83,12 @@ export async function run(code: string, opts: RunOptions = {
         await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), storage)
       }
     }
+    console.log('result', JSON.stringify(result))
+    return result
   }
   await guardTimeExecution(
     async () => await compiler.runCompiledCode().catch(async (e:Error) => {
+      // 有办法在执行错误的时候进行截图吗
       // 抛出执行错误
       result.success = false
       result.msg = e.message

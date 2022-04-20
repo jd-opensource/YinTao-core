@@ -69,3 +69,21 @@ export function monotonicTime(): number {
   const [seconds, nanoseconds] = process.hrtime()
   return seconds * 1000 + (nanoseconds / 1000 | 0) / 1000
 }
+
+/**
+ * @method 重复尝试执行函数一段时间直到成功或超时
+ */
+export const __retry_time = async (func:any, ms:number, args: any = undefined) => {
+  let count = parseInt(((ms / 1000) * 2) as any, 10)
+  while (count > 0) {
+    count--
+    try {
+      return await func(args)
+    } catch (e) {
+      if (count === 0) {
+        throw e
+      }
+    }
+    await __sleep(500)
+  }
+}

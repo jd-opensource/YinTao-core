@@ -6,11 +6,11 @@ import axios from 'axios'
 import Resolver from './resolver'
 import { Result, RunOptions } from '..'
 import * as cherry from '../../../index'
-import { __sleep } from '../../utils/suger'
+import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
 import {
-  Page as PageType, Route, Request, Response,
+  Page as PageType, Route, Request, Response, BrowserContext,
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
@@ -28,7 +28,7 @@ export default class V1Parse extends Resolver {
   }
 
   registerGlobalApi() {
-    const cookies = new Cookies(this.control)
+    const cookies = new Cookies(this)
     const utils = new Utils(this.control)
     return {
       page: new Page(this),
@@ -39,7 +39,7 @@ export default class V1Parse extends Resolver {
       dom: new Dom(this.control),
       sleep: __sleep,
       axios,
-      cookies: cookies.parse.bind(cookies),
+      cookies: cookies.parseFun.bind(cookies),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
       hint: () => { console.log('hint Temporary does not support!') },
       clearCookie: cookies.clearCookie.bind(cookies),
@@ -118,7 +118,12 @@ class assert {
   async custom(sign: string, attr: string, will: any, opreate: number) {
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
-    const result = await locator[attr]()
+    let result
+    if (attr == 'innerText') {
+      result = await locator.innerText()
+    } else {
+      result = await locator.getAttribute(attr)
+    }
     switch (opreate) {
       case 0: {
         expect(result).toBe(will)
@@ -214,7 +219,11 @@ class Keyboard {
      */
     delay?: number;
   }) {
-    await this.control.currentPage?.keyboard.press(key, options)
+    try {
+      await this.control.currentPage?.keyboard.press(key, options)
+    } catch (error) {
+      throw new Error(`press fail ${error.message}`)
+    }
   }
 
   async down(key:string) {
@@ -324,9 +333,21 @@ class Page {
     return await this.control.currentPage?.waitForResponse(urlOrPredicate, options)
   }
 
+  async waitPopup() {
+    const page = await this.control.currentPage?.waitForEvent('popup')
+    if (page) {
+      this.control.updatePage(page) //  这块后续看是否需要
+      this.control.updateContext(page)
+    } else {
+      console.log('not find popup page')
+    }
+  }
+
   async create(url: string, options?: PageOptions) {
     // 这个控制器必须存在
     if (this.control == undefined) throw new Error('control not find by gid')
+
+    // 如果上下文存在则直接建立页面
     await this._createContext()
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
@@ -335,16 +356,24 @@ class Page {
   }
 
   async _createContext() {
-    const contextOptions = {
-      deviceScaleFactor: 1,
-      ...this.defaultContextOptions,
-      hasTouch: false, // must false fix mobile https://jstp.m.jd.com/device/list don't click
+    if (!this.control.browserContext) {
+      const contextOptions = {
+        deviceScaleFactor: 1,
+        ...this.defaultContextOptions,
+        hasTouch: false, // must false fix mobile https://jstp.m.jd.com/device/list don't click
+        storageState: {
+          cookies: this.parse.runOptins.cookies as any,
+          origins: [],
+        },
+      }
+      const context = await this.control.browser.newContext(contextOptions)
+      context.setDefaultTimeout(5000) // 5s
+      context.setDefaultNavigationTimeout(10000) // 10s
+      this.control.setBrowserContext(context)
     }
-    const context = await this.control.browser.newContext(contextOptions)
-    context.setDefaultTimeout(5000) // 5s
-    context.setDefaultNavigationTimeout(10000) // 10s
-    this.control.setBrowserContext(context)
-    const page = await context.newPage()
+    const context = this.control.browserContext
+    const page = await context?.newPage()
+    if (page == undefined) throw new Error('page is undefined')
     this.control.updatePage(page) //  这块后续看是否需要
     this.control.updateContext(page)
   }
@@ -403,22 +432,33 @@ class Page {
     await this.control.currentPage?.bringToFront()
   }
 
-  async changeIframe(index: number| string) {
-    if (index == -1) { // 切出iframe
-      this.control.updateContext(this.control.currentPage as PageType)
+  async changeIframe(index: number| string, ms:number = 3000) {
+    // 切换时页面可能并没有准备好，因此我们需要等待一段时间
+    const _this = this
+    const __changeIframe = function (index: number| string) {
+      if (index == -1 && _this.control.currentPage) { // 切出iframe
+        return _this.control.updateContext(_this.control.currentPage)
+      }
+
+      if (typeof index === 'string') {
+        const frame = _this.control.currentPage?.frame(index)
+        if (!frame) {
+          throw new Error(`miss iframe name: ${index}`)
+        }
+        _this.control.updateContext(frame)
+      } else if (_this.control.runContext && (<PageType> _this.control.runContext).frames) {
+        const changeFrame = (<PageType> _this.control.runContext).frames()[index]
+        if (changeFrame !== undefined) {
+          _this.control.updateContext(changeFrame)
+        } else {
+          throw new Error(`not exist index of ${index} frame`)
+        }
+      } else {
+        throw new Error('Unable to switch ifarme! not frames.')
+      }
     }
 
-    if (typeof index === 'string') {
-      const frame = this.control.currentPage?.frame(index)
-      if (!frame) {
-        throw new Error(`miss iframe name: ${index}`)
-      }
-      this.control.updateContext(frame)
-    } else if (this.control.runContext && (<PageType> this.control.runContext).frames) {
-      this.control.updateContext((<PageType> this.control.runContext).frames()[++index])
-    } else {
-      throw new Error('Unable to switch ifarme! not frames.')
-    }
+    await __retry_time(__changeIframe, ms, index)
   }
 }
 
@@ -429,14 +469,16 @@ class Utils {
   }
 
   async execJavaScript(body: string) {
-    this.control.runContext?.evaluate(body)
+    return await this.control.runContext?.evaluate(body)
   }
 }
 
 class Cookies {
   control: TestControl
-  constructor(testControl: TestControl) {
-    this.control = testControl
+  parse: V1Parse
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.parse = v1parse
   }
 
   /**
@@ -455,7 +497,7 @@ class Cookies {
     return ''
   }
 
-  async parse(type: string, value: string | object, data: string) {
+  async parseFun(type: string, value: string | object, data: string) {
     switch (type) {
       case 'setAll': {
         const url = value as string
@@ -477,21 +519,30 @@ class Cookies {
           const domain = this.getDomain(url)
           if (domain != '') {
             const cookie = { // 追加
-              url,
+              domain,
               name,
+              path: '/',
               value,
             }
-            cookieList.push(cookie)
+            if (name !== '') {
+              cookieList.push(cookie)
+            }
           } else {
             console.error('getDomain domain error:', domain, url)
           }
         })
-        console.log('要设置的cookieList', cookieList)
-        await this.control.browserContext?.addCookies(cookieList)
+        console.log('set cookieList', cookieList)
+        this.parse.runOptins.cookies = this.parse?.runOptins?.cookies?.concat(cookieList)
+        if (this.control.browserContext) { // 同时允许中途设置
+          await this.control.browserContext?.addCookies(cookieList)
+        }
         break
       }
       case 'set': {
-        await this.control.browserContext?.addCookies(value as any)
+        this.parse.runOptins.cookies = this.parse?.runOptins?.cookies.concat(value)
+        if (this.control.browserContext) {
+          await this.control.browserContext.addCookies(value as any)
+        }
       }
     }
   }
@@ -508,12 +559,32 @@ class Dom {
   }
 
   async click(sign: string, options:any) {
-    // @ts-ignore
-    await this.control?.runContext?.click(sign, options)
+    if (this.control && this.control.runContext) {
+      try {
+        await this.control?.runContext?.click(sign, options)
+      } catch (error) {
+        throw new Error(`click fail ${error.message}`)
+      }
+    } else {
+      console.error('click obj not ok', this.control, this.control.runContext)
+      throw new Error('click obj not ok')
+    }
   }
 
   async set(value: string, sign: string) {
-    await this.control?.runContext?.type(sign, value)
+    try {
+      await this.control?.runContext?.type(sign, value)
+    } catch (error) {
+      throw new Error(`set fail ${error.message}`)
+    }
+  }
+
+  async getAttributes(sign:string, attr:string) {
+    try {
+      return await this.control?.runContext?.getAttribute(sign, attr)
+    } catch (error) {
+      throw new Error(`getAttributes fail ${error.message}`)
+    }
   }
 
   async reSet(value: string, sign: string) {
@@ -521,46 +592,100 @@ class Dom {
   }
 
   async wait(sign: string, ms?: number) {
-    await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
+    try {
+      await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
+    } catch (error) {
+      throw new Error(`wait fail ${error.message}`)
+    }
   }
 
   async hover(sign: string) {
-    await this.control?.runContext?.hover(sign)
+    try {
+      await this.control?.runContext?.hover(sign)
+    } catch (error) {
+      throw new Error(`hover fail ${error.message}`)
+    }
   }
 
-  async exist(sign: string): Promise<boolean> {
-    return !!await this.control?.runContext?.isVisible(sign)
+  async exist(sign: string, ms:number = 2000) : Promise<boolean> {
+    const __wait_time = async (func:any, ms:number, args: any = undefined) => {
+      let count = parseInt(((ms / 1000) * 2) as any, 10)
+      while (count > 0) {
+        count--
+        const result = await func(args)
+        if (result || count === 0) {
+          return result
+        }
+        await __sleep(500)
+      }
+    }
+    return await __wait_time(this.control?.runContext?.isVisible.bind(this.control.runContext), ms, sign) as boolean
   }
 
-  async fill(sign: string, value: string) {
-    await this.control?.runContext?.fill(sign, value)
+  async fill(sign: string, value: string, options?: {
+    /**
+     * Whether to bypass the [actionability](https://playwright.dev/docs/actionability) checks. Defaults to `false`.
+     */
+    force?: boolean;
+
+    /**
+     * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
+     * opt out of waiting via setting this flag. You would only need this option in the exceptional cases such as navigating to
+     * inaccessible pages. Defaults to `false`.
+     */
+    noWaitAfter?: boolean;
+
+    /**
+     * When true, the call requires selector to resolve to a single element. If given selector resolves to more then one
+     * element, the call throws an exception.
+     */
+    strict?: boolean;
+
+    /**
+     * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
+     */
+    timeout?: number;
+  }) {
+    try {
+      await this.control?.runContext?.fill(sign, value, options)
+    } catch (error) {
+      throw new Error(`fill fail ${error.message}`)
+    }
   }
 
   async select(sign:string, value: any) {
-    await this.control?.runContext?.selectOption(sign, value)
+    try {
+      await this.control?.runContext?.selectOption(sign, value)
+    } catch (error) {
+      throw new Error(`select fail ${error.message}`)
+    }
   }
 
   async upload(sign: string, files: string | string[]): Promise<void> {
-    if (files instanceof Array) {
-      for (const _path of files) {
-        if (fs.existsSync(_path) === false) {
-          throw new Error(`Invalid file path: ${_path}`)
+    if (Array.isArray(files)) {
+      for (const index in files) {
+        const filepath = files[index]
+        if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(filepath)) {
+          const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(filepath))
+          await mkdirIfNeeded(downloadPath)
+          await download(filepath, downloadPath)
+          files[index] = downloadPath
+        } else if (fs.existsSync(filepath) === false) {
+          throw new Error(`Invalid file path: ${filepath}`)
         }
       }
-    } else {
-      if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(files)) {
-        /**
+    } else if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(files)) {
+      /**
          * todo: https://playwright.dev/docs/api/class-page#page-set-input-files
          * 链接上传使用object避免落磁盘
          */
-        const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(files))
-        await mkdirIfNeeded(downloadPath)
-        await download(files, downloadPath)
-        files = downloadPath
-      } else if (fs.existsSync(files) === false) {
-        throw new Error(`Invalid file path: ${files}`)
-      }
-      await this.control?.runContext?.setInputFiles(sign, files)
+      const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(files))
+      await mkdirIfNeeded(downloadPath)
+      await download(files, downloadPath)
+      files = downloadPath
+    } else if (fs.existsSync(files) === false) {
+      throw new Error(`Invalid file path: ${files}`)
     }
+    await this.control?.runContext?.setInputFiles(sign, files)
   }
 }
