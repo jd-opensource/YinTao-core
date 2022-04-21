@@ -6,6 +6,7 @@
         "src", "lib/run/compiler/virtual-san-box.js", "index.d.ts",
     ],
     "compilerOptions": {
+        "experimentalDecorators": true,
         "esModuleInterop": true,
         "strict": true, 
         "module": "commonjs",

@@ -42,14 +42,14 @@ export default class Compiler {
       executablePath: this._runOption?.executablePath || undefined,
     }
 
-    // hostDns {server}
+    // hostDns server
     launchOptions.proxy = this._runOption.proxy
     const browser = await browserCore.launch(launchOptions)
-    // 设置测试控制器
+    // set control
     this.control = new TestControl(this.id, browser)
     cherry.testControl.set(this.id, this.control)
 
-    // 这里需要传入解析版本
+    // script parse
     this.resolver = new V1Parse(this.control, this._runOption)
   }
 
@@ -77,11 +77,9 @@ export default class Compiler {
             })
           }
         }
-        console.log('ewrrror debug,', res.error)
-        // 调试时开放isCallsiteFrame,以抛出明细
         const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
         if (callsiteRecord !== null) {
-          // @ts-ignore  锁定以调用私有方法
+          // @ts-ignore  call interior func
           const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
           // del frist empty allow code align
           console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))

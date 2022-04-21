@@ -10,9 +10,25 @@ import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
 import {
-  Page as PageType, Route, Request, Response, BrowserContext,
+  Page as PageType, Route, Request, Response,
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
+
+/**
+ *  @method 将内部堆栈以外部脚本抛出
+ */
+function throwStack() {
+  return function (target: any, key: string, descriptor: PropertyDescriptor) {
+    const methodFun = descriptor.value
+    descriptor.value = async function (...args) {
+      try {
+        await methodFun.apply(this, args)
+      } catch (error) {
+        throw new Error(`${key} instruction fail ${error.message}`)
+      }
+    }
+  }
+}
 
 // 初版driver脚本解析
 export default class V1Parse extends Resolver {
@@ -28,7 +44,6 @@ export default class V1Parse extends Resolver {
   }
 
   registerGlobalApi() {
-    const cookies = new Cookies(this)
     const utils = new Utils(this.control)
     return {
       page: new Page(this),
@@ -39,10 +54,9 @@ export default class V1Parse extends Resolver {
       dom: new Dom(this.control),
       sleep: __sleep,
       axios,
-      cookies: cookies.parseFun.bind(cookies),
+      cookies: new Cookies(this),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
       hint: () => { console.log('hint Temporary does not support!') },
-      clearCookie: cookies.clearCookie.bind(cookies),
       asyncReport: asyncReport.bind(this),
       execJavaScript: utils.execJavaScript.bind(utils),
       assert: new assert(this.control),
@@ -151,11 +165,8 @@ class assert {
  * @param args
  */
 async function asyncReport(this: V1Parse, ...args: any) {
-  // @ts-ignore
   const { result, image, log } = this.runOptins?.remoteReport || {}
   if (result) {
-    // 首先想要回掉结果，前提是拿到执行结果
-    // 我们怎么获取到执行结果
     const resultData: Result = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
@@ -167,7 +178,6 @@ async function asyncReport(this: V1Parse, ...args: any) {
   }
   if (image) {
     await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
-    // 上传完毕要清除掉数组
     this.runOptins._screenImages = []
   }
 
@@ -175,7 +185,7 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunLog(log, "success", { args, ...this.runOptins.storage })
   }
 
-  // 去除已上报的case
+  // delete reported case
   if (this.runOptins.storage && this.runOptins.storage.__caseList) {
     this.runOptins.storage.__caseList.shift()
   }
@@ -191,7 +201,7 @@ class Browser {
   }
 
   on(event:string, callback:any) {
-    // Todo: callback可能抛出错误, 错误不会影响运行,但应该被接受并修改执行结果
+    // Todo: callback maybe throw error, but it not block run
     this.control.browserContext?.on(event as any, wrapHandler(callback))
   }
 
@@ -213,31 +223,28 @@ class Keyboard {
     this.defaultContextOptions = {}
   }
 
+  @throwStack()
   async press(key: string, options?: {
     /**
      * Time to wait between `keydown` and `keyup` in milliseconds. Defaults to 0.
      */
     delay?: number;
   }) {
-    try {
-      await this.control.currentPage?.keyboard.press(key, options)
-    } catch (error) {
-      throw new Error(`press fail ${error.message}`)
-    }
+    await this.control.currentPage?.keyboard.press(key, options)
   }
 
+  @throwStack()
   async down(key:string) {
     await this.control.currentPage?.keyboard.down(key)
   }
 
+  @throwStack()
   async up(key:string) {
     await this.control.currentPage?.keyboard.up(key)
   }
 
+  @throwStack()
   async type(text: string, options?: {
-    /**
-     * Time to wait between key presses in milliseconds. Defaults to 0.
-     */
     delay?: number;
   }) {
     await this.control.currentPage?.keyboard.type(text, options)
@@ -255,6 +262,7 @@ class Mouse {
     this.defaultContextOptions = {}
   }
 
+  @throwStack()
   async click(x: number, y: number, options?: {
     /**
      * Defaults to `left`.
@@ -274,34 +282,23 @@ class Mouse {
     await this.control.currentPage?.mouse.click(x, y, options)
   }
 
+  @throwStack()
   async down(options?: {
-    /**
-     * Defaults to `left`.
-     */
-    button?: "left"|"right"|"middle";
-
-    /**
-     * defaults to 1. See [UIEvent.detail].
-     */
-    clickCount?: number;
+    button?: "left"|"right"|"middle"; // Defaults to `left`.
+    clickCount?: number; // defaults to 1. See [UIEvent.detail].
   }) {
     await this.control.currentPage?.mouse.down(options)
   }
 
+  @throwStack()
   async up(options?: {
-    /**
-     * Defaults to `left`.
-     */
-    button?: "left"|"right"|"middle";
-
-    /**
-     * defaults to 1. See [UIEvent.detail].
-     */
-    clickCount?: number;
+    button?: "left"|"right"|"middle"; // Defaults to `left`.
+    clickCount?: number; // defaults to 1. See [UIEvent.detail].
   }) {
     await this.control.currentPage?.mouse.up(options)
   }
 
+  @throwStack()
   async wheel(deltaX: number, deltaY: number) {
     await this.control.currentPage?.mouse.wheel(deltaX, deltaY)
   }
@@ -319,7 +316,6 @@ class Page {
   }
 
   setDevice(name:string) {
-    // 设置名称
     const deviceOptions = cherry.devices[name]
     if (deviceOptions === undefined) {
       throw new Error(`The lack of the preset ${name}`)
@@ -336,18 +332,18 @@ class Page {
   async waitPopup() {
     const page = await this.control.currentPage?.waitForEvent('popup')
     if (page) {
-      this.control.updatePage(page) //  这块后续看是否需要
+      this.control.updatePage(page)
       this.control.updateContext(page)
     } else {
       console.log('not find popup page')
     }
   }
 
+  @throwStack()
   async create(url: string, options?: PageOptions) {
-    // 这个控制器必须存在
+    // must exist
     if (this.control == undefined) throw new Error('control not find by gid')
 
-    // 如果上下文存在则直接建立页面
     await this._createContext()
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
@@ -374,7 +370,7 @@ class Page {
     const context = this.control.browserContext
     const page = await context?.newPage()
     if (page == undefined) throw new Error('page is undefined')
-    this.control.updatePage(page) //  这块后续看是否需要
+    this.control.updatePage(page)
     this.control.updateContext(page)
   }
 
@@ -389,6 +385,7 @@ class Page {
     this.control.currentPage?.reload(options)
   }
 
+  @throwStack()
   async to(url: string, options?: PageOptions) {
     if (this.control.currentPage === undefined) {
       await this._createContext()
@@ -400,8 +397,9 @@ class Page {
     }
   }
 
+  @throwStack()
   async screenshot(imgPath: string) {
-    // 服务运行不落磁盘
+    // todo: sercer run don't save disk
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
       this.parse.runOptins._screenImages.push({
@@ -412,9 +410,12 @@ class Page {
     }
   }
 
+  @throwStack()
   async back() {
     await this.control?.currentPage?.goBack()
   }
+
+  @throwStack()
   async forward() {
     await this.control?.currentPage?.goForward()
   }
@@ -433,7 +434,6 @@ class Page {
   }
 
   async changeIframe(index: number| string, ms:number = 3000) {
-    // 切换时页面可能并没有准备好，因此我们需要等待一段时间
     const _this = this
     const __changeIframe = function (index: number| string) {
       if (index == -1 && _this.control.currentPage) { // 切出iframe
@@ -457,7 +457,6 @@ class Page {
         throw new Error('Unable to switch ifarme! not frames.')
       }
     }
-
     await __retry_time(__changeIframe, ms, index)
   }
 }
@@ -468,6 +467,7 @@ class Utils {
     this.control = testControl
   }
 
+  @throwStack()
   async execJavaScript(body: string) {
     return await this.control.runContext?.evaluate(body)
   }
@@ -497,56 +497,36 @@ class Cookies {
     return ''
   }
 
-  async parseFun(type: string, value: string | object, data: string) {
-    switch (type) {
-      case 'setAll': {
-        const url = value as string
-        let cookieData = data
-        cookieData = cookieData.slice(0, 7) === 'Cookie:' ? cookieData.slice(7) : cookieData
-        const kvs = cookieData.split(';')
-        const cookieList: any[] = []
-        kvs.map(async (kv) => {
-          let value; let
-            name
-          const datas = kv.split('=')
-          if (datas.length == 2) {
-            name = datas[0].trim()
-            value = datas[1]
-          } else { // 特殊值,一组cookie可能包含多个=号
-            name = kv.slice(0, kv.indexOf('=')).trim()
-            value = kv.slice(kv.indexOf('=') + 1)
-          }
-          const domain = this.getDomain(url)
-          if (domain != '') {
-            const cookie = { // 追加
-              domain,
-              name,
-              path: '/',
-              value,
-            }
-            if (name !== '') {
-              cookieList.push(cookie)
-            }
-          } else {
-            console.error('getDomain domain error:', domain, url)
-          }
-        })
-        console.log('set cookieList', cookieList)
-        this.parse.runOptins.cookies = this.parse?.runOptins?.cookies?.concat(cookieList)
-        if (this.control.browserContext) { // 同时允许中途设置
-          await this.control.browserContext?.addCookies(cookieList)
-        }
-        break
-      }
-      case 'set': {
-        this.parse.runOptins.cookies = this.parse?.runOptins?.cookies.concat(value)
-        if (this.control.browserContext) {
-          await this.control.browserContext.addCookies(value as any)
-        }
-      }
+  @throwStack()
+  async set(value:any[]) {
+    this.parse.runOptins.cookies = this.parse?.runOptins?.cookies.concat(value)
+    if (this.control.browserContext) {
+      await this.control.browserContext.addCookies(value as any)
     }
   }
 
+  async setAll(url:string, cookieText:string) {
+    const cookieList :any[] = []
+    cookieText = cookieText.slice(0, 7) === 'Cookie:' ? cookieText.slice(7) : cookieText
+    const kvs: string[] = cookieText.match(/([^;=]+)=([^;]+)/g) || []
+    const domain = this.getDomain(url)
+    for (const kv of kvs) {
+      const [, name, value] = kv.match(/^\s*([^=]+)=(.+)/) as Array<string>
+      const cookie = {
+        domain,
+        name,
+        path: '/',
+        value,
+      }
+      cookieList.push(cookie)
+    }
+    this.parse.runOptins.cookies = this.parse?.runOptins?.cookies?.concat(cookieList)
+    if (this.control.browserContext) {
+      await this.control.browserContext?.addCookies(cookieList)
+    }
+  }
+
+  @throwStack()
   async clearCookie() {
     await this.control.browserContext?.clearCookies()
   }
@@ -558,55 +538,41 @@ class Dom {
     this.control = testControl
   }
 
+  @throwStack()
   async click(sign: string, options:any) {
     if (this.control && this.control.runContext) {
-      try {
-        await this.control?.runContext?.click(sign, options)
-      } catch (error) {
-        throw new Error(`click fail ${error.message}`)
-      }
+      await this.control?.runContext?.click(sign, options)
     } else {
-      console.error('click obj not ok', this.control, this.control.runContext)
       throw new Error('click obj not ok')
     }
   }
 
+  @throwStack()
   async set(value: string, sign: string) {
-    try {
-      await this.control?.runContext?.type(sign, value)
-    } catch (error) {
-      throw new Error(`set fail ${error.message}`)
-    }
+    await this.control?.runContext?.type(sign, value)
   }
 
+  @throwStack()
   async getAttributes(sign:string, attr:string) {
-    try {
-      return await this.control?.runContext?.getAttribute(sign, attr)
-    } catch (error) {
-      throw new Error(`getAttributes fail ${error.message}`)
-    }
+    return await this.control?.runContext?.getAttribute(sign, attr)
   }
 
+  @throwStack()
   async reSet(value: string, sign: string) {
     await this.control?.runContext?.fill(sign, value)
   }
 
+  @throwStack()
   async wait(sign: string, ms?: number) {
-    try {
-      await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
-    } catch (error) {
-      throw new Error(`wait fail ${error.message}`)
-    }
+    await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
   }
 
+  @throwStack()
   async hover(sign: string) {
-    try {
-      await this.control?.runContext?.hover(sign)
-    } catch (error) {
-      throw new Error(`hover fail ${error.message}`)
-    }
+    await this.control?.runContext?.hover(sign)
   }
 
+  @throwStack()
   async exist(sign: string, ms:number = 2000) : Promise<boolean> {
     const __wait_time = async (func:any, ms:number, args: any = undefined) => {
       let count = parseInt(((ms / 1000) * 2) as any, 10)
@@ -622,45 +588,28 @@ class Dom {
     return await __wait_time(this.control?.runContext?.isVisible.bind(this.control.runContext), ms, sign) as boolean
   }
 
+  /**
+   * @method 输入框填充文本
+   * @param {string} sign  mixture selector resource location
+   * @param {string} value  input text
+   * @param {Object} options selected config
+   */
+  @throwStack()
   async fill(sign: string, value: string, options?: {
-    /**
-     * Whether to bypass the [actionability](https://playwright.dev/docs/actionability) checks. Defaults to `false`.
-     */
-    force?: boolean;
-
-    /**
-     * Actions that initiate navigations are waiting for these navigations to happen and for pages to start loading. You can
-     * opt out of waiting via setting this flag. You would only need this option in the exceptional cases such as navigating to
-     * inaccessible pages. Defaults to `false`.
-     */
-    noWaitAfter?: boolean;
-
-    /**
-     * When true, the call requires selector to resolve to a single element. If given selector resolves to more then one
-     * element, the call throws an exception.
-     */
-    strict?: boolean;
-
-    /**
-     * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
-     */
-    timeout?: number;
+    force?: boolean; // jump chencks Defaults to `false`
+    noWaitAfter?: boolean; // When true, the call requires selector to resolve to a single element.
+    strict?: boolean; // When true, the call requires selector to resolve to a single element.
+    timeout?: number; // Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
   }) {
-    try {
-      await this.control?.runContext?.fill(sign, value, options)
-    } catch (error) {
-      throw new Error(`fill fail ${error.message}`)
-    }
+    await this.control?.runContext?.fill(sign, value, options)
   }
 
+  @throwStack()
   async select(sign:string, value: any) {
-    try {
-      await this.control?.runContext?.selectOption(sign, value)
-    } catch (error) {
-      throw new Error(`select fail ${error.message}`)
-    }
+    await this.control?.runContext?.selectOption(sign, value)
   }
 
+  @throwStack()
   async upload(sign: string, files: string | string[]): Promise<void> {
     if (Array.isArray(files)) {
       for (const index in files) {
