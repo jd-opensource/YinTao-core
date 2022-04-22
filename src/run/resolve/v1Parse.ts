@@ -135,6 +135,8 @@ class assert {
     let result
     if (attr == 'innerText') {
       result = await locator.innerText()
+    } else if (attr == 'value') {
+      result = await locator.inputValue()
     } else {
       result = await locator.getAttribute(attr)
     }
@@ -444,12 +446,22 @@ class Page {
     return this.control?.currentPage?.url() as string
   }
 
-  async change(index: number) {
+  async change(rule: number | string) {
+    let page
     const pages = this.control.browserContext?.pages()
-    if (pages && pages.length > 0) {
-      this.control.updatePage(pages[index])
-      this.control.updateContext(pages[index])
+    if (!pages || pages.length == 0) throw new Error('not page can be change!')
+    if (typeof rule === 'number') {
+      if (rule >= pages.length) {
+        throw new Error(`not find page index ${rule}`)
+      } else if (pages.length > 0) {
+        page = pages[rule]
+      }
+    } else if (typeof rule === 'string') {
+      page = pages.find((page) => page.url().includes(rule))
     }
+
+    this.control.updatePage(page)
+    this.control.updateContext(page)
     await this.control.currentPage?.bringToFront()
   }
 

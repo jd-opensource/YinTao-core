@@ -112,7 +112,7 @@ export async function run(code: string, opts: RunOptions = {
           await reportRunImage(launchOptions.remoteReport?.image, launchOptions._screenImages, storage)
         }
         if (launchOptions.remoteReport?.log) {
-          await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), storage)
+          await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result.log), storage)
         }
       }
     }),
