@@ -323,12 +323,14 @@ class Page {
     this.defaultContextOptions = { ...this.defaultContextOptions, ...deviceOptions }
   }
 
+  @throwStack()
   async waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
     timeout?: number;
   }) {
     return await this.control.currentPage?.waitForResponse(urlOrPredicate, options)
   }
 
+  @throwStack()
   async waitPopup() {
     const page = await this.control.currentPage?.waitForEvent('popup')
     if (page) {
@@ -336,6 +338,14 @@ class Page {
       this.control.updateContext(page)
     } else {
       console.log('not find popup page')
+    }
+  }
+
+  @throwStack()
+  async waitForEvent(event:"framenavigated") {
+    const page = await this.control.currentPage?.waitForEvent(event)
+    if (event === 'framenavigated' && page) {
+      this.control.updateContext(page)
     }
   }
 
@@ -352,11 +362,21 @@ class Page {
   }
 
   async _createContext() {
+    let viewport
+    if (this.parse.runOptins.screen) {
+      viewport = {
+        width: Math.floor(this.parse.runOptins.screen.width * 0.98),
+        height: Math.floor(this.parse.runOptins.screen.height * 0.9),
+      }
+    }
+
     if (!this.control.browserContext) {
       const contextOptions = {
         deviceScaleFactor: 1,
         ...this.defaultContextOptions,
         hasTouch: false, // must false fix mobile https://jstp.m.jd.com/device/list don't click
+        // eslint-disable-next-line no-unsafe-optional-chaining
+        viewport,
         storageState: {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],
@@ -602,6 +622,11 @@ class Dom {
     timeout?: number; // Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
   }) {
     await this.control?.runContext?.fill(sign, value, options)
+  }
+
+  @throwStack()
+  async dispatchEvent(sign:string, event:string, eventInit: any, options:any) {
+    await this.control?.runContext?.dispatchEvent(sign, event, eventInit, options)
   }
 
   @throwStack()

@@ -33,6 +33,10 @@ export interface RunOptions extends LaunchOptions{
   cookies:any[]
   script?:string
   storage?: any
+  screen?: {
+    width: number
+    height: number
+  }
   _startTime?:number
   _screenImages: ImgFile[] // 单次运行时的截图
 }
@@ -52,6 +56,7 @@ export async function run(code: string, opts: RunOptions = {
     proxy: opts.proxy,
     _startTime: new Date().getTime(),
     _screenImages: [],
+    screen: opts.screen,
   }
   // 拿到脚本先编译, 以检查错误。
   const result: Result = {
