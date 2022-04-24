@@ -492,8 +492,8 @@ class Page {
           throw new Error(`miss iframe name: ${index}`)
         }
         _this.control.updateContext(frame)
-      } else if (_this.control.runContext && (<PageType> _this.control.runContext).frames) {
-        const changeFrame = (<PageType> _this.control.runContext).frames()[index]
+      } else if (_this.control.currentPage && (<PageType> _this.control.currentPage).frames) {
+        const changeFrame = (<PageType> _this.control.currentPage).frames()[index]
         if (changeFrame !== undefined) {
           _this.control.updateContext(changeFrame)
         } else {
@@ -573,7 +573,7 @@ class Cookies {
   }
 
   @throwStack()
-  async clearCookie() {
+  async clear() {
     await this.control.browserContext?.clearCookies()
   }
 }
