@@ -14,6 +14,18 @@ import {
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
+const handler = {
+  get(trapTarget, key, receiver) {
+    return function (...args) {
+      if (key == 'log' || key == 'error') {
+        console.log('args', args)
+        // 写入到全局__log 对象中
+      }
+      trapTarget[key](...args)
+    }
+  },
+}
+
 /**
  *  @method 将内部堆栈以外部脚本抛出
  */
@@ -46,6 +58,7 @@ export default class V1Parse extends Resolver {
   registerGlobalApi() {
     const utils = new Utils(this.control)
     return {
+      console,
       page: new Page(this),
       keyboard: new Keyboard(this),
       mouse: new Mouse(this),
@@ -162,7 +175,7 @@ class assert {
 }
 
 /**
- * @method 远程上报case执行（用于合并任务进度上报）
+ * @method 远程上报case执行(用于合并任务进度上报)
  * @param this
  * @param args
  */
@@ -322,6 +335,7 @@ class Page {
     if (deviceOptions === undefined) {
       throw new Error(`The lack of the preset ${name}`)
     }
+    deviceOptions.hasTouch = false // must false fix mobile https://jstp.m.jd.com/device/list don't click
     this.defaultContextOptions = { ...this.defaultContextOptions, ...deviceOptions }
   }
 
@@ -375,10 +389,9 @@ class Page {
     if (!this.control.browserContext) {
       const contextOptions = {
         deviceScaleFactor: 1,
-        ...this.defaultContextOptions,
-        hasTouch: false, // must false fix mobile https://jstp.m.jd.com/device/list don't click
         // eslint-disable-next-line no-unsafe-optional-chaining
         viewport,
+        ...this.defaultContextOptions,
         storageState: {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],
@@ -422,6 +435,7 @@ class Page {
   @throwStack()
   async screenshot(imgPath: string) {
     // todo: sercer run don't save disk
+    console.log('page screenshot image save path: ', imgPath)
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
       this.parse.runOptins._screenImages.push({
@@ -571,6 +585,14 @@ class Dom {
   }
 
   @throwStack()
+  async viewTo(sign:string) {
+    const locator = await this.control?.runContext?.locator(sign)
+    const count = await locator?.count()
+    if (count !== 1) throw new Error(`sign get ${count} elements not run viewTo`)
+    locator?.scrollIntoViewIfNeeded()
+  }
+
+  @throwStack()
   async click(sign: string, options:any) {
     if (this.control && this.control.runContext) {
       await this.control?.runContext?.click(sign, options)
@@ -586,7 +608,17 @@ class Dom {
 
   @throwStack()
   async getAttributes(sign:string, attr:string) {
-    return await this.control?.runContext?.getAttribute(sign, attr)
+    const locator = this.control.runContext?.locator(sign)
+    if (!locator) throw new Error(`custom not find sign:', ${sign}`)
+    let result
+    if (attr == 'innerText') {
+      result = await locator.innerText()
+    } else if (attr == 'value') {
+      result = await locator.inputValue()
+    } else {
+      result = await locator.getAttribute(attr)
+    }
+    return result
   }
 
   @throwStack()
