@@ -1,7 +1,11 @@
-await page.to(`https://baidu.com`) // 切换页面
-
-console.log('CSS selector ',await dom.exist("input:has-text(\"百度一下\")"))
-console.log('selector ',await dom.exist("#su"))
-console.log('N-th element selector ', await dom.exist("#s-top-left >> text=贴吧"))
-console.log('xpath ',await dom.exist(`//*[@id="su"]`))
-console.log('fill xpath ',await dom.exist('//html/body/div[1]/div[1]/div[5]/div/div/form/span[2]/input'))
+await cookies.setAll("http://test.jd.com","cud=d2dae9224831bda62c0461f7f5bacf7f;guid=f3c65b477298e4422f6ad7b87c64a4352857c52cd92caf7df9e1fd5b4f85f466;__jda=139046964.1648900772239826443959.1648900772.1648900772.1650862691.2;__jdv=139046964%7Cbao.tjjt360.com%7C-%7Creferral%7C-%7C1650862691984;shshshfp=2ca356fbbd6ed155e8d6392ba69cb0d9;shshshfpa=10dd6553-eb3b-2916-328a-a0856b48a131-1650862692;3AB9D23F7A4B3C9B=XNPYBBCL4QIL6C2EBCZJ5HSABJPW5EXCWND4GBBY4BSMICQ5YJ52K6ZTIKQL6UKOF2OG4ERUFSLZLZLH3S27ZXCF3M;sso.jd.com=BJ.3607CF1B06A2E8F39ACC4C39B188CEB31120220425150530;")
+await page.to("http://test.jd.com/delayreporting/deliverGoodsTabs")
+await dom.click("#tab-2")
+await dom.click(":nth-child(1) > .el-table_3_column_19 > .cell > :nth-child(2) > span")
+await dom.click(":nth-child(4) > .el-form-item__content > .el-select > .el-input > .el-input__suffix > .el-input__suffix-inner > .el-select__caret")
+await dom.click("li:has-text(\"系统原因\") >> nth=2")
+await dom.click(".is-success > .el-form-item__content > .el-select > .el-input > .el-input__inner")
+await dom.click("span:has-text(\"国家大型会议/政策\") >> nth=2")
+await dom.click("label:nth-child(4) .el-checkbox__input .el-checkbox__inner")
+await sleep(2000)
+await dom.click("button:has-text(\"确定\")")

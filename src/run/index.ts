@@ -38,7 +38,8 @@ export interface RunOptions extends LaunchOptions{
     height: number
   }
   _startTime?:number
-  _screenImages: ImgFile[] // 单次运行时的截图
+  __log_body?:any[]
+  _screenImages: ImgFile[]
 }
 
 export async function run(code: string, opts: RunOptions = {
@@ -46,7 +47,6 @@ export async function run(code: string, opts: RunOptions = {
   script: '',
   cookies: [],
 }) :Promise<Result> {
-  // 测试远程上报
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     headless: opts.headless,
@@ -58,7 +58,6 @@ export async function run(code: string, opts: RunOptions = {
     _screenImages: [],
     screen: opts.screen,
   }
-  // 拿到脚本先编译, 以检查错误。
   const result: Result = {
     duration: 0,
     success: true,
@@ -92,12 +91,15 @@ export async function run(code: string, opts: RunOptions = {
     return result
   }
   await guardTimeExecution(
-    async () => await compiler.runCompiledCode().catch(async (e:Error) => {
-      // 有办法在执行错误的时候进行截图吗
+    async () => await compiler.runCompiledCode().then((a,b)=>{
+      // 执行成功
+      launchOptions.__log_body?.push('run success!')
+      result.log =  launchOptions.__log_body?.join('/n')
+    }).catch(async (e:Error) => {
       // 抛出执行错误
       result.success = false
       result.msg = e.message
-      result.log = e.message
+      result.log =  launchOptions.__log_body?.join('/n') + e.message
       result.code = 4044
       if (launchOptions.remoteReport) {
         const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
@@ -131,5 +133,4 @@ export async function runFile(filePath:string, opts:any) {
   const script = await readFile(filePath)
   const code = stripBom(script.toString()).toString()
   await run(code, opts)
-  console.log('全部执行完了')
 }

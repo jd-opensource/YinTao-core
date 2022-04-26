@@ -14,18 +14,6 @@ import {
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 
-const handler = {
-  get(trapTarget, key, receiver) {
-    return function (...args) {
-      if (key == 'log' || key == 'error') {
-        console.log('args', args)
-        // 写入到全局__log 对象中
-      }
-      trapTarget[key](...args)
-    }
-  },
-}
-
 /**
  *  @method 将内部堆栈以外部脚本抛出
  */
@@ -44,27 +32,45 @@ function throwStack() {
 
 // 初版driver脚本解析
 export default class V1Parse extends Resolver {
-  testId: string
+  private testId: string
   control: TestControl
   runOptins: RunOptions
+  console: Console
+  private __log_body: any[]
 
   constructor(testControl: TestControl, runOptins: RunOptions) {
     super()
     this.testId = testControl.id
     this.control = testControl
+    runOptins.__log_body = []
     this.runOptins = runOptins
+    this.__log_body = []
+
+    const _this = this
+    const handler = {
+      get(trapTarget, key, receiver) {
+        return function (...args) {
+          if (key == 'log' || key == 'error' || key == 'warn') {
+            args.unshift(key)
+            _this.runOptins.__log_body?.push(args.join(' '))
+          }
+          trapTarget[key](...args)
+        }
+      },
+    };
+    this.console = new Proxy(console,handler)
   }
 
   registerGlobalApi() {
     const utils = new Utils(this.control)
     return {
-      console,
+      console:this.console,
       page: new Page(this),
       keyboard: new Keyboard(this),
       mouse: new Mouse(this),
       browser: new Browser(this),
       expect,
-      dom: new Dom(this.control),
+      dom: new Dom(this),
       sleep: __sleep,
       axios,
       cookies: new Cookies(this),
@@ -323,11 +329,13 @@ class Page {
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
+  console:Console
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
     this.defaultContextOptions = {}
+    this.console = v1parse.console
   }
 
   setDevice(name:string) {
@@ -353,7 +361,7 @@ class Page {
       this.control.updatePage(page)
       this.control.updateContext(page)
     } else {
-      console.log('not find popup page')
+      this.console.log('not find popup page')
     }
   }
 
@@ -435,7 +443,7 @@ class Page {
   @throwStack()
   async screenshot(imgPath: string) {
     // todo: sercer run don't save disk
-    console.log('page screenshot image save path: ', imgPath)
+    this.console.log('page screenshot image save path: ', imgPath)
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
       this.parse.runOptins._screenImages.push({
@@ -522,9 +530,11 @@ class Utils {
 class Cookies {
   control: TestControl
   parse: V1Parse
+  console:Console
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
+    this.console = v1parse.console
   }
 
   /**
@@ -580,8 +590,11 @@ class Cookies {
 
 class Dom {
   control: TestControl
-  constructor(testControl: TestControl) {
-    this.control = testControl
+  console:Console
+
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.console = v1parse.console
   }
 
   @throwStack()
