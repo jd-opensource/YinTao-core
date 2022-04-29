@@ -24,7 +24,9 @@ import { debugLogger } from './debugLogger'
 
 export async function downloadBrowserWithProgressBar(title: string, browserDirectory: string, executablePath: string, downloadURL: string, downloadFileName: string): Promise<boolean> {
   const progressBarName = `Playwright build of ${title}`
-  if (await existsAsync(browserDirectory)) {
+  const platformDir = executablePath.match(`${browserDirectory}/(.+?)/`)
+  const PlatformBrowserDirectory =  platformDir ?  path.resolve(browserDirectory,platformDir[1]) : browserDirectory
+  if (await existsAsync(PlatformBrowserDirectory)) {
     // Already downloaded.
     debugLogger.log('install', `browser ${title} is already downloaded.`)
     return false

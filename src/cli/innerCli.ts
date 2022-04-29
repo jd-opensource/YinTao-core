@@ -91,7 +91,8 @@ program
   .command('install [browser...]')
   .description('ensure browsers necessary for this version of Playwright are installed')
   .option('--with-deps', 'install system dependencies for browsers')
-  .action(async (args: string[], options: { withDeps?: boolean }) => {
+  .option('--platform <platform>', 'install browsers platform win64,mac11,ubuntu20.04', undefined)
+  .action(async (args: string[], options: { withDeps?: boolean,platform?:string }) => {
     try {
       if (!args.length) {
         const executables = registry.defaultExecutables()
@@ -111,7 +112,7 @@ program
 
         const executables = checkBrowsersToInstall(args)
         if (options.withDeps) { await registry.installDeps(executables, false) }
-        await registry.install(executables)
+        await registry.install(executables, options.platform)
       }
     } catch (e) {
       console.log(`Failed to install browsers\n${e}`)

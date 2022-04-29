@@ -230,7 +230,7 @@ export interface Executable {
 }
 
 interface ExecutableImpl extends Executable {
-  _install?: () => Promise<void>;
+  _install?: (platform?:string) => Promise<void>;
   _dependencyGroup?: DependencyGroup;
 }
 
@@ -239,9 +239,11 @@ export class Registry {
 
   constructor(browsersJSON: BrowsersJSON) {
     const descriptors = readDescriptors(browsersJSON)
-    const findExecutablePath = (dir: string, name: keyof typeof EXECUTABLE_PATHS) => {
+    const findExecutablePath = (dir: string, name: keyof typeof EXECUTABLE_PATHS,platform?:string) => {
       let tokens:any
-      if (hostPlatform.startsWith('ubuntu')) { tokens = EXECUTABLE_PATHS[name].linux } else if (hostPlatform.startsWith('mac')) { tokens = EXECUTABLE_PATHS[name].mac } else if (hostPlatform.startsWith('win')) { tokens = EXECUTABLE_PATHS[name].win }
+      if(platform && platform == 'win64') {  // 先单独适配win64
+        tokens = EXECUTABLE_PATHS[name].win;
+      } else if (hostPlatform.startsWith('ubuntu')) { tokens = EXECUTABLE_PATHS[name].linux } else if (hostPlatform.startsWith('mac')) { tokens = EXECUTABLE_PATHS[name].mac } else if (hostPlatform.startsWith('win')) { tokens = EXECUTABLE_PATHS[name].win }
       return tokens ? path.join(dir, ...tokens) : undefined
     }
     const executablePathOrDie = (name: string, e: string | undefined, installByDefault: boolean, sdkLanguage: string) => {
@@ -273,7 +275,7 @@ export class Registry {
       executablePathOrDie: (sdkLanguage: string) => executablePathOrDie('chromium', chromiumExecutable, chromium.installByDefault, sdkLanguage),
       installType: chromium.installByDefault ? 'download-by-default' : 'download-on-demand',
       validateHostRequirements: (sdkLanguage: string) => this._validateHostRequirements(sdkLanguage, 'chromium', chromium.dir, ['chrome-linux'], [], ['chrome-win']),
-      _install: () => this._downloadExecutable(chromium, chromiumExecutable, DOWNLOAD_PATHS.chromium[hostPlatform], 'PLAYWRIGHT_CHROMIUM_DOWNLOAD_HOST'),
+      _install: (platform) => this._downloadExecutable(chromium, platform ? findExecutablePath(chromium.dir, 'chromium', platform) : chromiumExecutable, DOWNLOAD_PATHS.chromium[platform || hostPlatform], 'PLAYWRIGHT_CHROMIUM_DOWNLOAD_HOST'),
       _dependencyGroup: 'chromium',
     })
 
@@ -510,7 +512,7 @@ export class Registry {
     if (os.platform() === 'linux') { return await installDependenciesLinux(targets, dryRun) }
   }
 
-  async install(executablesToInstall: Executable[]) {
+  async install(executablesToInstall: Executable[],platform?:string) {
     const executables = this._addRequirementsAndDedupe(executablesToInstall)
     await fs.promises.mkdir(registryDirectory, { recursive: true })
     const lockfilePath = path.join(registryDirectory, '__dirlock')
@@ -540,7 +542,7 @@ export class Registry {
 
       // Install browsers for this package.
       for (const executable of executables) {
-        if (executable._install) { await executable._install() } else { throw new Error(`ERROR: Playwright does not support installing ${executable.name}`) }
+        if (executable._install) { await executable._install(platform) } else { throw new Error(`ERROR: Playwright does not support installing ${executable.name}`) }
       }
     } catch (e) {
       if (e.code === 'ELOCKED') {

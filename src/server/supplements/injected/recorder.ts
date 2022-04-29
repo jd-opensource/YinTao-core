@@ -60,7 +60,7 @@ export class Recorder {
 
   private _refreshListenersIfNeeded() {
     // Ensure we are attached to the current document, and we are on top (last element);
-    if (this._highlight.isInstalled()) { return }
+    // if (this._highlight.isInstalled()) { return }
     removeEventListeners(this._listeners)
     this._listeners = [
       addEventListener(document, 'click', (event) => this._onClick(event as MouseEvent), true),
@@ -79,7 +79,7 @@ export class Recorder {
         // this._updateHighlight()
       }, true),
     ]
-    this._highlight.install()
+    // this._highlight.install()
   }
 
   private async _pollRecorderMode() {
@@ -217,18 +217,18 @@ export class Recorder {
 
   private _onMouseDown(event: MouseEvent) {
     console.log('_onMouseDown _activeModel ')
-    if (this._shouldIgnoreMouseEvent(event)) { return }
-    if (!this._performingAction) { consumeEvent(event) }
+    // if (this._shouldIgnoreMouseEvent(event)) { return }  // block drag
+    // if (!this._performingAction) { consumeEvent(event) }
     this._activeElement = this._hoveredElement
   }
 
   private _onMouseUp(event: MouseEvent) {
-    if (this._shouldIgnoreMouseEvent(event)) { return }
-    if (!this._performingAction) { consumeEvent(event) }
+    // if (this._shouldIgnoreMouseEvent(event)) { return }
+    // if (!this._performingAction) { consumeEvent(event) }
   }
 
   private _onMouseMove(event: MouseEvent) {
-    if (this._mode === 'none') return
+    // if (this._mode === 'none') return
     const target = this._deepEventTarget(event)
     if (this._hoveredElement === target) { return }
     this._hoveredElement = target
