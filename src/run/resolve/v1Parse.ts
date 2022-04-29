@@ -22,7 +22,7 @@ function throwStack() {
     const methodFun = descriptor.value
     descriptor.value = async function (...args) {
       try {
-        await methodFun.apply(this, args)
+        return await methodFun.apply(this, args)
       } catch (error) {
         throw new Error(`${key} instruction fail ${error.message}`)
       }
