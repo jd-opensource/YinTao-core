@@ -13,6 +13,7 @@ import {
   Page as PageType, Route, Request, Response,
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
+import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser } from './parse'
 
 /**
  *  @method 将内部堆栈以外部脚本抛出
@@ -113,12 +114,13 @@ function handleError(err) {
   console.log(`error handler: ${err.message}`, "yellow")
 }
 
-class assert {
+class assert implements FCherryAssert{
   control: TestControl
   constructor(testControl: TestControl) {
     this.control = testControl
   }
 
+  @throwStack()
   async all(text:string, times:number = 6) {
     const _this = this
     const __wait_call = async (func:()=> Promise<boolean>, number:number, sleep:number) => {
@@ -138,16 +140,19 @@ class assert {
     }, times, 500)
   }
 
+  @throwStack()
   async location(url:string) {
     const pageUrl = this.control.runContext?.url()
     expect(pageUrl).toBe(url)
   }
 
+  @throwStack()
   async title(title:string) {
     const pageTitle = await this.control.currentPage?.title()
-    expect(pageTitle).toBe(title)
+    expect(pageTitle).toContain(title)
   }
 
+  @throwStack()
   async custom(sign: string, attr: string, will: any, opreate: number) {
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
@@ -212,7 +217,7 @@ async function asyncReport(this: V1Parse, ...args: any) {
   }
 }
 
-class Browser {
+class Browser implements FCherryBrowser{
   control: TestControl
   parse: any
 
@@ -226,6 +231,7 @@ class Browser {
     this.control.browserContext?.on(event as any, wrapHandler(callback))
   }
 
+  //@ts-ignore
   route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
     times?: number;
   }) {
@@ -233,7 +239,7 @@ class Browser {
   }
 }
 
-class Keyboard {
+class Keyboard implements FCherryKeyboard{
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -272,7 +278,7 @@ class Keyboard {
   }
 }
 
-class Mouse {
+class Mouse implements FCherryMouse{
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -325,7 +331,7 @@ class Mouse {
   }
 }
 
-class Page {
+class Page implements FCherryPage{
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -338,7 +344,7 @@ class Page {
     this.console = v1parse.console
   }
 
-  setDevice(name:string) {
+  async setDevice(name:string) {
     const deviceOptions = cherry.devices[name]
     if (deviceOptions === undefined) {
       throw new Error(`The lack of the preset ${name}`)
@@ -349,14 +355,15 @@ class Page {
 
   @throwStack()
   async waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
-    timeout?: number;
-  }) {
-    return await this.control.currentPage?.waitForResponse(urlOrPredicate, options)
+      timeout?: number;
+    }){
+    if(!this.control.currentPage) throw new Error('miss currentPage.')
+    return await this.control.currentPage.waitForResponse(urlOrPredicate, options)
   }
 
   @throwStack()
-  async waitPopup() {
-    const page = await this.control.currentPage?.waitForEvent('popup')
+  async waitPopup(opt:any) :Promise<void>{
+    const page = await this.control.currentPage?.waitForEvent('popup', opt)
     if (page) {
       this.control.updatePage(page)
       this.control.updateContext(page)
@@ -366,8 +373,8 @@ class Page {
   }
 
   @throwStack()
-  async waitForEvent(event:"framenavigated") {
-    const page = await this.control.currentPage?.waitForEvent(event)
+  async waitForEvent(event:"framenavigated", opt:any) {
+    const page = await this.control.currentPage?.waitForEvent(event, opt)
     if (event === 'framenavigated' && page) {
       this.control.updateContext(page)
     }
@@ -443,7 +450,7 @@ class Page {
   @throwStack()
   async screenshot(imgPath: string) {
     // todo: sercer run don't save disk
-    this.console.log('page screenshot image save path: ', imgPath)
+    this.console.log('screenshot img path:', path.resolve(imgPath))
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
       this.parse.runOptins._screenImages.push({
@@ -527,7 +534,7 @@ class Utils {
   }
 }
 
-class Cookies {
+class Cookies implements FCherryCookies{
   control: TestControl
   parse: V1Parse
   console:Console
@@ -588,7 +595,7 @@ class Cookies {
   }
 }
 
-class Dom {
+class Dom implements FCherryDom{
   control: TestControl
   console:Console
 
@@ -606,7 +613,21 @@ class Dom {
   }
 
   @throwStack()
-  async click(sign: string, options:any) {
+  async click(sign: string,  options?: {
+    button?: "left"|"right"|"middle";
+    clickCount?: number;
+    delay?: number;
+    force?: boolean;
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
+    noWaitAfter?: boolean;
+    position?: {
+      x: number;
+      y: number;
+    };
+    strict?: boolean;
+    timeout?: number;
+    trial?: boolean;
+  }) {
     if (this.control && this.control.runContext) {
       await this.control?.runContext?.click(sign, options)
     } else {

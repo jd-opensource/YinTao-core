@@ -3,6 +3,7 @@ import { LaunchOptions } from '../../types/types'
 import guardTimeExecution from '../utils/guard-time-execution'
 import { reportRunImage, reportRunLog, reportRunResult } from '../utils/remoteReport'
 import { readFile } from '../utils/suger'
+import stripAnsi from 'strip-ansi'
 import Compiler from './compiler'
 
 export interface Result {
@@ -72,8 +73,9 @@ export async function run(code: string, opts: RunOptions = {
     // 抛出编译错误
     result.success = false
     result.msg = error.message
-    result.log = error.message
+    result.log = stripAnsi(error.message) // 错误中包含cli着色器日志中需要去除
     result.code = 4025
+    result.storage = opts.storage
     if (launchOptions.remoteReport) {
       const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
       const storage = {
@@ -94,12 +96,12 @@ export async function run(code: string, opts: RunOptions = {
     async () => await compiler.runCompiledCode().then((a,b)=>{
       // 执行成功
       launchOptions.__log_body?.push('run success!')
-      result.log =  launchOptions.__log_body?.join('/n')
+      result.log =  launchOptions.__log_body?.join('\n')
     }).catch(async (e:Error) => {
       // 抛出执行错误
       result.success = false
       result.msg = e.message
-      result.log =  launchOptions.__log_body?.join('/n') + e.message
+      result.log =  launchOptions.__log_body?.join('\n') + '\n' + stripAnsi(e.message)
       result.code = 4044
       if (launchOptions.remoteReport) {
         const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
