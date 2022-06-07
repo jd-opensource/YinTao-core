@@ -25,6 +25,9 @@ function throwStack() {
       try {
         return await methodFun.apply(this, args)
       } catch (error) {
+        if(error.stack.includes('virtual_test')) {
+          throw error
+        }
         throw new Error(`${key} instruction fail ${error.message}`)
       }
     }
