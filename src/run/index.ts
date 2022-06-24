@@ -6,13 +6,14 @@ import { readFile } from '../utils/suger'
 import stripAnsi from 'strip-ansi'
 import Compiler from './compiler'
 
-export interface Result {
+export interface CherryResult {
   duration:number,
   success:boolean,
   msg:string,
-  divertor:any[],
+  divertor:any[], // 目前来说价值不大了，后续应该删除
   storage?:any
   log?:string
+  error? : Error
   /**
    * @code 4021 脚本编译错误 4044 脚本执行错误 2000执行成功
    */
@@ -26,6 +27,7 @@ export interface ImgFile {
 }
 
 export interface RunOptions extends LaunchOptions{
+  id?:string
   remoteReport?:{
     result?:string
     log?:string
@@ -47,7 +49,8 @@ export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
   cookies: [],
-}) :Promise<Result> {
+}) :Promise<CherryResult> {
+  let cherryResult :CherryResult
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     headless: opts.headless,
@@ -59,23 +62,21 @@ export async function run(code: string, opts: RunOptions = {
     _screenImages: [],
     screen: opts.screen,
   }
-  const result: Result = {
-    duration: 0,
-    success: true,
-    msg: '',
-    divertor: [],
-    code: 2000,
-  }
-  let compiler
+ 
+  let compiler: Compiler
   try {
     compiler = new Compiler(code, launchOptions)
   } catch (error) {
     // 抛出编译错误
-    result.success = false
-    result.msg = error.message
-    result.log = stripAnsi(error.message) // 错误中包含cli着色器日志中需要去除
-    result.code = 4025
-    result.storage = opts.storage
+    cherryResult = {
+      duration: 0,
+      success: false,
+      msg: error.message,
+      divertor: [],
+      log:stripAnsi(error.message),
+      code: 4025,
+      storage : opts.storage
+    }
     if (launchOptions.remoteReport) {
       const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
       const storage = {
@@ -83,52 +84,49 @@ export async function run(code: string, opts: RunOptions = {
         args: [caseId],
       }
       if (launchOptions.remoteReport?.result) {
-        await reportRunResult(launchOptions.remoteReport?.result, result, storage)
+        await reportRunResult(launchOptions.remoteReport?.result, cherryResult, storage)
       }
       if (launchOptions.remoteReport?.log) {
-        await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result), storage)
+        await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(cherryResult), storage)
       }
     }
-    console.log('result', JSON.stringify(result))
-    return result
+    return cherryResult
   }
-  await guardTimeExecution(
-    async () => await compiler.runCompiledCode().then((a,b)=>{
-      // 执行成功
-      launchOptions.__log_body?.push('run success!')
-      result.log =  launchOptions.__log_body?.join('\n')
-    }).catch(async (e:Error) => {
-      // 抛出执行错误
-      result.success = false
-      result.msg = e.message
-      result.log =  launchOptions.__log_body?.join('\n') + '\n' + stripAnsi(e.message)
-      result.code = 4044
-      if (launchOptions.remoteReport) {
-        const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
-        const storage = {
-          ...opts.storage,
-          args: [caseId],
-        }
-        if (launchOptions.remoteReport?.result) {
-          await reportRunResult(launchOptions.remoteReport?.result, result, storage)
-        }
-        if (launchOptions.remoteReport?.image) {
-          await reportRunImage(launchOptions.remoteReport?.image, launchOptions._screenImages, storage)
-        }
-        if (launchOptions.remoteReport?.log) {
-          await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(result.log), storage)
-        }
+
+  let duration:number = 0
+  cherryResult = await guardTimeExecution(
+    async () => await compiler.runCompiledCode().then((result:CherryResult)=>{
+      if(result.error){
+        result.msg = result.error.message
+        result.code = 4044
       }
+      return result
     }),
     (elapsedTime) => {
-      const duration = (elapsedTime[0] * 1000) + (elapsedTime[1] / 1000000)
-      result.duration = duration
-      result.storage = opts.storage
+      duration = (elapsedTime[0] * 1000) + (elapsedTime[1] / 1000000)
       console.log('time:', duration, 'ms') //  elapsedTime [秒，纳秒后缀]
     },
   )
-  console.log('result', JSON.stringify(result))
-  return result
+  cherryResult.duration = duration
+  cherryResult.storage = opts.storage
+
+  if (launchOptions.remoteReport) {
+    const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
+    const storage = {
+      ...opts.storage,
+      args: [caseId],
+    }
+    if (launchOptions.remoteReport?.result) {
+      await reportRunResult(launchOptions.remoteReport?.result, cherryResult, storage)
+    }
+    if (launchOptions.remoteReport?.image) {
+      await reportRunImage(launchOptions.remoteReport?.image, launchOptions._screenImages, storage)
+    }
+    if (launchOptions.remoteReport?.log) {
+      await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(cherryResult.log), storage)
+    }
+  }
+  return cherryResult
 }
 
 export async function runFile(filePath:string, opts:any) {

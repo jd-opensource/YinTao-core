@@ -4,7 +4,7 @@ import path from 'path'
 import expect from 'expect'
 import axios from 'axios'
 import Resolver from './resolver'
-import { Result, RunOptions } from '..'
+import { CherryResult, RunOptions } from '..'
 import * as cherry from '../../../index'
 import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
@@ -196,7 +196,7 @@ class assert implements FCherryAssert{
 async function asyncReport(this: V1Parse, ...args: any) {
   const { result, image, log } = this.runOptins?.remoteReport || {}
   if (result) {
-    const resultData: Result = {
+    const resultData: CherryResult = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
       code: 2000,
@@ -456,10 +456,21 @@ class Page implements FCherryPage{
     this.console.log('screenshot img path:', path.resolve(imgPath))
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
     if (buffer) {
-      this.parse.runOptins._screenImages.push({
+      let screenImage = {
         path: path.resolve(imgPath),
         buffer,
         name: path.basename(imgPath),
+      }
+
+      await new Promise((resolver,reject)=>{
+        // @ts-ignore
+        process.send(
+          {
+            type: 'addScreenImages',
+            data: screenImage
+          },undefined,undefined,()=>{
+          resolver(true)
+          })
       })
     }
   }
@@ -644,6 +655,36 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
+  async check(sign: string, options?: {
+    force?: boolean | undefined
+    noWaitAfter?: boolean | undefined
+    position?: {
+        x: number
+        y: number
+    } | undefined
+    strict?: boolean | undefined
+    timeout?: number | undefined
+    trial?: boolean | undefined
+} ) {
+    await this.control?.runContext?.check(sign, options)
+  }
+
+  @throwStack()
+  async tap(sign: string, options?: {
+    force?: boolean | undefined
+    noWaitAfter?: boolean | undefined
+    position?: {
+        x: number
+        y: number
+    } | undefined
+    strict?: boolean | undefined
+    timeout?: number | undefined
+    trial?: boolean | undefined
+} ) {
+    await this.control?.runContext?.tap(sign, options)
+  }
+
+  @throwStack()
   async getAttributes(sign:string, attr:string) {
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
@@ -664,12 +705,22 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
-  async wait(sign: string, ms?: number) {
+  async wait(sign: string, ms: number=5000) {
     await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
   }
 
   @throwStack()
-  async hover(sign: string) {
+  async hover(sign: string,options?: {
+    force?: boolean
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">
+    position?: {
+      x: number
+      y: number
+    };
+    strict?: boolean
+    timeout?: number
+    trial?: boolean
+  }) {
     await this.control?.runContext?.hover(sign)
   }
 

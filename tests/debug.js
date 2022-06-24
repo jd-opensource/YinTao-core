@@ -1,11 +1,37 @@
-await cookies.setAll("http://test.jd.com","cud=d2dae9224831bda62c0461f7f5bacf7f;guid=f3c65b477298e4422f6ad7b87c64a4352857c52cd92caf7df9e1fd5b4f85f466;__jda=139046964.1648900772239826443959.1648900772.1648900772.1650862691.2;__jdv=139046964%7Cbao.tjjt360.com%7C-%7Creferral%7C-%7C1650862691984;shshshfp=2ca356fbbd6ed155e8d6392ba69cb0d9;shshshfpa=10dd6553-eb3b-2916-328a-a0856b48a131-1650862692;3AB9D23F7A4B3C9B=XNPYBBCL4QIL6C2EBCZJ5HSABJPW5EXCWND4GBBY4BSMICQ5YJ52K6ZTIKQL6UKOF2OG4ERUFSLZLZLH3S27ZXCF3M;sso.jd.com=BJ.3607CF1B06A2E8F39ACC4C39B188CEB31120220425150530;")
-await page.to("http://test.jd.com/delayreporting/deliverGoodsTabs")
-await dom.click("#tab-2")
-await dom.click(":nth-child(1) > .el-table_3_column_19 > .cell > :nth-child(2) > span")
-await dom.click(":nth-child(4) > .el-form-item__content > .el-select > .el-input > .el-input__suffix > .el-input__suffix-inner > .el-select__caret")
-await dom.click("li:has-text(\"系统原因\") >> nth=2")
-await dom.click(".is-success > .el-form-item__content > .el-select > .el-input > .el-input__inner")
-await dom.click("span:has-text(\"国家大型会议/政策\") >> nth=2")
-await dom.click("label:nth-child(4) .el-checkbox__input .el-checkbox__inner")
-await sleep(2000)
-await dom.click("button:has-text(\"确定\")")
+await page.setDevice('iPhone 11')
+await page.to("https://card.m.jd.com/")
+await dom.click("text=账号密码登录333")
+console.log('nihao')
+await dom.click("[placeholder=\"用户名\\/邮箱\\/手机号\"]")
+
+console.log('nihao  日志内容222')
+await dom.fill("[placeholder=\"用户名\\/邮箱\\/手机号\"]","ji mi test")
+// await page.screenshot("nihao.jpg")
+// await sleep(2000)
+
+await page.screenshot('nihao.jpg') 
+
+// throw new Error("自定义出错")
+
+
+
+
+
+// await keyboard.press('Enter')
+// await dom.fill("[placeholder=\"用户名\\/邮箱\\/手机号\"]","jimitest1")
+// await dom.click("[placeholder=\"请输入密码\"]")
+// await dom.fill("[placeholder=\"请输入密码\"]","ai360buy")
+// await dom.click("input[type=\"checkbox\"]")
+// await dom.click("text=登 录")
+// await sleep(1000) 
+// await page.to("https://card.m.jd.com/")
+// await sleep(1000) 
+// // await dom.click("[placeholder=\"请输入6-999区间的数字\"]")
+// await dom.click(`//*[@id="root-virtual"]/div/div[1]/div[1]/div[3]/div[2]/input`)
+// await sleep(1000)
+// await dom.set(`51`,`//*[@id="root-virtual"]/div/div[1]/div[1]/div[3]/div[2]/input`)
+// await sleep(1000) 
+// await dom.tap('//*[@id="root-virtual"]/div/div[1]/div[1]/div[5]/div/div[1]/div[1]/div',{force:true})
+// // await dom.click('')
+// await sleep(1000000)
+// await dom.click("text=¥51.00")

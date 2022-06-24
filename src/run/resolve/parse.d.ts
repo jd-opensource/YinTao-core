@@ -404,14 +404,55 @@ interface FCherryDom {
   /**
    * @method 等待目标元素出现
    * @param sign 
-   * @param timeout 
+   * @param timeout default 5000/ms
    */
   wait(sign: string, timeout?: number)
   /**
    * @method 元素悬浮触发hover事件
    * @param sign 
    */
-  hover(sign: string)
+  hover(sign: string,options?: {
+    /**
+     * Whether to bypass the [actionability](https://playwright.dev/docs/actionability) checks. Defaults to `false`.
+     */
+    force?: boolean;
+
+    /**
+     * Modifier keys to press. Ensures that only these modifiers are pressed during the operation, and then restores current
+     * modifiers back. If not specified, currently pressed modifiers are used.
+     */
+    modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">;
+
+    /**
+     * A point to use relative to the top-left corner of element padding box. If not specified, uses some visible point of the
+     * element.
+     */
+    position?: {
+      x: number;
+
+      y: number;
+    };
+
+    /**
+     * When true, the call requires selector to resolve to a single element. If given selector resolves to more then one
+     * element, the call throws an exception.
+     */
+    strict?: boolean;
+
+    /**
+     * Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
+     * using the
+     * [browserContext.setDefaultTimeout(timeout)](https://playwright.dev/docs/api/class-browsercontext#browser-context-set-default-timeout)
+     * or [page.setDefaultTimeout(timeout)](https://playwright.dev/docs/api/class-page#page-set-default-timeout) methods.
+     */
+    timeout?: number;
+
+    /**
+     * When set, this method only performs the [actionability](https://playwright.dev/docs/actionability) checks and skips the action. Defaults to
+     * `false`. Useful to wait until the element is ready for the action without performing it.
+     */
+    trial?: boolean;
+  })
 
   /**
    * @method 判断元素是否存在
