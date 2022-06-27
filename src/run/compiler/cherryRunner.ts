@@ -3,7 +3,6 @@
 import vm from 'vm'
 import os from 'os'
 import path from 'path'
-import stripAnsi from 'strip-ansi'
 import { createRequire } from 'module'
 import { VirtualFile } from './index'
 import * as cherry from '../../../index'
@@ -267,15 +266,18 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
         })
       }
     }
+    if(!result.error) {
+      resolver.runOptins.__log_body?.push('run success!')
+    }
     // 这里构建统一的运行结果，评估执行成功或失败
     const cherryResult: CherryResult = {
       duration: 0,
       success: !result.error,
-      msg: '',
+      msg: result.error?.message || '',
       divertor: [],
-      log: resolver.runOptins.__log_body?.join('\n') + '\n' + stripAnsi(result.error?.message || ''),
+      log: resolver.runOptins.__log_body?.join('\n') + '\n',
       error: result.error,
-      code: 2000,
+      code: !result.error ? 2000 : 4044
     }
     sendResult(cherryResult)
 })()

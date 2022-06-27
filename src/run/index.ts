@@ -96,10 +96,6 @@ export async function run(code: string, opts: RunOptions = {
   let duration:number = 0
   cherryResult = await guardTimeExecution(
     async () => await compiler.runCompiledCode().then((result:CherryResult)=>{
-      if(result.error){
-        result.msg = result.error.message
-        result.code = 4044
-      }
       return result
     }),
     (elapsedTime) => {

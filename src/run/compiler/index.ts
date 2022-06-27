@@ -1,6 +1,7 @@
 // 引入babel 编译源代码
 import os from 'os'
 import { transform } from '@babel/core'
+import stripAnsi from 'strip-ansi'
 import createCallsiteRecord from 'callsite-record'
 import runScript from './runScript'
 import * as cherry from '../../../index'
@@ -80,18 +81,15 @@ export default class Compiler {
   async runCompiledCode() {
     var RunnerTimeout,res:CherryResult
     try {
-      res = await this.runUnsafeScript(this.code).catch(err=>{
-        console.log('err 100 这里应该永远不会执行:',err)
-        throw err
-      })
+      res = await this.runUnsafeScript(this.code)
       if (res.error) {
         const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
         if (callsiteRecord !== null) {
           // @ts-ignore  call interior func
           const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
           // del frist empty allow code align
-          console.log('cherry run error:', res.error.message, '\n', errorMsg.slice(1))
-          res.error = new Error(`cherry run error:${res.error.message}\n${errorMsg.slice(1)}`)
+          res.log = res.log + `${stripAnsi(res.error.message || '')}\n${stripAnsi(errorMsg.slice(1))}\n`
+          res.error = new Error(`cherry run error:${res.error.message}\n`);
         } else {
           console.log('cherry run error - check stack:', res.error.message)
         }
