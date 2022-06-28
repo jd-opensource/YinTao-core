@@ -1,16 +1,12 @@
 // 引入babel 编译源代码
-import os from 'os'
 import { transform } from '@babel/core'
 import stripAnsi from 'strip-ansi'
 import createCallsiteRecord from 'callsite-record'
-import runScript from './runScript'
 import * as cherry from '../../../index'
 import TestControl from '../../test_control/testControl'
 import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
-import V1Parse from '../resolve/v1Parse'
 import { CherryResult, RunOptions } from '..'
-import { LaunchOptions } from '../../client/types'
 import {fork} from 'child_process'
 import path from 'path'
 
