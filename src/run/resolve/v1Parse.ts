@@ -195,6 +195,7 @@ class assert implements FCherryAssert{
  */
 async function asyncReport(this: V1Parse, ...args: any) {
   const { result, image, log } = this.runOptins?.remoteReport || {}
+  this.console.log("asyncReport debug:",this.runOptins,this.runOptins._screenImages)
   if (result) {
     const resultData: CherryResult = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
@@ -453,14 +454,18 @@ class Page implements FCherryPage{
   @throwStack()
   async screenshot(imgPath: string) {
     // todo: sercer run don't save disk
-    this.console.log('screenshot img path:', path.resolve(imgPath))
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
-    if (buffer) {
+    this.console.log('screenshot img path:', path.resolve(imgPath)," image size:",buffer?.length || 0)
+    if (!buffer ||  buffer &&  buffer.length < 100){
+      this.console.error(`screenshot截图失败-路径: ${imgPath}`)
+    }else{
       let screenImage = {
         path: path.resolve(imgPath),
         buffer,
         name: path.basename(imgPath),
       }
+
+      this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
 
       await new Promise((resolver,reject)=>{
         // @ts-ignore
@@ -689,12 +694,23 @@ class Dom implements FCherryDom{
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     let result
-    if (attr == 'innerText') {
-      result = await locator.innerText()
-    } else if (attr == 'value') {
-      result = await locator.inputValue()
-    } else {
-      result = await locator.getAttribute(attr)
+    switch(attr){
+      case 'innerText':{
+        result = await locator.innerText()
+        break
+      }
+      case 'value':{
+        result = await locator.inputValue()
+        break
+      }
+      case 'checked':{
+        result = await locator.isChecked()
+        break
+      }
+      default:{
+        result = await locator.getAttribute(attr)
+        console.log("getAttributes 默认分支:", result)
+      }
     }
     return result
   }

@@ -36,8 +36,16 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
  */
 export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) {
   // 将要上传的图片
+  console.log(`image upload count:${imgs.length}`)
   imgs.map(async (img) => {
+
+    if(Buffer.isBuffer(img.buffer) == false) {
+      img.buffer = Buffer.from(img.buffer)
+    }
+
     const imgbase64 = `data: image/${getImageType(img.name)};base64,${img.buffer.toString('base64')}`
+    // fs.writeFileSync("nihaottt.png",imgbase64)
+    console.log(`upload image ${img.path} len:${imgbase64.length}`)
     await axios.post(
       url,
       {
@@ -46,7 +54,14 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
         name: img.name,
       },
       { timeout: 3000 },
-    ).catch((e: Error) => {
+    ).then((res)=>{
+      if (res.status === 200) {
+        console.log('reportRunImage success!')
+      } else {
+        console.log('reportRunImage error code')
+      }
+    })
+    .catch((e: Error) => {
       console.log('reportRunImage error!', e)
     })
   })

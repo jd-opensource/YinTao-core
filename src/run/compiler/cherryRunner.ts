@@ -234,25 +234,18 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
       sendResult(res)
     })
     if (result.error !== undefined) {
+      console.log("运行错误:", result.error)
       const imgPath = path.resolve(os.tmpdir(),'__cherry_auto_error.jpg') // 获取系统临时目录
       let screenshotPath : string | undefined = imgPath
       if (os.type() === 'Linux') { screenshotPath = undefined }// 远程执行,失败自动截图
-      
       const buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
       if (buffer) {
-        const imgPath = 'auto_error.jpg'
-        resolver.runOptins._screenImages.push({
-          path: imgPath,
-          buffer,
-          name: imgPath,
-        })
-        
         const screenImage = {
           path: imgPath,
           buffer,
           name: imgPath,
         }
-
+        resolver.runOptins._screenImages.push(screenImage)
         // 直接发送内容避免非必要落本地磁盘
         await new Promise((resolver,reject)=>{
             // @ts-ignore

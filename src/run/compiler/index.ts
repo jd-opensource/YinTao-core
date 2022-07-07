@@ -43,7 +43,6 @@ export default class Compiler {
       }, timeout)
 
       worker.on('message', (msg:any)=>{
-        // console.log('message',msg)
         const {type,data} = msg
         switch(type){
           case 'addScreenImages':

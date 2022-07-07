@@ -105,21 +105,21 @@ export async function run(code: string, opts: RunOptions = {
   )
   cherryResult.duration = duration
   cherryResult.storage = opts.storage
-
   if (launchOptions.remoteReport) {
+    console.log("执行完毕-启动远程异步数据上报!")
     const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
     const storage = {
       ...opts.storage,
       args: [caseId],
     }
-    if (launchOptions.remoteReport?.result) {
-      await reportRunResult(launchOptions.remoteReport?.result, cherryResult, storage)
+    if (launchOptions.remoteReport.result) {
+      await reportRunResult(launchOptions.remoteReport.result, cherryResult, storage)
     }
-    if (launchOptions.remoteReport?.image) {
-      await reportRunImage(launchOptions.remoteReport?.image, launchOptions._screenImages, storage)
+    if (launchOptions.remoteReport.image) {
+      await reportRunImage(launchOptions.remoteReport.image, launchOptions._screenImages, storage)
     }
-    if (launchOptions.remoteReport?.log) {
-      await reportRunLog(launchOptions.remoteReport?.log, JSON.stringify(cherryResult.log), storage)
+    if (launchOptions.remoteReport.log) {
+      await reportRunLog(launchOptions.remoteReport.log, JSON.stringify(cherryResult.log), storage)
     }
   }
   return cherryResult
