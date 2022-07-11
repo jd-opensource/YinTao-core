@@ -48,6 +48,9 @@ export default class Compiler {
           case 'addScreenImages':
             this._runOption._screenImages.push(data)
             break
+          case 'clearScreenImages':
+            this._runOption._screenImages = []
+            break
           case 'result':
             clearTimeout(timeoutId)
             resolver(data)

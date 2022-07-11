@@ -237,7 +237,11 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
       console.log("运行错误:", result.error)
       const imgPath = path.resolve(os.tmpdir(),'__cherry_auto_error.jpg') // 获取系统临时目录
       let screenshotPath : string | undefined = imgPath
-      if (os.type() === 'Linux') { screenshotPath = undefined }// 远程执行,失败自动截图
+      if (os.type() === 'Linux') { // 远程执行,失败自动截图
+        screenshotPath = undefined 
+      } else { // 显示本地错误截图路径
+        resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
+      }
       const buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
       if (buffer) {
         const screenImage = {

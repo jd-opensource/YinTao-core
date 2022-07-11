@@ -195,7 +195,6 @@ class assert implements FCherryAssert{
  */
 async function asyncReport(this: V1Parse, ...args: any) {
   const { result, image, log } = this.runOptins?.remoteReport || {}
-  this.console.log("asyncReport debug:",this.runOptins,this.runOptins._screenImages)
   if (result) {
     const resultData: CherryResult = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
@@ -207,6 +206,17 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
   }
   if (image) {
+    await new Promise((resolver,reject)=>{
+      // @ts-ignore
+      process.send(
+        {
+          type: 'clearScreenImages',
+          data: []
+        },undefined,undefined,()=>{
+        resolver(true)
+        })
+    })
+
     await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
     this.runOptins._screenImages = []
   }
