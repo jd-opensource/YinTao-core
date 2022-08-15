@@ -488,7 +488,16 @@ interface FCherryDom {
    * @param sign 
    * @param value 
    */
-  select(sign:string, value: any)
+  select(sign:string, value: {
+    value?: string,
+    label?:string,
+    index?:number,
+  },options?:{
+    force?:boolean,
+    noWaitAfter?: boolean,
+    strict?:boolean,
+    timeout?:number
+  })
   /**
    * @method inputFile文件上传
    * @param sign 

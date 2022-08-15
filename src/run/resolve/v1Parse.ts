@@ -531,11 +531,22 @@ class Page implements FCherryPage{
       }
 
       if (typeof index === 'string') {
-        const frame = _this.control.currentPage?.frame(index)
+        var frame = _this.control.currentPage?.frame(index)
         if (!frame) {
+          // 按照路径尝试匹配
+          const frames = (<PageType> _this.control.currentPage).frames()
+          for(let _frame of frames){
+            if(_frame.url().includes(index)){
+              frame = _frame
+              break
+            }
+          }
+        }
+        if(frame){
+          _this.control.updateContext(frame)
+        } else {
           throw new Error(`miss iframe name: ${index}`)
         }
-        _this.control.updateContext(frame)
       } else if (_this.control.currentPage && (<PageType> _this.control.currentPage).frames) {
         const changeFrame = (<PageType> _this.control.currentPage).frames()[index]
         if (changeFrame !== undefined) {
@@ -788,8 +799,17 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
-  async select(sign:string, value: any) {
-    await this.control?.runContext?.selectOption(sign, value)
+  async select(sign:string,  value: {
+    value?: string,
+    label?:string,
+    index?:number,
+  },options?:{
+    force?:boolean,
+    noWaitAfter?: boolean,
+    strict?:boolean,
+    timeout?:number
+  }) {
+    await this.control?.runContext?.selectOption(sign, value, options)
   }
 
   @throwStack()

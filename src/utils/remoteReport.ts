@@ -27,7 +27,7 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
       console.log('reportRunResult error code')
     }
   }).catch((e: Error) => {
-    console.log('reportRunResult catch error!', e)
+    console.log('reportRunResult catch error!', e.message, " report-url:",url)
   })
 }
 
@@ -62,7 +62,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
       }
     })
     .catch((e: Error) => {
-      console.log('reportRunImage error!', e)
+      console.log('reportRunImage error!', e.message, " image-url:",url)
     })
   })
 }
@@ -77,7 +77,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   param.append("logFile", logBody)
   param.append('storage', JSON.stringify(storage))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
-    console.log('reportRunLog error', e)
+    console.log('reportRunLog error', e.message, " log-url:",url)
   })
   console.log('reportRunLog success')
 }

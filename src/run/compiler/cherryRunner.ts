@@ -17,7 +17,11 @@ process.on('uncaughtException', function(err) {
 
 // @ts-ignore
 const sendResult = (result)=> {process.send({type:"result",data:result},undefined,undefined,()=>{
-    process.exit(0)
+    setTimeout(() => {
+      // 有时未上报完，线程就莫名被关闭，因此添加调试。
+      console.log('send resule success~ exit child process!')
+      process.exit(0)
+    }, 300);
     })
 }
 
@@ -242,6 +246,7 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
       } else { // 显示本地错误截图路径
         resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
       }
+      console.log("staring 执行错误自动截图中...")
       const buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
       if (buffer) {
         const screenImage = {
@@ -258,6 +263,7 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
                 type: 'addScreenImages',
                 data: screenImage
               },undefined,undefined,()=>{
+                console.log("错误图片上报成功")
               resolver(true)
             })
         })

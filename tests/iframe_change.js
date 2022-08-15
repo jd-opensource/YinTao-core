@@ -1,7 +1,5 @@
-await page.create(`https://baidu.com`)
-await page.change(0)
 await page.to(`http://vsp.jd.com`)
-await page.changeIframe(0)
+await page.changeIframe("passport/middle")
 await dom.click(`#loginname`)
 await dom.set(`4`,`#loginname`)
 await dom.set(`4`,`#loginname`)
