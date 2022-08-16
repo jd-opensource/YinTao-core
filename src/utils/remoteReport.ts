@@ -6,6 +6,8 @@ const getImageType = (str) => {
   return str.match(reg)[1]
 }
 
+const requestTimeout = 3000
+
 /**
  * @method 远程报告运行结果
  */
@@ -18,7 +20,7 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 3000,
+      timeout: requestTimeout,
     },
   ).then((res) => {
     if (res.status === 200) {
@@ -28,6 +30,7 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
     }
   }).catch((e: Error) => {
     console.log('reportRunResult catch error!', e.message, " report-url:",url)
+    console.log("body: ",JSON.stringify(result))
   })
 }
 
@@ -53,7 +56,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
         storage,
         name: img.name,
       },
-      { timeout: 3000 },
+      { timeout: requestTimeout },
     ).then((res)=>{
       if (res.status === 200) {
         console.log('reportRunImage success!')
@@ -76,7 +79,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   const param = new FormData()
   param.append("logFile", logBody)
   param.append('storage', JSON.stringify(storage))
-  await axios.post(url, param, { headers: param.getHeaders(), timeout: 3000 }).catch((e) => {
+  await axios.post(url, param, { headers: param.getHeaders(), timeout: requestTimeout }).catch((e) => {
     console.log('reportRunLog error', e.message, " log-url:",url)
   })
   console.log('reportRunLog success')

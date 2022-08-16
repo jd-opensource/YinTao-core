@@ -10,6 +10,7 @@ import { LaunchOptions } from '../../client/types'
 import V1Parse from '../resolve/v1Parse'
 import TestControl from '../../test_control/testControl'
 import { CherryResult } from '..'
+import { __sleep } from '../../utils/suger'
 
 process.on('uncaughtException', function(err) {
  process.exit(1);
@@ -222,7 +223,10 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
 
 (async()=>{
     process.on('message',(msg:any)=>{
-        if(msg.kill) process.exit()
+        if(msg.kill){
+          console.log('child process exit success!')
+          process.exit()
+        } 
     })
     const code = process.argv[2]
     const runOption = JSON.parse(process.argv[3] || '{}') 
@@ -247,7 +251,12 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
         resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
       }
       console.log("staring 执行错误自动截图中...")
-      const buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
+      var buffer
+      try {
+        buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
+      } catch (error) {
+        console.log("执行错误-自动截图失败:",error)
+      }
       if (buffer) {
         const screenImage = {
           path: imgPath,
@@ -283,4 +292,8 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
       code: !result.error ? 2000 : 4044
     }
     sendResult(cherryResult)
+    // 子线程不能自己退出必须等待退出消息
+    while(true){
+      await __sleep(3000)
+    }
 })()
