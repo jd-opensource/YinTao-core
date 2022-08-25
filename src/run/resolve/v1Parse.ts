@@ -195,6 +195,12 @@ class assert implements FCherryAssert{
  */
 async function asyncReport(this: V1Parse, ...args: any) {
   const { result, image, log } = this.runOptins?.remoteReport || {}
+
+  // delete reported case
+  if (this.runOptins.storage && this.runOptins.storage.__caseList) {
+      this.runOptins.storage.__caseList.shift()
+  }
+
   if (result) {
     const resultData: CherryResult = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
@@ -225,10 +231,6 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunLog(log, "success", { args, ...this.runOptins.storage })
   }
 
-  // delete reported case
-  if (this.runOptins.storage && this.runOptins.storage.__caseList) {
-    this.runOptins.storage.__caseList.shift()
-  }
 }
 
 class Browser implements FCherryBrowser{

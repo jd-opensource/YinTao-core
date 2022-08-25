@@ -50,6 +50,7 @@ export default class Compiler {
             break
           case 'clearScreenImages':
             this._runOption._screenImages = []
+            this._runOption.storage?.__caseList?.shift()
             break
           case 'result':
             clearTimeout(timeoutId)
