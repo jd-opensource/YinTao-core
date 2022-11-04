@@ -13,7 +13,8 @@ import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
 
 process.on('uncaughtException', function(err) {
- process.exit(1);
+  console.log("收到了关闭异常:",err)
+  process.exit(1);
 });
 
 // @ts-ignore
@@ -256,7 +257,8 @@ async function bootstrap(browserType:string ='chrome',runOption:any){
       try {
         buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
       } catch (error) {
-        console.log("执行错误-自动截图失败:",error)
+        console.log("执行错误-自动截图失败:", error)
+        // 如果页面未正常运行(例: 长时间loding)，这种情况下cdp截图无法正常截取，需要读取指定图片传递给后台
       }
       if (buffer) {
         const screenImage = {

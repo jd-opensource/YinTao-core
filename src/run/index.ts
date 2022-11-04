@@ -81,7 +81,7 @@ export async function run(code: string, opts: RunOptions = {
       const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
       const storage = {
         ...opts.storage,
-        args: [caseId],
+        args: caseId === undefined || caseId == null ? [] : [caseId],
       }
       if (launchOptions.remoteReport?.result) {
         await reportRunResult(launchOptions.remoteReport?.result, cherryResult, storage)
@@ -110,7 +110,7 @@ export async function run(code: string, opts: RunOptions = {
     const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
     const storage = {
       ...opts.storage,
-      args: [caseId],
+      args: caseId === undefined || caseId == null ? [] : [caseId],
     }
     if (launchOptions.remoteReport.result) {
       await reportRunResult(launchOptions.remoteReport.result, cherryResult, storage)

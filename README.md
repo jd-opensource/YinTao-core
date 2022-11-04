@@ -46,7 +46,7 @@
 
 推荐使用  `yarn`。十分简单。
 ```shell
-yarn add @cherry/cherry-core
+yarn add @cherry-jd/cherry-core
 ```
 
 ## Usage

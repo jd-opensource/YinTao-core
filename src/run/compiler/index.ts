@@ -62,7 +62,7 @@ export default class Compiler {
 
       worker.on('exit', function (code, signal) {
         clearTimeout(timeoutId)
-        console.log('fork exit:', code)
+        console.log('fork exit:', code, signal)
       });
     
       worker.on('error', function (err) {

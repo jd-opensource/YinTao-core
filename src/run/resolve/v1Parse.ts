@@ -9,11 +9,11 @@ import * as cherry from '../../../index'
 import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
-import {
-  Page as PageType, Route, Request, Response,
-} from '../../../types/types'
+import { Page as PageType, Route, Request, Response,} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
-import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser } from './parse'
+import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser,FCherryImage, sleep } from './parse'
+import cv from '@u4/opencv4nodejs'
+import {matchFeatures} from './matchFeatures'
 
 /**
  *  @method 将内部堆栈以外部脚本抛出
@@ -76,6 +76,7 @@ export default class V1Parse extends Resolver {
       expect,
       dom: new Dom(this),
       sleep: __sleep,
+      img: new Img(this),
       axios,
       cookies: new Cookies(this),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
@@ -115,6 +116,82 @@ function handleError(err) {
     err = Error(err)
   }
   console.log(`error handler: ${err.message}`, "yellow")
+}
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+async function wait4key() {
+  // console.log('press a key to continue.');
+  if (process.stdin.isTTY)
+    process.stdin.setRawMode(true);
+  process.stdin.resume();
+  let done : string | null = null ;
+  const capture = (/*data: Buffer*/) => {
+    // console.log({data})
+    done = 'terminal';
+  };
+  process.stdin.on('data', capture);
+  await delay(10);
+  done = null;
+  for (; ;) {
+    await delay(10);
+    if (~cv.waitKey(10)) {
+      done = 'window';
+      break;
+    }
+    if (done)
+      break;
+  }
+  process.stdin.off('data', capture);
+  process.stdin.pause();
+  if (process.stdin.isTTY)
+    process.stdin.setRawMode(false);
+  return done;
+}
+
+
+class Img implements FCherryImage{
+  parse: V1Parse
+
+  constructor(v1parse: V1Parse) {
+    this.parse = v1parse
+  }
+  
+  async click(imgPath: string): Promise<void> {
+    console.log('进行图片点击,图片为:', imgPath)
+    if(imgPath == null || imgPath == '') throw new Error("img.click指令图片不能为空!")
+    // 获取浏览器截图
+    // await __sleep(1000)
+    // todu: 页面加载时截图回获取不到,需要加时间内重试
+    const imgData = await this.parse.control.currentPage?.screenshot({path:"./test_baidu.jpg"})
+    if(imgData){
+      const originalMat = await cv.imdecode(imgData);
+      var waldoMat
+      if(/^https?:\/\//.test(imgPath)){
+        
+      } else {
+        waldoMat = await cv.imreadAsync(path.resolve(imgPath));
+      }
+
+      const {x,y} = matchFeatures(
+        waldoMat,
+        originalMat,
+        new cv.SIFTDetector({ nFeatures: 4000 }),
+        cv.matchFlannBased,
+        false // debug时设置 -> true
+      );
+
+      if(x && y){
+        await this.parse.control.currentPage?.mouse.click(x, y)
+      }else{
+        throw new Error(`坐标获取失败,无法点击${x},${y}`)
+      }
+    }
+  }
+
+  async exist(imgPath: string): Promise<boolean> {
+    return true
+  }
+  
 }
 
 class assert implements FCherryAssert{
@@ -157,6 +234,11 @@ class assert implements FCherryAssert{
 
   @throwStack()
   async custom(sign: string, attr: string, will: any, opreate: number) {
+    // playweight 不支持/开头的根路径，因此需要协助调整
+    if(sign.slice(0,5) == "/html"){
+      sign = '/' + sign
+    }
+    
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     let result
@@ -715,7 +797,7 @@ class Dom implements FCherryDom{
   @throwStack()
   async getAttributes(sign:string, attr:string) {
     const locator = this.control.runContext?.locator(sign)
-    if (!locator) throw new Error(`custom not find sign:', ${sign}`)
+    if (!locator) throw new Error(`getAttributes not find sign:', ${sign}`)
     let result
     switch(attr){
       case 'innerText':{
@@ -792,7 +874,11 @@ class Dom implements FCherryDom{
     strict?: boolean; // When true, the call requires selector to resolve to a single element.
     timeout?: number; // Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
   }) {
-    await this.control?.runContext?.fill(sign, value, options)
+    if (this.control && this.control.runContext) {
+      await this.control?.runContext?.fill(sign, value, options)
+    } else {
+      throw new Error('fill error - page content miss, please chenk page...')
+    }
   }
 
   @throwStack()

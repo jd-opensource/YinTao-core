@@ -630,4 +630,9 @@ interface FCherryMouse{
   wheel(deltaX: number, deltaY: number)
 }
 
+interface FCherryImage {
+  click(imgPath:string): Promise<void>
+  exist(imgPath:string): Promise<boolean> 
+}
+
 declare const sleep : (ms:number)=> void

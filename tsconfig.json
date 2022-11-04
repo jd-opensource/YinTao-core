@@ -19,6 +19,7 @@
         "noImplicitAny":false,
         "allowJs": true,
         "jsx": "react",
+        "outDir": "./",
         "resolveJsonModule": true,
         "inlineSourceMap": true,
         "noImplicitOverride": true,
@@ -29,6 +30,7 @@
         "tests",
         "@types",
         "lib/**/*",
+        "dist"
         // "src/server/common/**/*"
     ],
 }
