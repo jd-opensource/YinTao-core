@@ -30,7 +30,6 @@
         "tests",
         "@types",
         "lib/**/*",
-        "dist"
-        // "src/server/common/**/*"
+        "dist",
     ],
 }

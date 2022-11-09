@@ -3,6 +3,7 @@ import os from 'os'
 import path from 'path'
 import expect from 'expect'
 import axios from 'axios'
+import request from 'request'
 import Resolver from './resolver'
 import { CherryResult, RunOptions } from '..'
 import * as cherry from '../../../index'
@@ -15,6 +16,7 @@ import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FC
 import cv from '@u4/opencv4nodejs'
 import {matchFeatures} from './matchFeatures'
 
+declare const Buffer
 /**
  *  @method 将内部堆栈以外部脚本抛出
  */
@@ -159,15 +161,21 @@ class Img implements FCherryImage{
   async click(imgPath: string): Promise<void> {
     console.log('进行图片点击,图片为:', imgPath)
     if(imgPath == null || imgPath == '') throw new Error("img.click指令图片不能为空!")
-    // 获取浏览器截图
-    // await __sleep(1000)
-    // todu: 页面加载时截图回获取不到,需要加时间内重试
-    const imgData = await this.parse.control.currentPage?.screenshot({path:"./test_baidu.jpg"})
+    // todu: 页面加载时截图回获取不到,需要加时间内重试 await __sleep(1000)
+    const imgData = await this.parse.control.currentPage?.screenshot()
     if(imgData){
       const originalMat = await cv.imdecode(imgData);
       var waldoMat
-      if(/^https?:\/\//.test(imgPath)){
-        
+      if(/^https?:\/\//.test(imgPath)) {
+        // 将图片转buff
+        waldoMat = await new Promise((resolve,reject) =>{
+          request.get({ uri: imgPath, encoding: 'binary' }, async function (err, res) {
+              if (!err) {
+                  let buffer = Buffer.from(res.body, 'ascii');
+                  resolve(await cv.imdecode(buffer)) 
+              }
+          });
+        })
       } else {
         waldoMat = await cv.imreadAsync(path.resolve(imgPath));
       }
