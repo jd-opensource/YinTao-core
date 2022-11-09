@@ -1,8 +1,11 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+// @ts-ignore
 import expect from 'expect'
+// @ts-ignore
 import axios from 'axios'
+// @ts-ignore
 import request from 'request'
 import Resolver from './resolver'
 import { CherryResult, RunOptions } from '..'
@@ -13,6 +16,7 @@ import { download, mkdirIfNeeded } from '../../utils/utils'
 import { Page as PageType, Route, Request, Response,} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser,FCherryImage, sleep } from './parse'
+// @ts-ignore
 import cv from '@u4/opencv4nodejs'
 import {matchFeatures} from './matchFeatures'
 
