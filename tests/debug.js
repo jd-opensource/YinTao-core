@@ -1,5 +1,9 @@
-await page.to("https://baidu.com")
-await dom.click("input[name=\"wd\"]")
-await dom.fill("input[name=\"wd\"]","666")
-await img.click("https://storage.360buyimg.com/assert/baidu_btn.jpg")
-await sleep(3000)
+try{
+await page.to("http://baidu.com/")
+    await dom.errorSend('用例设置为失败，继续执行')
+    await asyncReport()
+    
+}catch(e){
+    console.log("***",e.name)
+}
+    

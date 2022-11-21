@@ -1,23 +1,23 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-// @ts-ignore
-import expect from 'expect'
-// @ts-ignore
+import expect, { any } from 'expect'
 import axios from 'axios'
-// @ts-ignore
-import request from 'request'
+import { rsort } from 'semver'
 import Resolver from './resolver'
 import { CherryResult, RunOptions } from '..'
 import * as cherry from '../../../index'
 import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
-import { Page as PageType, Route, Request, Response,} from '../../../types/types'
+import {
+  Page as PageType, Route, Request, Response, testControl,
+} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
-import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser,FCherryImage, sleep } from './parse'
+import {
+  FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,
+} from './parse'
 
-declare const Buffer
 /**
  *  @method 将内部堆栈以外部脚本抛出
  */
@@ -28,7 +28,7 @@ function throwStack() {
       try {
         return await methodFun.apply(this, args)
       } catch (error) {
-        if(error.stack.includes('virtual_test')) {
+        if (error.stack.includes('virtual_test')) {
           throw error
         }
         throw new Error(`${key} instruction fail ${error.message}`)
@@ -43,12 +43,14 @@ export default class V1Parse extends Resolver {
   control: TestControl
   runOptins: RunOptions
   console: Console
+  cherryResult: CherryResult
   private __log_body: any[]
 
-  constructor(testControl: TestControl, runOptins: RunOptions) {
+  constructor(testControl: TestControl, runOptins: RunOptions, cherryResult: CherryResult) {
     super()
     this.testId = testControl.id
     this.control = testControl
+    this.cherryResult = cherryResult
     runOptins.__log_body = []
     this.runOptins = runOptins
     this.__log_body = []
@@ -64,14 +66,15 @@ export default class V1Parse extends Resolver {
           trapTarget[key](...args)
         }
       },
-    };
-    this.console = new Proxy(console,handler)
+    }
+    this.console = new Proxy(console, handler)
   }
 
   registerGlobalApi() {
     const utils = new Utils(this.control)
+
     return {
-      console:this.console,
+      console: this.console,
       page: new Page(this),
       keyboard: new Keyboard(this),
       mouse: new Mouse(this),
@@ -79,7 +82,6 @@ export default class V1Parse extends Resolver {
       expect,
       dom: new Dom(this),
       sleep: __sleep,
-      img: new Img(this),
       axios,
       cookies: new Cookies(this),
       locator: (sign, options) => this.control.runContext?.locator(sign, options),
@@ -121,54 +123,7 @@ function handleError(err) {
   console.log(`error handler: ${err.message}`, "yellow")
 }
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-class Img implements FCherryImage{
-  parse: V1Parse
-
-  constructor(v1parse: V1Parse) {
-    this.parse = v1parse
-  }
-  
-  async click(imgPath: string): Promise<void> {
-    console.log('进行图片点击,图片为:', imgPath)
-    if(imgPath == null || imgPath == '') throw new Error("img.click指令图片不能为空!")
-    // todu: 页面加载时截图回获取不到,需要加时间内重试 await __sleep(1000)
-    const imgData = await this.parse.control.currentPage?.screenshot()
-    // if(imgData){
-    //   const originalMat = await cv.imdecode(imgData);
-    //   var waldoMat
-    //   if(/^https?:\/\//.test(imgPath)) {
-    //     // 将图片转buff
-    //     waldoMat = await new Promise((resolve,reject) =>{
-    //       request.get({ uri: imgPath, encoding: 'binary' }, async function (err, res) {
-    //           if (!err) {
-    //               let buffer = Buffer.from(res.body, 'ascii');
-    //               resolve(await cv.imdecode(buffer)) 
-    //           }
-    //       });
-    //     })
-    //   } else {
-    //     waldoMat = await cv.imreadAsync(path.resolve(imgPath));
-    //   }
-      const {x,y} = {
-        x:11,
-        y:11
-      }
-      if(x && y){
-        await this.parse.control.currentPage?.mouse.click(x, y)
-      }else{
-        throw new Error(`坐标获取失败,无法点击${x},${y}`)
-      }
-  }
-
-  async exist(imgPath: string): Promise<boolean> {
-    return true
-  }
-  
-}
-
-class assert implements FCherryAssert{
+class assert implements FCherryAssert {
   control: TestControl
   constructor(testControl: TestControl) {
     this.control = testControl
@@ -177,6 +132,7 @@ class assert implements FCherryAssert{
   @throwStack()
   async all(text:string, times:number = 6) {
     const _this = this
+
     const __wait_call = async (func:()=> Promise<boolean>, number:number, sleep:number) => {
       while (number > 0) {
         number--
@@ -208,11 +164,6 @@ class assert implements FCherryAssert{
 
   @throwStack()
   async custom(sign: string, attr: string, will: any, opreate: number) {
-    // playweight 不支持/开头的根路径，因此需要协助调整
-    if(sign.slice(0,5) == "/html"){
-      sign = '/' + sign
-    }
-    
     const locator = this.control.runContext?.locator(sign)
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     let result
@@ -254,29 +205,33 @@ async function asyncReport(this: V1Parse, ...args: any) {
 
   // delete reported case
   if (this.runOptins.storage && this.runOptins.storage.__caseList) {
-      this.runOptins.storage.__caseList.shift()
+    this.runOptins.storage.__caseList.shift()
   }
 
   if (result) {
-    const resultData: CherryResult = {
+    console.log("cherryResult******", JSON.stringify(this.cherryResult))
+    const resultData: CherryResult = this.cherryResult || {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
       success: true,
       code: 2000,
       msg: 'success',
       divertor: [],
     }
+
     await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
+    this.cherryResult = {}
+
   }
+
   if (image) {
-    await new Promise((resolver,reject)=>{
+    await new Promise((resolver, reject) => {
       // @ts-ignore
-      process.send(
-        {
-          type: 'clearScreenImages',
-          data: []
-        },undefined,undefined,()=>{
+      process.send({
+        type: 'clearScreenImages',
+        data: [],
+      }, undefined, undefined, () => {
         resolver(true)
-        })
+      })
     })
 
     await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
@@ -286,10 +241,9 @@ async function asyncReport(this: V1Parse, ...args: any) {
   if (log) {
     await reportRunLog(log, "success", { args, ...this.runOptins.storage })
   }
-
 }
 
-class Browser implements FCherryBrowser{
+class Browser implements FCherryBrowser {
   control: TestControl
   parse: any
 
@@ -303,7 +257,7 @@ class Browser implements FCherryBrowser{
     this.control.browserContext?.on(event as any, wrapHandler(callback))
   }
 
-  //@ts-ignore
+  // @ts-ignore
   route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
     times?: number;
   }) {
@@ -311,7 +265,7 @@ class Browser implements FCherryBrowser{
   }
 }
 
-class Keyboard implements FCherryKeyboard{
+class Keyboard implements FCherryKeyboard {
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -350,7 +304,7 @@ class Keyboard implements FCherryKeyboard{
   }
 }
 
-class Mouse implements FCherryMouse{
+class Mouse implements FCherryMouse {
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -403,7 +357,7 @@ class Mouse implements FCherryMouse{
   }
 }
 
-class Page implements FCherryPage{
+class Page implements FCherryPage {
   control: TestControl
   parse: V1Parse
   defaultContextOptions: Object
@@ -428,13 +382,13 @@ class Page implements FCherryPage{
   @throwStack()
   async waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
       timeout?: number;
-    }){
-    if(!this.control.currentPage) throw new Error('miss currentPage.')
+    }) {
+    if (!this.control.currentPage) throw new Error('miss currentPage.')
     return await this.control.currentPage.waitForResponse(urlOrPredicate, options)
   }
 
   @throwStack()
-  async waitPopup(opt:any) :Promise<void>{
+  async waitPopup(opt:any) :Promise<void> {
     const page = await this.control.currentPage?.waitForEvent('popup', opt)
     if (page) {
       this.control.updatePage(page)
@@ -523,11 +477,11 @@ class Page implements FCherryPage{
   async screenshot(imgPath: string) {
     // todo: sercer run don't save disk
     const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
-    this.console.log('screenshot img path:', path.resolve(imgPath)," image size:",buffer?.length || 0)
-    if (!buffer ||  buffer &&  buffer.length < 100){
+    this.console.log('screenshot img path:', path.resolve(imgPath), " image size:", buffer?.length || 0)
+    if (!buffer || buffer && buffer.length < 100) {
       this.console.error(`screenshot截图失败-路径: ${imgPath}`)
-    }else{
-      let screenImage = {
+    } else {
+      const screenImage = {
         path: path.resolve(imgPath),
         buffer,
         name: path.basename(imgPath),
@@ -535,15 +489,14 @@ class Page implements FCherryPage{
 
       this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
 
-      await new Promise((resolver,reject)=>{
+      await new Promise((resolver, reject) => {
         // @ts-ignore
-        process.send(
-          {
-            type: 'addScreenImages',
-            data: screenImage
-          },undefined,undefined,()=>{
+        process.send({
+          type: 'addScreenImages',
+          data: screenImage,
+        }, undefined, undefined, () => {
           resolver(true)
-          })
+        })
       })
     }
   }
@@ -589,18 +542,18 @@ class Page implements FCherryPage{
       }
 
       if (typeof index === 'string') {
-        var frame = _this.control.currentPage?.frame(index)
+        let frame = _this.control.currentPage?.frame(index)
         if (!frame) {
           // 按照路径尝试匹配
           const frames = (<PageType> _this.control.currentPage).frames()
-          for(let _frame of frames){
-            if(_frame.url().includes(index)){
+          for (const _frame of frames) {
+            if (_frame.url().includes(index)) {
               frame = _frame
               break
             }
           }
         }
-        if(frame){
+        if (frame) {
           _this.control.updateContext(frame)
         } else {
           throw new Error(`miss iframe name: ${index}`)
@@ -632,7 +585,7 @@ class Utils {
   }
 }
 
-class Cookies implements FCherryCookies{
+class Cookies implements FCherryCookies {
   control: TestControl
   parse: V1Parse
   console:Console
@@ -693,13 +646,19 @@ class Cookies implements FCherryCookies{
   }
 }
 
-class Dom implements FCherryDom{
+class Dom implements FCherryDom {
   control: TestControl
   console:Console
+  // 增加paras定义Byzwj
+  parse: V1Parse
+  runOptins: RunOptions
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.console = v1parse.console
+    this.runOptins = v1parse.runOptins
+    // 增加parase 定义 Byzwj
+    this.parse = v1parse
   }
 
   @throwStack()
@@ -711,7 +670,7 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
-  async click(sign: string,  options?: {
+  async click(sign: string, options?: {
     button?: "left"|"right"|"middle";
     clickCount?: number;
     delay?: number;
@@ -749,7 +708,7 @@ class Dom implements FCherryDom{
     strict?: boolean | undefined
     timeout?: number | undefined
     trial?: boolean | undefined
-} ) {
+}) {
     await this.control?.runContext?.check(sign, options)
   }
 
@@ -764,29 +723,29 @@ class Dom implements FCherryDom{
     strict?: boolean | undefined
     timeout?: number | undefined
     trial?: boolean | undefined
-} ) {
+}) {
     await this.control?.runContext?.tap(sign, options)
   }
 
   @throwStack()
   async getAttributes(sign:string, attr:string) {
     const locator = this.control.runContext?.locator(sign)
-    if (!locator) throw new Error(`getAttributes not find sign:', ${sign}`)
+    if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     let result
-    switch(attr){
-      case 'innerText':{
+    switch (attr) {
+      case 'innerText': {
         result = await locator.innerText()
         break
       }
-      case 'value':{
+      case 'value': {
         result = await locator.inputValue()
         break
       }
-      case 'checked':{
+      case 'checked': {
         result = await locator.isChecked()
         break
       }
-      default:{
+      default: {
         result = await locator.getAttribute(attr)
         console.log("getAttributes 默认分支:", result)
       }
@@ -800,12 +759,12 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
-  async wait(sign: string, ms: number=5000) {
+  async wait(sign: string, ms: number = 5000) {
     await this.control?.runContext?.waitForSelector(sign, { timeout: ms })
   }
 
   @throwStack()
-  async hover(sign: string,options?: {
+  async hover(sign: string, options?: {
     force?: boolean
     modifiers?: Array<"Alt"|"Control"|"Meta"|"Shift">
     position?: {
@@ -823,6 +782,7 @@ class Dom implements FCherryDom{
   async exist(sign: string, ms:number = 2000) : Promise<boolean> {
     const __wait_time = async (func:any, ms:number, args: any = undefined) => {
       let count = parseInt(((ms / 1000) * 2) as any, 10)
+      console.log("getAttributes 默认分支:")
       while (count > 0) {
         count--
         const result = await func(args)
@@ -848,11 +808,7 @@ class Dom implements FCherryDom{
     strict?: boolean; // When true, the call requires selector to resolve to a single element.
     timeout?: number; // Maximum time in milliseconds, defaults to 30 seconds, pass `0` to disable timeout. The default value can be changed by
   }) {
-    if (this.control && this.control.runContext) {
-      await this.control?.runContext?.fill(sign, value, options)
-    } else {
-      throw new Error('fill error - page content miss, please chenk page...')
-    }
+    await this.control?.runContext?.fill(sign, value, options)
   }
 
   @throwStack()
@@ -861,11 +817,11 @@ class Dom implements FCherryDom{
   }
 
   @throwStack()
-  async select(sign:string,  value: {
+  async select(sign:string, value: {
     value?: string,
     label?:string,
     index?:number,
-  },options?:{
+  }, options?:{
     force?:boolean,
     noWaitAfter?: boolean,
     strict?:boolean,
@@ -901,5 +857,55 @@ class Dom implements FCherryDom{
       throw new Error(`Invalid file path: ${files}`)
     }
     await this.control?.runContext?.setInputFiles(sign, files)
+  }
+
+  @throwStack()
+  async errorSend(sign: string) : Promise<any> {
+    const errorSendImage = 'errSend.jpg'
+    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImage, type: 'jpeg' })
+    console.log("screenshot img path:", path.resolve(errorSendImage))
+    let screenImage: any
+    this.console.log('screenshot img path:', path.resolve(errorSendImage), " image size:", buffer?.length || 0)
+    if (!buffer || buffer && buffer.length < 100) {
+      this.console.error(`screenshot截图失败-路径: ${errorSendImage}`)
+    } else {
+      screenImage = {
+        path: path.resolve(errorSendImage),
+        buffer,
+        name: path.basename(errorSendImage),
+      }
+    }
+
+    this.parse.runOptins = {
+      id: this.control.id,
+      remoteReport: {
+        result: "errorSendResult",
+        log: "errorSendResult",
+        image: 'errorSendResultst',
+      },
+      cookies: ["errorSendResult"],
+      script: 'errorSendResultst',
+      storage: any,
+      screen: {
+        width: 1,
+        height: 2,
+      },
+      _startTime: 1,
+      __log_body: ['errorSendResult'],
+      _screenImages: ['用例设置为失败'],
+    }
+    this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
+
+    this.parse.cherryResult = {
+      duration: new Date().getTime() - (this.parse.runOptins._startTime as number),
+      success: false,
+      code: 400,
+      msg: sign,
+      divertor: [],
+      error: {
+        name: '主动将用例置为失败',
+        message: sign,
+      },
+    }
   }
 }

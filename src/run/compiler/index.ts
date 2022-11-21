@@ -2,13 +2,15 @@
 import { transform } from '@babel/core'
 import stripAnsi from 'strip-ansi'
 import createCallsiteRecord from 'callsite-record'
+import { fork } from 'child_process'
+import path from 'path'
+import { Console } from 'console'
 import * as cherry from '../../../index'
 import TestControl from '../../test_control/testControl'
 import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
 import { CherryResult, RunOptions } from '..'
-import {fork} from 'child_process'
-import path from 'path'
+import { Touchscreen } from '../../client/input'
 
 export const VirtualFile = 'virtual_test.js'
 
@@ -33,18 +35,17 @@ export default class Compiler {
    * @param script 脚本内容
    * @param timeout 超时时间/ms(默认15m)
    */
-  async runUnsafeScript(script:string, timeout:number= 900000) :Promise<CherryResult>{
-    return new Promise((resolver,reject)=>{
-      const worker = fork(path.join(__dirname,'cherryRunner'), [script,JSON.stringify(this._runOption)])
-
-      const timeoutId = setTimeout(()=>{
-        worker.send({kill:true}) // worker.kill() invalid
+  async runUnsafeScript(script:string, timeout:number = 900000) :Promise<CherryResult> {
+    return new Promise((resolver, reject) => {
+      const worker = fork(path.join(__dirname, 'cherryRunner'), [script, JSON.stringify(this._runOption)])
+      const timeoutId = setTimeout(() => {
+        worker.send({ kill: true }) // worker.kill() invalid
         reject(new Error("Timeout"))
       }, timeout)
 
-      worker.on('message', (msg:any)=>{
-        const {type,data} = msg
-        switch(type){
+      worker.on('message', (msg:any) => {
+        const { type, data } = msg
+        switch (type) {
           case 'addScreenImages':
             this._runOption._screenImages.push(data)
             break
@@ -55,21 +56,21 @@ export default class Compiler {
           case 'result':
             clearTimeout(timeoutId)
             resolver(data)
-            worker.send({kill:true})
+            worker.send({ kill: true })
             break
         }
-      });
+      })
 
-      worker.on('exit', function (code, signal) {
+      worker.on('exit', (code, signal) => {
         clearTimeout(timeoutId)
-        console.log('fork exit:', code, signal)
-      });
-    
-      worker.on('error', function (err) {
-        console.log('err85:',err)
+        console.log('fork exit:', code)
+      })
+
+      worker.on('error', (err) => {
+        console.log('err85:', err)
         clearTimeout(timeoutId)
         reject(err)
-        worker.send({kill:true})
+        worker.send({ kill: true })
       })
     })
   }
@@ -78,7 +79,7 @@ export default class Compiler {
    * @method 执行编译代码
    */
   async runCompiledCode() {
-    var RunnerTimeout,res:CherryResult
+    let RunnerTimeout; let res:CherryResult
     try {
       res = await this.runUnsafeScript(this.code)
       if (res.error) {
@@ -87,8 +88,8 @@ export default class Compiler {
           // @ts-ignore  call interior func
           const errorMsg:string = callsiteRecord?._renderRecord(this.code, { frameSize: 3 })
           // del frist empty allow code align
-          res.log = res.log + `${stripAnsi(res.error.message || '')}\n${stripAnsi(errorMsg.slice(1))}\n`
-          res.error = new Error(`cherry run error:${res.error.message}\n`);
+          res.log += `${stripAnsi(res.error.message || '')}\n${stripAnsi(errorMsg.slice(1))}\n`
+          res.error = new Error(`cherry run error:${res.error.message}\n`)
         } else {
           console.log('cherry run error - check stack:', res.error.message)
         }
@@ -98,7 +99,7 @@ export default class Compiler {
       this.dnsServer?.close()
       await this.clearTest()
     }
-    console.log('finished! ', JSON.stringify(res) )
+    console.log('finished! ', JSON.stringify(res))
     return res
   }
 

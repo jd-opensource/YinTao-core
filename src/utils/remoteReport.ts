@@ -12,6 +12,7 @@ const requestTimeout = 3000
  * @method 远程报告运行结果
  */
 export async function reportRunResult(url:string, result:any, storage?:any) {
+  console.log("resultReport", JSON.stringify(result))
   result.storage = storage
   await axios.post(
     url,
@@ -29,8 +30,8 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
       console.log('reportRunResult error code')
     }
   }).catch((e: Error) => {
-    console.log('reportRunResult catch error!', e.message, " report-url:",url)
-    console.log("body: ",JSON.stringify(result))
+    console.log('reportRunResult catch error!', e.message, " report-url:", url)
+    console.log("body: ", JSON.stringify(result))
   })
 }
 
@@ -41,8 +42,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
   // 将要上传的图片
   console.log(`image upload count:${imgs.length}`)
   imgs.map(async (img) => {
-
-    if(Buffer.isBuffer(img.buffer) == false) {
+    if (Buffer.isBuffer(img.buffer) == false) {
       img.buffer = Buffer.from(img.buffer)
     }
 
@@ -57,16 +57,16 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
         name: img.name,
       },
       { timeout: requestTimeout },
-    ).then((res)=>{
+    ).then((res) => {
       if (res.status === 200) {
         console.log('reportRunImage success!')
       } else {
         console.log('reportRunImage error code')
       }
     })
-    .catch((e: Error) => {
-      console.log('reportRunImage error!', e.message, " image-url:",url)
-    })
+      .catch((e: Error) => {
+        console.log('reportRunImage error!', e.message, " image-url:", url)
+      })
   })
 }
 
@@ -80,7 +80,7 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   param.append("logFile", logBody)
   param.append('storage', JSON.stringify(storage))
   await axios.post(url, param, { headers: param.getHeaders(), timeout: requestTimeout }).catch((e) => {
-    console.log('reportRunLog error', e.message, " log-url:",url)
+    console.log('reportRunLog error', e.message, " log-url:", url)
   })
   console.log('reportRunLog success')
 }

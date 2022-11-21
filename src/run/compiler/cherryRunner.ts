@@ -1,5 +1,3 @@
-
-
 import vm from 'vm'
 import os from 'os'
 import path from 'path'
@@ -12,19 +10,19 @@ import TestControl from '../../test_control/testControl'
 import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
 
-process.on('uncaughtException', function(err) {
-  console.log("收到了关闭异常:",err)
-  process.exit(1);
-});
+process.on('uncaughtException', (err) => {
+  process.exit(1)
+})
 
 // @ts-ignore
-const sendResult = (result)=> {process.send({type:"result",data:result},undefined,undefined,()=>{
+const sendResult = (result) => {
+  process.send({ type: "result", data: result }, undefined, undefined, () => {
     setTimeout(() => {
-      // 有时未上报完，线程就莫名被关闭，因此添加调试。
+    // 有时未上报完，线程就莫名被关闭，因此添加调试。
       console.log('send resule success~ exit child process!')
       process.exit(0)
-    }, 300);
-    })
+    }, 300)
+  })
 }
 
 interface RunScriptOptions {
@@ -191,112 +189,124 @@ export default async function runScript<T = any>(code: string, options: RunScrip
     err = getErrorMessage(e)
   }
 
+
+
   return {
     output: fake.exports.default ?? fake.exports,
     error: err,
   }
+ 
+
 }
 
 /**
 * @method 执行前的前置处理
 */
-async function bootstrap(browserType:string ='chrome',runOption:any){
-    let browserCore
-    if (browserType === 'chrome') {
-      browserCore = cherry.chromium
-    }
+async function bootstrap(browserType:string = 'chrome', runOption:any) {
+  let browserCore
+  if (browserType === 'chrome') {
+    browserCore = cherry.chromium
+  }
 
-    const launchOptions : LaunchOptions = {
-      headless: runOption?.headless || false,
-      executablePath: runOption?.executablePath || undefined,
-    }
+  const launchOptions : LaunchOptions = {
+    headless: runOption?.headless || false,
+    executablePath: runOption?.executablePath || undefined,
+  }
 
-    // hostDns server
-    launchOptions.proxy = runOption.proxy
-    const browser = await browserCore.launch(launchOptions)
-    // set control
-    const control = new TestControl(runOption.id, browser)
-    cherry.testControl.set(runOption.id, control)
+  // hostDns server
+  launchOptions.proxy = runOption.proxy
+  const browser = await browserCore.launch(launchOptions)
+  // set control
+  const control = new TestControl(runOption.id, browser)
+  cherry.testControl.set(runOption.id, control)
 
-    // script parse
-    return new V1Parse(control, runOption)
+  // script parse
+  return new V1Parse(control, runOption)
 }
 
-(async()=>{
-    process.on('message',(msg:any)=>{
-        if(msg.kill){
-          console.log('child process exit success!')
-          process.exit()
-        } 
-    })
-    const code = process.argv[2]
-    const runOption = JSON.parse(process.argv[3] || '{}') 
-    const resolver =  await bootstrap('chrome',runOption) // 初始化引导,理论可以传多个配合看后续设计
-    const runCode = `(async()=>{${code}\n;})()`
+(async () => {
+  process.on('message', (msg:any) => {
+    if (msg.kill) {
+      console.log('child process exit success!')
+      process.exit()
+    }
+  })
+  const code = process.argv[2]
+  const runOption = JSON.parse(process.argv[3] || '{}')
+  const resolver = await bootstrap('chrome', runOption) // 初始化引导,理论可以传多个配合看后续设计
+  const runCode = `(async()=>{${code}\n;})()`
+  let result :any
 
-    const result :any = await runScript(runCode, {
-        globalParams: resolver?.registerGlobalApi() || {},
-        dirname: __dirname,
-        filename: VirtualFile,
-    }).catch(res=>{
-      console.log('我先感知到出错,这里好像p用没有')
-      sendResult(res)
-    })
-    if (result.error !== undefined) {
-      console.log("运行错误:", result.error)
-      const imgPath = path.resolve(os.tmpdir(),'__cherry_auto_error.jpg') // 获取系统临时目录
-      let screenshotPath : string | undefined = imgPath
-      if (os.type() === 'Linux') { // 远程执行,失败自动截图
-          // 增加调试方式,将错误图片落磁盘
-          screenshotPath = runOption.storage?.debugImage ? "/tmp/cherry_auto.jpeg" : undefined
-      } else { // 显示本地错误截图路径
-        resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
+  const resultData :any = await runScript(runCode, {
+
+    globalParams: resolver?.registerGlobalApi() || {},
+    dirname: __dirname,
+    filename: VirtualFile,
+
+  }).catch((res) => {
+    console.log('我先感知到出错,这里好像p用没有')
+    sendResult(res)
+  })
+  // 判断是否有errorSend命令
+  // eslint-disable-next-line prefer-const
+  result = resolver.cherryResult || resultData
+
+  if (result.error !== undefined) {
+    console.log("运行错误:", result.error)
+    const imgPath = path.resolve(os.tmpdir(), '__cherry_auto_error.jpg') // 获取系统临时目录
+    let screenshotPath : string | undefined = imgPath
+    if (os.type() === 'Linux') { // 远程执行,失败自动截图
+      // 增加调试方式,将错误图片落磁盘
+      screenshotPath = runOption.storage?.debugImage ? "/tmp/cherry_auto.jpeg" : undefined
+    } else { // 显示本地错误截图路径
+      resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
+    }
+    console.log("staring 执行错误自动截图中...")
+    let buffer
+    try {
+      buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
+    } catch (error) {
+      console.log("执行错误-自动截图失败:", error)
+    }
+    if (buffer) {
+      const screenImage = {
+        path: imgPath,
+        buffer,
+        name: imgPath,
       }
-      console.log("staring 执行错误自动截图中...")
-      var buffer
-      try {
-        buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
-      } catch (error) {
-        console.log("执行错误-自动截图失败:", error)
-        // 如果页面未正常运行(例: 长时间loding)，这种情况下cdp截图无法正常截取，需要读取指定图片传递给后台
-      }
-      if (buffer) {
-        const screenImage = {
-          path: imgPath,
-          buffer,
-          name: imgPath,
-        }
-        resolver.runOptins._screenImages.push(screenImage)
-        // 直接发送内容避免非必要落本地磁盘
-        await new Promise((resolver,reject)=>{
-            // @ts-ignore
-            process.send(
-              {
-                type: 'addScreenImages',
-                data: screenImage
-              },undefined,undefined,()=>{
-                console.log("错误图片上报成功")
-              resolver(true)
-            })
+      resolver.runOptins._screenImages.push(screenImage)
+      // 直接发送内容避免非必要落本地磁盘
+      await new Promise((resolver, reject) => {
+        // @ts-ignore
+        process.send({
+          type: 'addScreenImages',
+          data: screenImage,
+        }, undefined, undefined, () => {
+          console.log("错误图片上报成功")
+          resolver(true)
         })
-      }
+      })
     }
-    if(!result.error) {
-      resolver.runOptins.__log_body?.push('run success!')
-    }
-    // 这里构建统一的运行结果，评估执行成功或失败
-    const cherryResult: CherryResult = {
-      duration: 0,
-      success: !result.error,
-      msg: result.error?.message || '',
-      divertor: [],
-      log: resolver.runOptins.__log_body?.join('\n') + '\n',
-      error: result.error,
-      code: !result.error ? 2000 : 4044
-    }
-    sendResult(cherryResult)
-    // 子线程不能自己退出必须等待退出消息
-    while(true){
-      await __sleep(3000)
-    }
+  }
+  // 重置，避免影响其他
+  resolver.cherryResult = {}
+
+  if (!result.error) {
+    resolver.runOptins.__log_body?.push('run success!')
+  }
+  // 这里构建统一的运行结果，评估执行成功或失败
+  const cherryResult: CherryResult = {
+    duration: 0,
+    success: !result.error,
+    msg: result.error?.message || '',
+    divertor: [],
+    log: `${resolver.runOptins.__log_body?.join('\n')}\n`,
+    error: result.error,
+    code: !result.error ? 2000 : 4044,
+  }
+  sendResult(cherryResult)
+  // 子线程不能自己退出必须等待退出消息
+  while (true) {
+    await __sleep(3000)
+  }
 })()

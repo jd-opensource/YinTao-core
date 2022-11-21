@@ -2,7 +2,7 @@
  * 禁止使用export
  */
 
-import {
+ import {
   Response,
 } from '../../../types/types'
 // monaco 引用时无法引用此文件，因此在之后需要合并
@@ -213,29 +213,29 @@ type Serializable = any;
 interface FCherryBrowser {
   /**
    * @method 监听页面请求
-   * @param event 
-   * @param callback 
+   * @param event
+   * @param callback
    */
   on(event:string, callback:any)
   /**
    * @method 拦截页面请求并修改
-   * @param url 
-   * @param handler 
-   * @param options 
+   * @param url
+   * @param handler
+   * @param options
    */
   route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
     times?: number;
-  }) 
+  })
 }
 
 interface FCherryPage {
    /**
-     * 
+     *
      * @method 设置h5设备模拟
      * @param name 设备名称 examples: iPhone 6, Iphone 12
      */
     setDevice(name:string): Promise<void>
-    /***
+    /** *
      * @method 等待url响应结果
      */
     waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
@@ -244,7 +244,7 @@ interface FCherryPage {
 
     /**
      * @method 等待并切换至跳转页面
-     * 
+     *
      */
     waitPopup(optionsOrPredicate?:{
       predicate:Function,
@@ -254,15 +254,15 @@ interface FCherryPage {
     /**
      * @method 等待页面事件
      */
-    waitForEvent(event:"framenavigated",optionsOrPredicate?:{
+    waitForEvent(event:"framenavigated", optionsOrPredicate?:{
       predicate:Function,
       timeout?: 30000
     }): Promise<void>
-    
+
     /**
      * @method 打开新页面
      * @param url 页面地址
-     * @param options 
+     * @param options
      */
     create(url: string, options?: {
       referer?: string;
@@ -278,11 +278,11 @@ interface FCherryPage {
       timeout?: number;
       waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' | 'commit';
     }): Promise<void>
-    
+
     /**
      * @method 页面跳转
-     * @param url 
-     * @param options 
+     * @param url
+     * @param options
      */
     to(url: string, options?: {
       referer?: string;
@@ -329,9 +329,9 @@ interface FCherryDom {
   /**
    * @method 点击目标元素
    * @param sign 混合定位符xpath,selector
-   * @param options 
+   * @param options
    */
-  click(sign: string,  options?: {
+  click(sign: string, options?: {
     /**
      * Defaults to `left`.
      */
@@ -397,21 +397,21 @@ interface FCherryDom {
   })
   /**
    * @method 获取元素属性内容
-   * @param sign 
-   * @param attr 
+   * @param sign
+   * @param attr
    */
   getAttributes(sign:string, attr:string)
   /**
    * @method 等待目标元素出现
-   * @param sign 
+   * @param sign
    * @param timeout default 5000/ms
    */
   wait(sign: string, timeout?: number)
   /**
    * @method 元素悬浮触发hover事件
-   * @param sign 
+   * @param sign
    */
-  hover(sign: string,options?: {
+  hover(sign: string, options?: {
     /**
      * Whether to bypass the [actionability](https://playwright.dev/docs/actionability) checks. Defaults to `false`.
      */
@@ -456,43 +456,43 @@ interface FCherryDom {
 
   /**
    * @method 判断元素是否存在
-   * @param sign 
+   * @param sign
    * @param timeout 超时时间 default:2000ms
    */
   exist(sign: string, timeout:number) : Promise<boolean>
 
   /**
    * @method text文字填充
-   * @param sign 
-   * @param value 
-   * @param options 
+   * @param sign
+   * @param value
+   * @param options
    */
   fill(sign: string, value: string, options?: {
     force?: boolean; // jump chencks Defaults to 'false'
     noWaitAfter?: boolean; // When true, the call requires selector to resolve to a single element.
     strict?: boolean; // When true, the call requires selector to resolve to a single element.
     timeout?: number; // Maximum time in milliseconds, defaults to 30 seconds, pass '0' to disable timeout. The default value can be changed by
-  }) 
+  })
 
   /**
    * @method 模拟触发元素js事件
-   * @param sign 
-   * @param event 
-   * @param eventInit 
-   * @param options 
+   * @param sign
+   * @param event
+   * @param eventInit
+   * @param options
    */
   dispatchEvent(sign:string, event:string, eventInit: any, options:any)
 
   /**
    * @method select控件选择
-   * @param sign 
-   * @param value 
+   * @param sign
+   * @param value
    */
   select(sign:string, value: {
     value?: string,
     label?:string,
     index?:number,
-  },options?:{
+  }, options?:{
     force?:boolean,
     noWaitAfter?: boolean,
     strict?:boolean,
@@ -500,16 +500,24 @@ interface FCherryDom {
   })
   /**
    * @method inputFile文件上传
-   * @param sign 
-   * @param files 
+   * @param sign
+   * @param files
    */
   upload(sign: string, files: string | string[]): Promise<void>
+
+  /**
+   * @method 判断元素是否存在
+   * @param sign
+   * @param timeout 超时时间 default:2000ms
+   */
+  errorSend(sign: string, timeout:number) : Promise<any>
+
 }
 
 interface FCherryCookies {
   /**
    * @method 设置浏览器cookie
-   * @param value 
+   * @param value
    */
   set(value:any[]) :Promise<void>
   /**
@@ -527,20 +535,20 @@ interface FCherryCookies {
 interface FCherryAssert {
   /**
    * @method 页面文案断言，在页面中断言text文本
-   * @param text 
-   * @param times 
+   * @param text
+   * @param times
    */
-  all(text:string, times:number) 
+  all(text:string, times:number)
   /**
    * @method 页面地址断言(包含关系)
-   * @param url 
+   * @param url
    */
   location(url:string)
   /**
    * @method 页面标题断言
-   * @param title 
+   * @param title
    */
-  title(title:string) 
+  title(title:string)
   /**
    * @method 元素属性断言
    * @param sign 混合定位符xpath,selector
@@ -554,8 +562,8 @@ interface FCherryAssert {
 interface FCherryKeyboard{
   /**
    * @method 模拟操作按键
-   * @param key 
-   * @param options 
+   * @param key
+   * @param options
    */
   press(key: string, options?: {
     /**
@@ -565,18 +573,18 @@ interface FCherryKeyboard{
   })
   /**
    * @method 模拟按键按下
-   * @param key 
+   * @param key
    */
   down(key:string)
   /**
    * @method 模拟按键抬起
-   * @param key 
+   * @param key
    */
   up(key:string)
   /**
    * @method 模拟键盘输入
    * @param text 文本内容
-   * @param options 
+   * @param options
    */
   type(text: string, options?: {
     delay?: number;
@@ -586,9 +594,9 @@ interface FCherryKeyboard{
 interface FCherryMouse{
   /**
    * @method 模拟鼠标进行坐标点击
-   * @param x 
-   * @param y 
-   * @param options 
+   * @param x
+   * @param y
+   * @param options
    */
   click(x: number, y: number, options?: {
     /**
@@ -608,7 +616,7 @@ interface FCherryMouse{
   })
   /**
    * @method 模拟鼠标按下
-   * @param options 
+   * @param options
    */
   down(options?: {
     button?: "left"|"right"|"middle"; // Defaults to 'left'.
@@ -616,7 +624,7 @@ interface FCherryMouse{
   })
   /**
    * @method 模拟鼠标抬起
-   * @param options 
+   * @param options
    */
   up(options?: {
     button?: "left"|"right"|"middle"; // Defaults to 'left'.
@@ -628,11 +636,6 @@ interface FCherryMouse{
   * @param deltaY  控制y轴滚动 Examples: 300-向下滚动300像素
   */
   wheel(deltaX: number, deltaY: number)
-}
-
-interface FCherryImage {
-  click(imgPath:string): Promise<void>
-  exist(imgPath:string): Promise<boolean> 
 }
 
 declare const sleep : (ms:number)=> void
