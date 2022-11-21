@@ -52,7 +52,6 @@ npm i -g  yarn
 
     ```sh
     npm i # 安装依赖
-    npx opencv-build-npm # 编译本地cv环境
     # 编译代码
     npm run build
     # 安装浏览器环境
@@ -136,23 +135,3 @@ CherryCore 团队遵循一套写作指南，使我们的文档易于阅读。提
 -   让你的句子简短而简单。确保每个句子只表达一个想法。
 -   不要重复相同的信息。
 -   如果可能，包括交互式示例（代码示例、屏幕截图等）。
-
-## 常见问题
-
-调试报错: Uncaught Error Error: No build found in .../.../.../opencv-build  you should launch opencv-build-npm once 
-
-`解决方法`: 
-```js
-npx build-opencv --version 4.5.5 rebuild // 编译本地opencv
-
-```
-
-编译opencv报错 `env: node\r: No such file or directory`
-
-`解决方法`:
-```js
-rm -rf /node_modules // 删除依赖
-npm i // 通过npm重新安装
-npx build-opencv --version 4.5.5 rebuild  // 重新编译即可
-
-```
