@@ -1,6 +1,6 @@
 {
   "name": "@cherry-jd/core",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Cherry core execution library, Used to handle page automation~",
   "main": "lib/index.js",
   "scripts": {
