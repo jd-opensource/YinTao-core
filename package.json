@@ -11,9 +11,6 @@
     "chromium": "node ./lib/cli install chromium",
     "chromium:win": "node ./lib/cli install chromium --platform=win64"
   },
-  "opencv4nodejs": {
-    "autoBuildOpencvVersion": "4.5.5"
-  },
   "bin": {
     "cherry": "./cli.js"
   },
@@ -22,7 +19,6 @@
   "dependencies": {
     "@babel/core": "^7.17.5",
     "@cypress/unique-selector": "^0.4.4",
-    "@u4/opencv4nodejs": "^6.2.5",
     "axios": "^0.26.1",
     "body-parser": "^1.19.2",
     "callsite-record": "^4.1.4",
@@ -42,7 +38,6 @@
     "lodash": "^4.17.21",
     "mime": "^3.0.0",
     "nanoid": "^3.3.1",
-    "opencv-build": "^0.1.9",
     "parse5": "^6.0.1",
     "pixelmatch": "^5.2.1",
     "proper-lockfile": "^4.1.2",

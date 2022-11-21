@@ -16,9 +16,6 @@ import { download, mkdirIfNeeded } from '../../utils/utils'
 import { Page as PageType, Route, Request, Response,} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 import { FCherryPage, FCherryDom,FCherryCookies,FCherryAssert,FCherryKeyboard,FCherryMouse,FCherryBrowser,FCherryImage, sleep } from './parse'
-// @ts-ignore
-import cv from '@u4/opencv4nodejs'
-import {matchFeatures} from './matchFeatures'
 
 declare const Buffer
 /**
@@ -125,35 +122,6 @@ function handleError(err) {
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-async function wait4key() {
-  // console.log('press a key to continue.');
-  if (process.stdin.isTTY)
-    process.stdin.setRawMode(true);
-  process.stdin.resume();
-  let done : string | null = null ;
-  const capture = (/*data: Buffer*/) => {
-    // console.log({data})
-    done = 'terminal';
-  };
-  process.stdin.on('data', capture);
-  await delay(10);
-  done = null;
-  for (; ;) {
-    await delay(10);
-    if (~cv.waitKey(10)) {
-      done = 'window';
-      break;
-    }
-    if (done)
-      break;
-  }
-  process.stdin.off('data', capture);
-  process.stdin.pause();
-  if (process.stdin.isTTY)
-    process.stdin.setRawMode(false);
-  return done;
-}
-
 
 class Img implements FCherryImage{
   parse: V1Parse
@@ -167,37 +135,31 @@ class Img implements FCherryImage{
     if(imgPath == null || imgPath == '') throw new Error("img.click指令图片不能为空!")
     // todu: 页面加载时截图回获取不到,需要加时间内重试 await __sleep(1000)
     const imgData = await this.parse.control.currentPage?.screenshot()
-    if(imgData){
-      const originalMat = await cv.imdecode(imgData);
-      var waldoMat
-      if(/^https?:\/\//.test(imgPath)) {
-        // 将图片转buff
-        waldoMat = await new Promise((resolve,reject) =>{
-          request.get({ uri: imgPath, encoding: 'binary' }, async function (err, res) {
-              if (!err) {
-                  let buffer = Buffer.from(res.body, 'ascii');
-                  resolve(await cv.imdecode(buffer)) 
-              }
-          });
-        })
-      } else {
-        waldoMat = await cv.imreadAsync(path.resolve(imgPath));
+    // if(imgData){
+    //   const originalMat = await cv.imdecode(imgData);
+    //   var waldoMat
+    //   if(/^https?:\/\//.test(imgPath)) {
+    //     // 将图片转buff
+    //     waldoMat = await new Promise((resolve,reject) =>{
+    //       request.get({ uri: imgPath, encoding: 'binary' }, async function (err, res) {
+    //           if (!err) {
+    //               let buffer = Buffer.from(res.body, 'ascii');
+    //               resolve(await cv.imdecode(buffer)) 
+    //           }
+    //       });
+    //     })
+    //   } else {
+    //     waldoMat = await cv.imreadAsync(path.resolve(imgPath));
+    //   }
+      const {x,y} = {
+        x:11,
+        y:11
       }
-
-      const {x,y} = matchFeatures(
-        waldoMat,
-        originalMat,
-        new cv.SIFTDetector({ nFeatures: 4000 }),
-        cv.matchFlannBased,
-        false // debug时设置 -> true
-      );
-
       if(x && y){
         await this.parse.control.currentPage?.mouse.click(x, y)
       }else{
         throw new Error(`坐标获取失败,无法点击${x},${y}`)
       }
-    }
   }
 
   async exist(imgPath: string): Promise<boolean> {
