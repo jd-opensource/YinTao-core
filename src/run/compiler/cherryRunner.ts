@@ -14,8 +14,8 @@ process.on('uncaughtException', (err) => {
   process.exit(1)
 })
 
-// @ts-ignore
 const sendResult = (result) => {
+  // @ts-ignore
   process.send({ type: "result", data: result }, undefined, undefined, () => {
     setTimeout(() => {
     // 有时未上报完，线程就莫名被关闭，因此添加调试。
