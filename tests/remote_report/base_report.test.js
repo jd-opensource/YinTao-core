@@ -4,7 +4,11 @@ import {startRemoteServer} from './report_server'
 test('基本测试服务远程上报', async () => {
   const port = 9898
   const all = startRemoteServer(port)
-  const testCode = "await page.create(`https://baidu.com`);await page.screenshot('test-1.jpg');\nawait page.change(0)\nawait dom.click(`#kw`)\nawait dom.set(`j`,`#kw`)\nawait dom.set(`d`,`#kw`)\nawait dom.click(`#su`)\nawait dom.click(`(//*[string()='京东JD.COM官网 多快好省 只为品质生活'])[1]`)\nawait page.change(1)\nawait dom.click(`(//*[contains(text(),'PLUS会员')])[1]`)\nawait page.change(2)\nawait dom.click(`(//*[string()='账户登录'])[1]`)\n\n await asyncReport(17191) \n"
+  const testCode = `
+  await page.to("https://baidu.com",{timeout:30000})
+console.log("打开了百度")
+await sleep(3000)
+  `
   await run(testCode,{
     remoteReport:{
       result:`http://localhost:${port}/result`,
@@ -24,4 +28,4 @@ test('基本测试服务远程上报', async () => {
       expect(img).toBe(true)
     }
   })
-},10000)
+},60000)
