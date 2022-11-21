@@ -26,4 +26,4 @@ test('脚本内容错误,服务远程异常上报', async () => {
   if(!img) {
     expect(img).toBe(true)
   }
-},10000)
+},60000)
