@@ -43,14 +43,14 @@ export default class V1Parse extends Resolver {
   control: TestControl
   runOptins: RunOptions
   console: Console
-  cherryResult: CherryResult
+  cherryResult: any
   private __log_body: any[]
 
-  constructor(testControl: TestControl, runOptins: RunOptions, cherryResult: CherryResult) {
+  constructor(testControl: TestControl, runOptins: RunOptions) {
     super()
     this.testId = testControl.id
     this.control = testControl
-    this.cherryResult = cherryResult
+    // this.cherryResult = {}
     runOptins.__log_body = []
     this.runOptins = runOptins
     this.__log_body = []
@@ -210,17 +210,19 @@ async function asyncReport(this: V1Parse, ...args: any) {
 
   if (result) {
     console.log("cherryResult******", JSON.stringify(this.cherryResult))
-    const resultData: CherryResult = this.cherryResult || {
+    const resultData: CherryResult = {
       duration: new Date().getTime() - (this.runOptins._startTime as number),
-      success: true,
-      code: 2000,
-      msg: 'success',
+      success: this.cherryResult.success,
+      code: this.cherryResult.code || 2000,
+      msg: this.cherryResult.msg,
       divertor: [],
     }
-
     await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
-    this.cherryResult = {}
-
+    this.cherryResult.success = true
+    this.cherryResult.code = 2000
+    this.cherryResult.msg = 'success'
+    this.cherryResult.error.message = ''
+    this.cherryResult.error.name = ''
   }
 
   if (image) {
@@ -876,7 +878,7 @@ class Dom implements FCherryDom {
       }
     }
 
-    this.parse.runOptins = {
+    this.parse.runOptins = null || {
       id: this.control.id,
       remoteReport: {
         result: "errorSendResult",
@@ -892,7 +894,7 @@ class Dom implements FCherryDom {
       },
       _startTime: 1,
       __log_body: ['errorSendResult'],
-      _screenImages: ['用例设置为失败'],
+      _screenImages: [],
     }
     this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
 

@@ -188,15 +188,10 @@ export default async function runScript<T = any>(code: string, options: RunScrip
   } catch (e: any) {
     err = getErrorMessage(e)
   }
-
-
-
   return {
     output: fake.exports.default ?? fake.exports,
     error: err,
   }
- 
-
 }
 
 /**
@@ -248,6 +243,9 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
     sendResult(res)
   })
   // 判断是否有errorSend命令
+  // eslint-disable-next-line prefer-const
+  console.log('resolerCherryResult', JSON.stringify(resolver.cherryResult))
+  
   // eslint-disable-next-line prefer-const
   result = resolver.cherryResult || resultData
 
