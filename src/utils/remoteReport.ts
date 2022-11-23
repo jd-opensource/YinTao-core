@@ -12,7 +12,7 @@ const requestTimeout = 3000
  * @method 远程报告运行结果
  */
 export async function reportRunResult(url:string, result:any, storage?:any) {
-  console.log("resultReport", JSON.stringify(result))
+  console.log("resultReport:", JSON.stringify(result))
   result.storage = storage
   await axios.post(
     url,
@@ -75,6 +75,7 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
  */
 export async function reportRunLog(url:string, logBody:string, storage?:any) {
   // log 获取不到运行结果,运行报错这里无法接收
+  console.log('reportRunLog:', {logBody,storage})
   const FormData = require('form-data')
   const param = new FormData()
   param.append("logFile", logBody)
