@@ -207,6 +207,7 @@ async function asyncReport(this: V1Parse, ...args: any) {
   if (this.runOptins.storage && this.runOptins.storage.__caseList) {
     this.runOptins.storage.__caseList.shift()
   }
+  this.console.log("asyncReport*** ", this.cherryResult)
 
   if (result) {
     console.log("cherryResult******", JSON.stringify(this.cherryResult))
@@ -220,9 +221,9 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunResult(result, resultData, { args, ...this.runOptins.storage })
     this.cherryResult.success = true
     this.cherryResult.code = 2000
-    this.cherryResult.msg = 'success'
-    this.cherryResult.error.message = ''
-    this.cherryResult.error.name = ''
+    this.cherryResult.msg = undefined
+    this.cherryResult.error.message = undefined
+    this.cherryResult.error.name = undefined
   }
 
   if (image) {
