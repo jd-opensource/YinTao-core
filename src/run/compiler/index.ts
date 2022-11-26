@@ -82,6 +82,7 @@ export default class Compiler {
     let RunnerTimeout; let res:CherryResult
     try {
       res = await this.runUnsafeScript(this.code)
+      console.log("res*****", JSON.stringify(res))
       if (res.error) {
         const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })
         if (callsiteRecord !== null) {

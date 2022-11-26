@@ -245,13 +245,13 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
   // 判断是否有errorSend命令
   // eslint-disable-next-line prefer-const
   console.log('resolerCherryResult', JSON.stringify(resolver.cherryResult))
-  
+
   // eslint-disable-next-line prefer-const
   result = resolver.cherryResult || resultData
-
   if (result.error !== undefined) {
     console.log("运行错误:", result.error)
     const imgPath = path.resolve(os.tmpdir(), '__cherry_auto_error.jpg') // 获取系统临时目录
+
     let screenshotPath : string | undefined = imgPath
     if (os.type() === 'Linux') { // 远程执行,失败自动截图
       // 增加调试方式,将错误图片落磁盘
@@ -259,7 +259,6 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
     } else { // 显示本地错误截图路径
       resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
     }
-    console.log("staring 执行错误自动截图中...")
     let buffer
     try {
       buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
@@ -288,7 +287,6 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
   }
   // 重置，避免影响其他
   resolver.cherryResult = {}
-
   if (!result.error) {
     resolver.runOptins.__log_body?.push('run success!')
   }
