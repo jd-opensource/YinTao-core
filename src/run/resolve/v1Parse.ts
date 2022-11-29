@@ -15,8 +15,10 @@ import {
 } from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
 import {
-  FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,
+  FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,FCherryImage
 } from './parse'
+import { remoteCvSiftMatch } from './callMemoteCv'
+import { Readable, Stream } from 'stream'
 
 /**
  *  @method 将内部堆栈以外部脚本抛出
@@ -81,6 +83,7 @@ export default class V1Parse extends Resolver {
       browser: new Browser(this),
       expect,
       dom: new Dom(this),
+      img: new Img(this),
       sleep: __sleep,
       axios,
       cookies: new Cookies(this),
@@ -123,6 +126,51 @@ function handleError(err) {
   console.log(`error handler: ${err.message}`, "yellow")
 }
 
+const getImageStream =  async (url) => {
+  const response = await axios.get(url, {responseType : "stream"});
+  if (response.status === 200) {
+      return response.data
+  } 
+}
+
+class Img implements FCherryImage{
+  parse: V1Parse
+
+  constructor(v1parse: V1Parse) {
+    this.parse = v1parse
+  }
+  
+  async click(imgPath: string): Promise<void> {
+      console.log('进行图片点击,图片为:', imgPath)
+      if (imgPath == null || imgPath == '') throw new Error("img.click指令图片不能为空!")
+      // todu: 页面加载时截图回获取不到,需要加时间内重试 await __sleep(1000)
+      const screenshotBuffer = await this.parse.control.currentPage?.screenshot({type:"png"})
+      if (screenshotBuffer) {
+        var waldoMat
+        if(/^https?:\/\//.test(imgPath)) {
+          // 将图片转buff
+          waldoMat = await getImageStream(imgPath)
+        } else {
+          waldoMat = fs.createReadStream(path.resolve(imgPath))
+        }
+        let res = await remoteCvSiftMatch(waldoMat,screenshotBuffer)
+        if (res.status == 200) {
+          const {x,y} = res.data
+          if(x && y) {
+            await this.parse.control.currentPage?.mouse.click(x, y)
+          } else {
+            throw new Error(`坐标获取失败,无法点击${x},${y}`)
+          }
+        } else {
+          console.log("图像点击失败-",res.data)
+        }
+      }
+    }
+
+  async exist(imgPath: string): Promise<boolean> {
+    return true
+  }
+}
 class assert implements FCherryAssert {
   control: TestControl
   constructor(testControl: TestControl) {

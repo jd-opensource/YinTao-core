@@ -1,5 +1,5 @@
 await page.to("https://baidu.com")
 await dom.click("input[name=\"wd\"]")
 await dom.fill("input[name=\"wd\"]","666")
-await img.click("/Users/zhouyuan11/work/cherry/core/tests/baidu_btn.jpg")
+await img.click("https://storage.360buyimg.com/assert/baidu_btn.jpg")
 await sleep(3000)
