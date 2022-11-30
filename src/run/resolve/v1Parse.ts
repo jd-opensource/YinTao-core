@@ -515,7 +515,12 @@ class Page implements FCherryPage {
 
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
-      await this.control?.currentPage?.goto(url, options)
+      let res = await this.control?.currentPage?.goto(url, options)
+      if (res != undefined ) {
+        this.control.updateContext(res.frame())
+      } else {
+        this.console.log('page.to 命令异常，无法切换到目标地址:',url)        
+      }
     }
   }
 
