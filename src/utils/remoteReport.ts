@@ -44,12 +44,9 @@ export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) 
 
   console.log(`image upload count:${imgs.length}`)
   imgs.map(async (img) => {
-    console.log("img.buffer", img.buffer)
     if (Buffer.isBuffer(img.buffer) == false) {
       img.buffer = Buffer.from(img.buffer)
     }
-    console.log(`begin upload`)
-
     const imgbase64 = `data: image/${getImageType(img.name)};base64,${img.buffer.toString('base64')}`
     // fs.writeFileSync("nihaottt.png",imgbase64)
     console.log(`upload image ${img.path} len:${imgbase64.length}`)
