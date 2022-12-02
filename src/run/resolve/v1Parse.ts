@@ -485,8 +485,8 @@ class Page implements FCherryPage {
         },
       }
       const context = await this.control.browser.newContext(contextOptions)
-      context.setDefaultTimeout(5000) // 5s
-      context.setDefaultNavigationTimeout(10000) // 10s
+      context.setDefaultTimeout(5000) // 设置页面内容末日超时5s
+      context.setDefaultNavigationTimeout(30000) // 设置页面加载默认超时30s
       this.control.setBrowserContext(context)
     }
     const context = this.control.browserContext
