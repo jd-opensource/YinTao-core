@@ -739,7 +739,7 @@ class Dom implements FCherryDom {
     if (this.control && this.control.runContext) {
       await this.control?.runContext?.click(sign, options)
     } else {
-      throw new Error('click obj not ok')
+      throw new Error('Cannot make any click, please check your is opened any page?')
     }
   }
 
