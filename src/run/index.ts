@@ -41,18 +41,20 @@ export interface RunOptions extends LaunchOptions{
     height: number
   }
   _startTime?:number
-  __log_body?:any[]
+  __log_body:string[]
   _screenImages: ImgFile[]
 }
 
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
+  __log_body:[],
   cookies: [],
 }) :Promise<CherryResult> {
   let cherryResult :CherryResult
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
+    __log_body:[],
     headless: opts.headless,
     cookies: opts.cookies || [],
     remoteReport: opts.remoteReport,

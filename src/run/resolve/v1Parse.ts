@@ -46,16 +46,13 @@ export default class V1Parse extends Resolver {
   runOptins: RunOptions
   console: Console
   cherryResult: any
-  // private __log_body: any[]
 
   constructor(testControl: TestControl, runOptins: RunOptions) {
     super()
     this.testId = testControl.id
     this.control = testControl
     // this.cherryResult = {}
-    runOptins.__log_body = []
     this.runOptins = runOptins
-    // this.__log_body = []
 
     const _this = this
     const handler = {
@@ -63,7 +60,7 @@ export default class V1Parse extends Resolver {
         return function (...args) {
           if (key == 'log' || key == 'error' || key == 'warn') {
             args.unshift(key)
-            _this.runOptins.__log_body?.push(args.join(' '))
+            _this.runOptins.__log_body.push(args.join(' '))
           }
           trapTarget[key](...args)
         }
@@ -250,7 +247,6 @@ class assert implements FCherryAssert {
  */
 async function asyncReport(this: V1Parse, ...args: any) {
   const { result, image, log } = this.runOptins?.remoteReport || {}
-  this.console.log('asyncReport', args)
   // delete reported case
   if (this.runOptins.storage && this.runOptins.storage.__caseList) {
     this.runOptins.storage.__caseList.shift()
@@ -282,9 +278,9 @@ async function asyncReport(this: V1Parse, ...args: any) {
     await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
     this.runOptins._screenImages = []
   }
-
   if (log) {
-    await reportRunLog(log, "success", { args, ...this.runOptins.storage })
+    await reportRunLog(log, this.runOptins.__log_body.join(''), { args, ...this.runOptins.storage })
+    this.runOptins.__log_body = [] // 上报后清空日志
   }
   // this.runOptins = undefined
 }
@@ -951,7 +947,7 @@ class Dom implements FCherryDom {
       _screenImages: [],
     }
     this.runOptins._screenImages.push(screenImage) // 用于异步上报
-    this.runOptins.__log_body?.push(`run error auto screenshot path : file://${path.resolve(errorSendImage)}`)
+    this.runOptins.__log_body.push(`run error auto screenshot path : file://${path.resolve(errorSendImage)}`)
 
     this.parse.cherryResult = {
       duration: new Date().getTime() - (this.parse.runOptins._startTime as number),

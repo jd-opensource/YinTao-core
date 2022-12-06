@@ -85,7 +85,6 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
   param.append('headers', JSON.stringify({
     'Content-Type': 'application/json',
   }))
-  console.log('param', JSON.stringify(param.getHeaders))
 
   await axios.post(url, param, { headers: param.getHeaders(), timeout: requestTimeout }).then(res=>{
     console.log('reportRunLog success: ',res.data)
