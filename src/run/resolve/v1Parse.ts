@@ -279,7 +279,7 @@ async function asyncReport(this: V1Parse, ...args: any) {
     this.runOptins._screenImages = []
   }
   if (log) {
-    await reportRunLog(log, this.runOptins.__log_body.join(''), { args, ...this.runOptins.storage })
+    await reportRunLog(log, this.runOptins.__log_body.join('\n'), { args, ...this.runOptins.storage })
     this.runOptins.__log_body = [] // 上报后清空日志
   }
   // this.runOptins = undefined
