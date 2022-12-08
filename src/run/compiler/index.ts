@@ -35,7 +35,7 @@ export default class Compiler {
    * @param script 脚本内容
    * @param timeout 超时时间/ms(默认15m)
    */
-  async runUnsafeScript(script:string, timeout:number = 900000) :Promise<CherryResult> {
+  async runUnsafeScript(script:string, callback?:Function, timeout:number = 900000) :Promise<CherryResult> {
     return new Promise((resolver, reject) => {
       const worker = fork(path.join(__dirname, 'cherryRunner'), [script, JSON.stringify(this._runOption)])
       const timeoutId = setTimeout(() => {
@@ -52,6 +52,14 @@ export default class Compiler {
           case 'clearScreenImages':
             this._runOption._screenImages = []
             this._runOption.storage?.__caseList?.shift()
+            break
+          case 'log':
+              if(callback == undefined) break;
+              callback({
+                type: 'callback',
+                msg: data,
+                storage: this._runOption.storage
+              })
             break
           case 'result':
             clearTimeout(timeoutId)
@@ -78,10 +86,10 @@ export default class Compiler {
   /**
    * @method 执行编译代码
    */
-  async runCompiledCode() {
+  async runCompiledCode(callback?:Function) {
     let RunnerTimeout; let res:CherryResult
     try {
-      res = await this.runUnsafeScript(this.code)
+      res = await this.runUnsafeScript(this.code,callback)
       console.log("res*****", JSON.stringify(res))
       if (res.error) {
         const callsiteRecord = createCallsiteRecord({ forError: res.error, isCallsiteFrame: (frame) => !!frame.fileName && frame.fileName?.indexOf(VirtualFile) > -1 })

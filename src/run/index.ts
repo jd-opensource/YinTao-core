@@ -45,12 +45,18 @@ export interface RunOptions extends LaunchOptions{
   _screenImages: ImgFile[]
 }
 
+/**
+ * @param code 执行的代码片段
+ * @param opts 运行配置项
+ * @param callback 用于执行中的消息传递，目前仅用于实时日志
+ * @returns 
+ */
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
   __log_body:[],
   cookies: [],
-}) :Promise<CherryResult> {
+},callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {
   let cherryResult :CherryResult
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
@@ -97,7 +103,7 @@ export async function run(code: string, opts: RunOptions = {
 
   let duration:number = 0
   cherryResult = await guardTimeExecution(
-    async () => await compiler.runCompiledCode().then((result:CherryResult)=>{
+    async () => await compiler.runCompiledCode(callback).then((result:CherryResult)=>{
       return result
     }),
     (elapsedTime) => {

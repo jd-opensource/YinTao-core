@@ -21,6 +21,23 @@ import { remoteCvSiftMatch } from './callMemoteCv'
 import { Readable, Stream } from 'stream'
 
 /**
+ * @method 向主进程传递消息
+ * @param type 消息类型
+ * @param data 消息内容
+ */
+async function processSend(type:string,data:any) {
+  return new Promise((resolver, reject) => {
+    // @ts-ignore
+    process.send({
+      type,
+      data,
+    }, undefined, undefined, () => {
+      resolver(true)
+    })
+  })
+}
+
+/**
  *  @method 将内部堆栈以外部脚本抛出
  */
 function throwStack() {
@@ -61,6 +78,7 @@ export default class V1Parse extends Resolver {
           if (key == 'log' || key == 'error' || key == 'warn') {
             args.unshift(key)
             _this.runOptins.__log_body.push(args.join(' '))
+            processSend('log', args.join(' '))
           }
           trapTarget[key](...args)
         }
@@ -266,15 +284,7 @@ async function asyncReport(this: V1Parse, ...args: any) {
   }
 
   if (image) {
-    await new Promise((resolver, reject) => {
-      // @ts-ignore
-      process.send({
-        type: 'clearScreenImages',
-        data: [],
-      }, undefined, undefined, () => {
-        resolver(true)
-      })
-    })
+    await processSend('clearScreenImages', [])
     await reportRunImage(image, this.runOptins._screenImages, { args, ...this.runOptins.storage })
     this.runOptins._screenImages = []
   }
@@ -535,16 +545,7 @@ class Page implements FCherryPage {
       }
 
       this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
-
-      await new Promise((resolver, reject) => {
-        // @ts-ignore
-        process.send({
-          type: 'addScreenImages',
-          data: screenImage,
-        }, undefined, undefined, () => {
-          resolver(true)
-        })
-      })
+      await processSend('addScreenImages', screenImage)
     }
   }
 
