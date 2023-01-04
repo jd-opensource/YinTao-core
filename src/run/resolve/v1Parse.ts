@@ -1,7 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import expect, { any } from 'expect'
+import expect, { any } from 'expect' // expect-doc: https://jestjs.io/docs/using-matchers
 import axios from 'axios'
 import { rsort } from 'semver'
 import Resolver from './resolver'
@@ -106,7 +106,7 @@ export default class V1Parse extends Resolver {
       hint: () => { console.log('hint Temporary does not support!') },
       asyncReport: asyncReport.bind(this),
       execJavaScript: utils.execJavaScript.bind(utils),
-      assert: new assert(this.control),
+      assert: new assert(this),
       __cherryRun: {
         gid: this.testId,
       },
@@ -188,8 +188,10 @@ class Img implements FCherryImage{
 }
 class assert implements FCherryAssert {
   control: TestControl
-  constructor(testControl: TestControl) {
-    this.control = testControl
+  console:Console
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.console = v1parse.console
   }
 
   @throwStack()
@@ -211,6 +213,18 @@ class assert implements FCherryAssert {
       const htmlText = await locator?.innerHTML() || ''
       return htmlText.includes(text)
     }, times, 500)
+  }
+
+  @throwStack()
+  true(value:any, errorHint:string | undefined='') {
+    try{
+      expect(value).toBeTruthy()
+    }catch(e){
+      if(!!errorHint){
+        this.console.error(errorHint)
+      }
+      throw e
+    }
   }
 
   @throwStack()

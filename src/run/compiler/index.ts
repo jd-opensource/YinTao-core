@@ -64,7 +64,7 @@ export default class Compiler {
           case 'result':
             clearTimeout(timeoutId)
             resolver(data)
-            worker.send({ kill: true })
+            worker.send({ kill: true }) // 这里会报错. write EPIPE
             break
         }
       })

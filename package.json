@@ -7,6 +7,7 @@
     "build": "gulp",
     "fast": "gulp && cp -rf lib ../cherry/node_modules/@cherry-jd/core",
     "test": "jest",
+    "js:debug": "jest js_debug",
     "publish": "npm publish --access public",
     "chromium": "node ./lib/cli install chromium",
     "chromium:win": "node ./lib/cli install chromium --platform=win64"
