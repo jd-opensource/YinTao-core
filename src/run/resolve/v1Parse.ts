@@ -38,6 +38,19 @@ async function processSend(type:string,data:any) {
 }
 
 /**
+ * @method ai错误诊断
+ * @param err 错误文案
+ * @returns 
+ */
+function aiDiagnosis(err:string){
+  let aiMsg = ''
+  if(err.includes('Timeout') && err.includes('waiting for selector')){
+      aiMsg = '\n ai诊断: 命令执行超时,原因为长时间未找到定位元素,通常是因为定位元素不准确导致,请检查并手动调整sign参数。\n 元素定位参考: https://dqa.jd.com/cherry/guide/exam/select.html'
+  }
+  return err + aiMsg
+}
+
+/**
  *  @method 将内部堆栈以外部脚本抛出
  */
 function throwStack() {
@@ -50,7 +63,9 @@ function throwStack() {
         if (error.stack.includes('virtual_test')) {
           throw error
         }
-        throw new Error(`${key} instruction fail ${error.message}`)
+
+        if (error.message.includes('Timeout'))
+        throw new Error(`${key} instruction fail ${aiDiagnosis(error.message)}`)
       }
     }
   }
@@ -428,12 +443,14 @@ class Page implements FCherryPage {
   parse: V1Parse
   defaultContextOptions: Object
   console:Console
+  browserCofing:cherry.BrowserContextOptions
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
     this.defaultContextOptions = {}
     this.console = v1parse.console
+    this.browserCofing = {}
   }
 
   async setDevice(name:string) {
@@ -484,6 +501,10 @@ class Page implements FCherryPage {
     }
   }
 
+  setBrowserCofing( browserCofing:cherry.BrowserContextOptions){
+    this.browserCofing = browserCofing
+  }
+
   async _createContext() {
     let viewport
     if (this.parse.runOptins.screen) {
@@ -494,7 +515,7 @@ class Page implements FCherryPage {
     }
 
     if (!this.control.browserContext) {
-      const contextOptions = {
+      const contextOptions :cherry.BrowserContextOptions = {
         deviceScaleFactor: 1,
         // eslint-disable-next-line no-unsafe-optional-chaining
         viewport,
@@ -503,7 +524,10 @@ class Page implements FCherryPage {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],
         },
+        userAgent: this.browserCofing.userAgent || undefined
       }
+      
+      this.console.log('userAgent', contextOptions.userAgent)
       const context = await this.control.browser.newContext(contextOptions)
       context.setDefaultTimeout(10000) // 设置页面内容末日超时10s
       context.setDefaultNavigationTimeout(30000) // 设置页面加载默认超时30s
