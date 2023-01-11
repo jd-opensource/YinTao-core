@@ -112,6 +112,7 @@ export default class V1Parse extends Resolver {
       mouse: new Mouse(this),
       browser: new Browser(this),
       expect,
+      env:process.env,
       dom: new Dom(this),
       img: new Img(this),
       sleep: __sleep,
