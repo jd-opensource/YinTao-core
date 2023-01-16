@@ -11,6 +11,7 @@ import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
 
 process.on('uncaughtException', (err) => {
+  console.log("异常导致中断: err",err)
   process.exit(1)
 })
 

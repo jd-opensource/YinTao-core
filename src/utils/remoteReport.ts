@@ -3,7 +3,12 @@ import { ImgFile } from '../run'
 
 const getImageType = (str) => {
   const reg = /\.(png|jpg|gif|jpeg|webp)$/
-  return str.match(reg)[1]
+  const result = str.match(reg)
+  if (result == null) { // 未指定后缀则返回jpg
+    return 'jpg'
+  }else{
+    return result[1]
+  }
 }
 
 const requestTimeout = 3000
