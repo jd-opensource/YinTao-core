@@ -560,11 +560,15 @@ class Page implements FCherryPage {
 
     if (url) {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
-      let res = await this.control?.currentPage?.goto(url, options)
-      if (res != undefined ) {
-        this.control.updateContext(res.frame())
+      if(this.control && this.control.currentPage) {
+        let res = await this.control.currentPage.goto(url, options)
+        if (res == null) {
+          this.console.log('page.to 命令异常,无法切换到目标地址:',url)
+        } else {
+          this.console.log('page.to 命令执行完成。 页面返回的状态码为:', res.status)      
+        }
       } else {
-        this.console.log('page.to 命令异常，无法切换到目标地址:',url)        
+        this.console.log('page.to 命令异常,未获取到正常上下文! 可以尝试在该命令前方添加sleep函数等待上下文缓冲!')   
       }
     }
   }
