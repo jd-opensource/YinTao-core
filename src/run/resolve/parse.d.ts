@@ -3,6 +3,7 @@
  */
 
  import {
+   LocatorScreenshotOptions,
   Response,
 } from '../../../types/types'
 // monaco 引用时无法引用此文件，因此在之后需要合并
@@ -294,7 +295,7 @@ interface FCherryPage {
      * @method 页面截图
      * @param imgPath 截图存放路径
      */
-    screenshot(imgPath: string): Promise<void>
+    screenshot(imgPath: string,options: LocatorScreenshotOptions): Promise<void>
     /**
      * @method 页面后退
      */

@@ -18,7 +18,6 @@ import {
   FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,FCherryImage
 } from './parse'
 import { remoteCvSiftMatch } from './callMemoteCv'
-import { Readable, Stream } from 'stream'
 
 /**
  * @method 向主进程传递消息
@@ -115,6 +114,7 @@ export default class V1Parse extends Resolver {
       env:process.env,
       dom: new Dom(this),
       img: new Img(this),
+      errorSend: new ErrorSend(this).errorSend,
       sleep: __sleep,
       axios,
       cookies: new Cookies(this),
@@ -565,7 +565,7 @@ class Page implements FCherryPage {
         if (res == null) {
           this.console.log('page.to 命令异常,无法切换到目标地址:',url)
         } else {
-          this.console.log('page.to 命令执行完成。 页面返回的状态码为:', res.status)      
+          this.console.log('page.to 命令执行完成。 页面返回的状态码为:', res.status())
         }
       } else {
         this.console.log('page.to 命令异常,未获取到正常上下文! 可以尝试在该命令前方添加sleep函数等待上下文缓冲!')   
@@ -574,9 +574,10 @@ class Page implements FCherryPage {
   }
 
   @throwStack()
-  async screenshot(imgPath: string) {
+  async screenshot(imgPath: string,options: cherry.LocatorScreenshotOptions={}) {
     // todo: sercer run don't save disk
-    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : imgPath, type: 'jpeg' })
+    options.path = os.type() === 'Linux' ? undefined : imgPath
+    const buffer = await this.control.currentPage?.screenshot(options)
     this.console.log('screenshot img path:', path.resolve(imgPath), " image size:", buffer?.length || 0)
     if (!buffer || buffer && buffer.length < 100) {
       this.console.error(`screenshot截图失败-路径: ${imgPath}`)
@@ -750,6 +751,72 @@ class Dom implements FCherryDom {
     this.runOptins = v1parse.runOptins
     // 增加parase 定义 Byzwj
     this.parse = v1parse
+  }
+
+  // 按元素滚动条设置页面高度以截全图
+  async setIonViewport(sign:string) {
+    if(!this.control.currentPage) return
+
+    const page = this.control.currentPage
+    const currentViewport = await page.viewportSize();
+
+    const pixelAmountRenderedOffscreen = await page.evaluate(([sign]) => {
+      const content = document.querySelector(sign);
+      if(content instanceof HTMLElement) {
+          this.console.log("两个高度:",content.scrollHeight , content.clientHeight)
+          return Promise.resolve(content.scrollHeight - content.clientHeight);
+      }
+    },[sign]);
+
+    if(currentViewport == null || !pixelAmountRenderedOffscreen) return
+
+    await page.setViewportSize({
+      width: currentViewport.width,
+      height: currentViewport.height + pixelAmountRenderedOffscreen + 100
+    })
+  }
+
+  /**
+   * @method screenshot
+   * @description 截图指定元素内容
+   */
+  @throwStack()
+  async screenshot(sign:string, options: cherry.LocatorScreenshotOptions = {}) {
+    const _imgPath :string = options.path || ''
+    options.path = os.type() === 'Linux' ? undefined : options.path
+    // options.type = 'jpeg'
+    this.console.log("截图参数:",options)
+
+    var buffer
+    // @ts-ignore 原生并不支持对dom截全屏
+    if(options.fullPage) {
+      const currentViewport = await this.control.currentPage?.viewportSize();
+      if(!currentViewport) { this.console.error('dom screenshot error: 无法获取页面视图宽高!'); return}
+      this.setIonViewport(sign)
+      buffer = await this.control.currentPage?.locator(sign).screenshot(options);
+      
+      // 恢复原始页面
+      await this.control.currentPage?.setViewportSize({
+        width: currentViewport.width,
+        height: currentViewport.height
+      })
+    }else{
+      buffer = await this.control.currentPage?.locator(sign).screenshot(options);
+    }
+
+
+    if (!buffer || buffer && buffer.length < 100) {
+      this.console.error(`screenshot截图失败-路径: ${options.path}`)
+    } else {
+      const screenImage = {
+        path: path.resolve(_imgPath),
+        buffer,
+        name: path.basename(_imgPath),
+      }
+      this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
+      await processSend('addScreenImages', screenImage)
+    }
+  
   }
 
   @throwStack()
@@ -948,6 +1015,79 @@ class Dom implements FCherryDom {
       throw new Error(`Invalid file path: ${files}`)
     }
     await this.control?.runContext?.setInputFiles(sign, files)
+  }
+
+  @throwStack()
+  async errorSend(sign: string) : Promise<any> {
+    const errorSendImage = `${sign}.jpg`
+    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImage, type: 'jpeg' })
+    console.log("screenshot img path:", path.resolve(errorSendImage))
+    let screenImage: any
+    this.console.log('screenshot img path:', path.resolve(errorSendImage), " image size:", buffer?.length || 0)
+    if (!buffer || buffer && buffer.length < 100) {
+      screenImage = {
+        path: path.resolve(errorSendImage),
+        buffer,
+        name: path.basename(errorSendImage),
+      }
+      this.console.error(`screenshot截图失败-路径: ${errorSendImage}`)
+    } else {
+      screenImage = {
+        path: path.resolve(errorSendImage),
+        buffer,
+        name: path.basename(errorSendImage),
+      }
+    }
+
+    this.runOptins = null || {
+      id: this.control.id,
+      remoteReport: {
+        result: "http://uitc.jd.com/api/updateCaseRunResult",
+        log: "http://uitc.jd.com/api/saveCaseLog",
+        image: 'http://uitc.jd.com/api/createCaseScreenShot',
+      },
+      cookies: ["errorSendResult"],
+      script: 'errorSendResultst',
+      storage: any,
+      screen: {
+        width: 1,
+        height: 2,
+      },
+      _startTime: 1,
+      __log_body: ['errorSendResult'],
+      _screenImages: [],
+    }
+    this.runOptins._screenImages.push(screenImage) // 用于异步上报
+    this.runOptins.__log_body.push(`run error auto screenshot path : file://${path.resolve(errorSendImage)}`)
+
+    this.parse.cherryResult = {
+      duration: new Date().getTime() - (this.parse.runOptins._startTime as number),
+      success: false,
+      code: 400,
+      msg: sign,
+      divertor: [],
+      error: {
+        name: '主动将用例置为失败',
+        message: sign,
+      },
+    }
+  }
+}
+
+// 标记错误且不影响程序执行
+class ErrorSend{
+  control: TestControl
+  console:Console
+  // 增加paras定义Byzwj
+  parse: V1Parse
+  runOptins: RunOptions
+
+  constructor(v1parse: V1Parse) {
+    this.control = v1parse.control
+    this.console = v1parse.console
+    this.runOptins = v1parse.runOptins
+    // 增加parase 定义 Byzwj
+    this.parse = v1parse
   }
 
   @throwStack()

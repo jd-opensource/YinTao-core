@@ -1,7 +1,7 @@
 import stripBom from 'strip-bom'
 import { LaunchOptions } from '../../types/types'
 import guardTimeExecution from '../utils/guard-time-execution'
-import { reportRunImage, reportRunLog, reportRunResult } from '../utils/remoteReport'
+import { getImageType, reportRunImage, reportRunLog, reportRunResult } from '../utils/remoteReport'
 import { readFile } from '../utils/suger'
 import stripAnsi from 'strip-ansi'
 import Compiler from './compiler'
@@ -14,6 +14,10 @@ export interface CherryResult {
   storage?:any
   log?:string
   error? : Error
+  images?:{
+    path:string,
+    base64:string
+  }[]
   /**
    * @code 4021 脚本编译错误 4044 脚本执行错误 2000执行成功
    */
@@ -113,6 +117,7 @@ export async function run(code: string, opts: RunOptions = {
   )
   cherryResult.duration = duration
   cherryResult.storage = opts.storage
+
   if (launchOptions.remoteReport) {
     console.log("执行完毕-启动远程异步数据上报!")
     const caseId = launchOptions?.storage?.__caseList?.shift() || undefined
@@ -129,7 +134,25 @@ export async function run(code: string, opts: RunOptions = {
     if (launchOptions.remoteReport.log) {
       await reportRunLog(launchOptions.remoteReport.log, JSON.stringify(cherryResult.log), storage)
     }
+  } 
+  
+  if(!launchOptions.remoteReport || launchOptions.remoteReport.image == undefined) {
+    // 当没有异步上报时, 将日志和图片返回给http响应
+    cherryResult.images = []
+    launchOptions._screenImages.map(async (img) => {
+        if (Buffer.isBuffer(img.buffer) == false) {
+          img.buffer = Buffer.from(img.buffer)
+        }
+        const imgbase64 = `data:image/${getImageType(img.name)};base64,${img.buffer.toString('base64')}`
+
+        cherryResult.images?.push({
+          path: img.name || '',
+          base64: imgbase64
+        })
+      }
+    )
   }
+  
   return cherryResult
 }
 
