@@ -276,8 +276,6 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
       console.log("追踪关闭执行错误", error)
       resolver.runOptins.__log_body?.push(`trace save error: ${error}`)
     }
-  } else {
-    console.log("关闭追踪失败",resolver.control, resolver.control.browserContext, resolver.runOptins.remoteReport?.trace)
   }
   
   // eslint-disable-next-line prefer-const
