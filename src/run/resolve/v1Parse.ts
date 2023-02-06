@@ -533,6 +533,10 @@ class Page implements FCherryPage {
       context.setDefaultTimeout(10000) // 设置页面内容末日超时10s
       context.setDefaultNavigationTimeout(30000) // 设置页面加载默认超时30s
       this.control.setBrowserContext(context)
+      if(this.parse.runOptins.remoteReport?.trace) {
+        await context.tracing.start({ screenshots: true, snapshots: true }) // 启动追踪
+        console.log("启动执行自动追踪!")
+      }
     }
     const context = this.control.browserContext
     const page = await context?.newPage()
@@ -844,7 +848,7 @@ class Dom implements FCherryDom {
     trial?: boolean;
   }) {
     if (this.control && this.control.runContext) {
-      await this.control?.runContext?.click(sign, options)
+      await this.control.runContext.click(sign, options)
     } else {
       throw new Error('Cannot make any click, please check your is opened any page?')
     }

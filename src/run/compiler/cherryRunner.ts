@@ -9,6 +9,8 @@ import V1Parse from '../resolve/v1Parse'
 import TestControl from '../../test_control/testControl'
 import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
+import {  reportTrace } from '../../utils/remoteReport'
+import fs  from 'fs'
 
 process.on('uncaughtException', (err) => {
   console.log("异常导致中断: err",err)
@@ -247,6 +249,37 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
   // eslint-disable-next-line prefer-const
   console.log('resolerCherryResult', JSON.stringify(resolver.cherryResult))
 
+  // 关闭追踪
+  console.log("测试关闭追踪逻辑")
+  if(resolver.control && resolver.control.browserContext && resolver.runOptins.remoteReport?.trace) {
+    let trace_path:string | undefined = resolver.runOptins.remoteReport?.trace
+    let online_os = false // 是否上传至服务器
+    if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(resolver.runOptins.remoteReport.trace)) { // 如果为http地址则进行上报
+      // 如果未http地址则,存储到临时目录中
+      trace_path = path.join(os.tmpdir(), 'cherryDfSession', resolver.control.id + '.zip')
+      online_os = true
+    }
+    
+    try {
+      await resolver.control?.browserContext?.tracing.stop({ path: trace_path}) // 关闭跟踪 './trace.zip'
+      console.log(`停止追踪成功, 存储的位置-: ${trace_path}`)
+      if(online_os) {
+        // const buffer = fs.readFileSync(trace_path) // 读取内容，将内容上传到路径中
+        await reportTrace(resolver.runOptins.remoteReport.trace, trace_path, resolver.runOptins.storage)
+        // 上传后将本地文件删除
+        fs.unlinkSync(trace_path)
+      }else if(os.type() === 'Linux' && !online_os){ // 当远程执行时,且地址为本地路径则需要删除文件，放置恶意打满磁盘
+        fs.unlinkSync(trace_path)
+        console.log("删除恶意追踪文件!")
+      }
+    } catch (error) {
+      console.log("追踪关闭执行错误", error)
+      resolver.runOptins.__log_body?.push(`trace save error: ${error}`)
+    }
+  } else {
+    console.log("关闭追踪失败",resolver.control, resolver.control.browserContext, resolver.runOptins.remoteReport?.trace)
+  }
+  
   // eslint-disable-next-line prefer-const
   result = resolver.cherryResult || resultData
   if (result.error !== undefined) {
@@ -263,8 +296,12 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
     let buffer
     try {
       buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
+      if (!buffer || buffer && buffer.length < 100) {
+        console.log(`screenshot截图失败-路径: ${imgPath}`," img-size:",buffer.length)
+        resolver.runOptins.__log_body?.push(`错误自动截图失败screenshot-路径: ${imgPath},mg-size:,${buffer.length}`)
+      } 
     } catch (error) {
-      console.log("执行错误-自动截图失败:", error)
+      resolver.runOptins.__log_body?.push("执行<错误-自动截图失败>:" + error)
     }
     if (buffer) {
       const screenImage = {

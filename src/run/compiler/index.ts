@@ -40,7 +40,7 @@ export default class Compiler {
       const worker = fork(path.join(__dirname, 'cherryRunner'), [script, JSON.stringify(this._runOption)])
       const timeoutId = setTimeout(() => {
         worker.send({ kill: true }) // worker.kill() invalid
-        reject(new Error("Timeout"))
+        reject(new Error("Timeout: Operation exceeds the maximum 900000ms time limit"))
       }, timeout)
 
       worker.on('message', (msg:any) => {
@@ -119,6 +119,8 @@ export default class Compiler {
 
   async clearTest() {
     // 不在等待浏览器关闭, 有时无法收到退出
+    // todo: 修改存储位置查看存储内容
+  
     this.control?.browser.close()
     cherry.testControl.delete(this.id)
   }

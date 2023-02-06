@@ -1,3 +1,4 @@
+import fs from 'fs'
 import axios from 'axios'
 import { ImgFile } from '../run'
 
@@ -39,6 +40,7 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
     console.log("body: ", JSON.stringify(result))
   })
 }
+
 
 /**
  * @method 远程报告运行图片
@@ -96,4 +98,26 @@ export async function reportRunLog(url:string, logBody:string, storage?:any) {
     console.log('reportRunLog error', e.message, " log-url:", url)
   })
   
+}
+
+/**
+ * @method 上报运行跟踪内容
+ */
+export async function reportTrace(url:string, filePath:string, storage?:any) {
+  console.log('run reportTrace', url, 'filePath:', filePath)
+  // log 获取不到运行结果,运行报错这里无法接收
+  const FormData = require('form-data')
+  const param = new FormData()
+  param.append("trace",   fs.createReadStream(filePath))
+  param.append('storage', JSON.stringify(storage))
+  param.append('headers', JSON.stringify({
+    'Content-Type': 'application/json',
+  }))
+
+  try {
+    let res = await axios.post(url, param, { headers: param.getHeaders(), timeout: 1000 * 60 * 3 }) // 追踪超时设置为3分钟
+    console.log('reportTrace success: ',res.data)
+  } catch (error) {
+    console.log('reportTrace error', error.message, " log-url:", url)
+  }
 }

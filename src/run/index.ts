@@ -36,6 +36,7 @@ export interface RunOptions extends LaunchOptions{
     result?:string
     log?:string
     image?:string
+    trace?:string
   },
   cookies:any[]
   script?:string
