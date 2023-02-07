@@ -437,12 +437,25 @@ class Mouse implements FCherryMouse {
   async wheel(deltaX: number, deltaY: number) {
     await this.control.currentPage?.mouse.wheel(deltaX, deltaY)
   }
+
+  @throwStack()
+  async dragTo(point: {x:number,y:number}, targetPoint: {x:number,y:number}) {
+    const page = this.control.currentPage
+    if(page){
+      await page.mouse.move(point.x,point.y)
+      await page.mouse.down({button:'left'})
+      await page.mouse.move(targetPoint.x,targetPoint.y)
+      await page.mouse.up({button:'left'})
+    }else{
+      console.error("页面出现异常丢失")
+    }
+  }
 }
 
 class Page implements FCherryPage {
   control: TestControl
   parse: V1Parse
-  defaultContextOptions: Object
+  defaultContextOptions: cherry.BrowserContextOptions
   console:Console
   browserCofing:cherry.BrowserContextOptions
 
@@ -525,7 +538,7 @@ class Page implements FCherryPage {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],
         },
-        userAgent: this.browserCofing.userAgent || undefined
+        userAgent: this.browserCofing.userAgent || this.defaultContextOptions.userAgent || undefined
       }
       
       this.console.log('userAgent', contextOptions.userAgent)
@@ -755,6 +768,14 @@ class Dom implements FCherryDom {
     this.runOptins = v1parse.runOptins
     // 增加parase 定义 Byzwj
     this.parse = v1parse
+  }
+
+  /**
+   * @method 拖拽元素到指定元素中
+   */
+  async dragTo(sign:string, target: string){
+    if(!this.control.currentPage) return
+    await this.control.currentPage.locator(sign).dragTo(this.control.currentPage.locator(target));
   }
 
   // 按元素滚动条设置页面高度以截全图
