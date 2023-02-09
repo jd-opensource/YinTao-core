@@ -325,7 +325,6 @@ async function asyncReport(this: V1Parse, ...args: any) {
 
   if(trace){
     try {
-      this.console.log("尝试任务关闭追踪..",args)
       let trace_path = path.join(os.tmpdir(), 'cherryDfSession',  new Date().getTime() + '.zip')
       await this.control.browserContext?.tracing.stop({ path: trace_path})
       await reportTrace(trace,trace_path,{ args, ...this.runOptins.storage })
