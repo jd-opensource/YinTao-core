@@ -13,7 +13,7 @@ import { download, mkdirIfNeeded } from '../../utils/utils'
 import {
   Page as PageType, Route, Request, Response, testControl,
 } from '../../../types/types'
-import { reportRunImage, reportRunLog, reportRunResult } from '../../utils/remoteReport'
+import { reportRunImage, reportRunLog, reportRunResult, reportTrace } from '../../utils/remoteReport'
 import {
   FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,FCherryImage
 } from './parse'
@@ -294,7 +294,7 @@ class assert implements FCherryAssert {
  * @param args
  */
 async function asyncReport(this: V1Parse, ...args: any) {
-  const { result, image, log } = this.runOptins?.remoteReport || {}
+  const { result, image, log, trace } = this.runOptins?.remoteReport || {}
   // delete reported case
   if (this.runOptins.storage && this.runOptins.storage.__caseList) {
     this.runOptins.storage.__caseList.shift()
@@ -321,6 +321,20 @@ async function asyncReport(this: V1Parse, ...args: any) {
   if (log) {
     await reportRunLog(log, this.runOptins.__log_body.join('\n'), { args, ...this.runOptins.storage })
     this.runOptins.__log_body = [] // 上报后清空日志
+  }
+
+  if(trace){
+    try {
+      this.console.log("尝试任务关闭追踪..",args)
+      let trace_path = path.join(os.tmpdir(), 'cherryDfSession',  new Date().getTime() + '.zip')
+      await this.control.browserContext?.tracing.stop({ path: trace_path})
+      await reportTrace(trace,trace_path,{ args, ...this.runOptins.storage })
+      fs.unlinkSync(trace_path)
+      await this.control.browserContext?.tracing.start({ screenshots: true, snapshots: true }) 
+    } catch (error) {
+      this.console.log("error: 中途关闭追踪失败,",error)
+    }
+ 
   }
   // this.runOptins = undefined
 }
