@@ -326,10 +326,19 @@ async function asyncReport(this: V1Parse, ...args: any) {
   if(trace){
     try {
       let trace_path = path.join(os.tmpdir(), 'cherryDfSession',  new Date().getTime() + '.zip')
-      await this.control.browserContext?.tracing.stop({ path: trace_path})
-      await reportTrace(trace,trace_path,{ args, ...this.runOptins.storage })
-      fs.unlinkSync(trace_path)
-      await this.control.browserContext?.tracing.start({ screenshots: true, snapshots: true }) 
+      if(this.control.browserContext){
+        await this.control.browserContext.tracing.stop({ path: trace_path})
+        await reportTrace(trace,trace_path,{ args, ...this.runOptins.storage })
+        fs.unlinkSync(trace_path)
+        await this.control.browserContext.tracing.start({ screenshots: true, snapshots: true }) 
+      }else{
+        /**
+         * 处理方式:(目前采用第一种)
+         *  1. 由于未挂载页面导致不能正确追踪,并且此时追踪并为开启，因此可以直接忽略本次上报，因为并没有追踪内容。
+         *  2. 默认打开空白页面，使追踪逻辑连贯，上报空追踪内容。
+         */
+        this.console.log("停止追踪异常,browserContext丢失! 可能为上报前为挂载页面导致.")
+      }
     } catch (error) {
       this.console.log("error: 中途关闭追踪失败,",error)
     }
