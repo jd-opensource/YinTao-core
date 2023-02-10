@@ -587,6 +587,16 @@ class Page implements FCherryPage {
     await this.control?.currentPage?.setViewportSize({ width, height })
   }
 
+  /**
+   * @method 获取页面视图宽高
+   */
+  async getViewSize() :Promise<{width:number,height:number} | null > {
+    if(this.control.currentPage){
+      return this.control.currentPage.viewportSize()
+    }
+    return null
+  }
+  
   async refresh(options:PageOptions) {
     this.control.currentPage?.reload(options)
   }
