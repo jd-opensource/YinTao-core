@@ -837,8 +837,6 @@ class Dom implements FCherryDom {
   async screenshot(sign:string, options: cherry.LocatorScreenshotOptions = {}) {
     const _imgPath :string = options.path || ''
     options.path = os.type() === 'Linux' ? undefined : options.path
-    // options.type = 'jpeg'
-    this.console.log("截图参数:",options)
 
     var buffer
     // @ts-ignore 原生并不支持对dom截全屏
