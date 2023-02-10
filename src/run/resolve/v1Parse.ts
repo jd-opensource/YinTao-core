@@ -817,13 +817,8 @@ class Dom implements FCherryDom {
     const page = this.control.currentPage
     const currentViewport = await page.viewportSize();
 
-    const pixelAmountRenderedOffscreen = await page.evaluate(([sign]) => {
-      const content = document.querySelector(sign);
-      if(content instanceof HTMLElement) {
-          this.console.log("两个高度:",content.scrollHeight , content.clientHeight)
-          return Promise.resolve(content.scrollHeight - content.clientHeight);
-      }
-    },[sign]);
+    const tweets = page.locator(sign);
+    const pixelAmountRenderedOffscreen = await tweets.evaluate(node => node.scrollHeight - node.clientHeight)
 
     if(currentViewport == null || !pixelAmountRenderedOffscreen) return
 
