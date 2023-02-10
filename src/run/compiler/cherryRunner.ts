@@ -9,11 +9,11 @@ import V1Parse from '../resolve/v1Parse'
 import TestControl from '../../test_control/testControl'
 import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
-import {  reportTrace } from '../../utils/remoteReport'
-import fs  from 'fs'
+import { reportTrace } from '../../utils/remoteReport'
+import fs from 'fs'
 
 process.on('uncaughtException', (err) => {
-  console.log("异常导致中断: err",err)
+  console.log("异常导致中断: err", err)
   process.exit(1)
 })
 
@@ -21,7 +21,7 @@ const sendResult = (result) => {
   // @ts-ignore
   process.send({ type: "result", data: result }, undefined, undefined, () => {
     setTimeout(() => {
-    // 有时未上报完，线程就莫名被关闭，因此添加调试。
+      // 有时未上报完，线程就莫名被关闭，因此添加调试。
       console.log('send resule success~ exit child process!')
       process.exit(0)
     }, 300)
@@ -200,13 +200,13 @@ export default async function runScript<T = any>(code: string, options: RunScrip
 /**
 * @method 执行前的前置处理
 */
-async function bootstrap(browserType:string = 'chrome', runOption:any) {
+async function bootstrap(browserType: string = 'chrome', runOption: any) {
   let browserCore
   if (browserType === 'chrome') {
     browserCore = cherry.chromium
   }
 
-  const launchOptions : LaunchOptions = {
+  const launchOptions: LaunchOptions = {
     headless: runOption?.headless || false,
     executablePath: runOption?.executablePath || undefined,
   }
@@ -223,7 +223,7 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
 }
 
 (async () => {
-  process.on('message', (msg:any) => {
+  process.on('message', (msg: any) => {
     if (msg.kill) {
       console.log('child process exit success!')
       process.exit()
@@ -233,9 +233,9 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
   const runOption = JSON.parse(process.argv[3] || '{}')
   const resolver = await bootstrap('chrome', runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`
-  let result :any
+  let result: any
 
-  const resultData :any = await runScript(runCode, {
+  const resultData: any = await runScript(runCode, {
 
     globalParams: resolver?.registerGlobalApi() || {},
     dirname: __dirname,
@@ -250,25 +250,25 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
   console.log('resolerCherryResult', JSON.stringify(resolver.cherryResult))
 
   // 关闭追踪
-  console.log("测试关闭追踪逻辑")
-  if(resolver.control && resolver.control.browserContext && resolver.runOptins.remoteReport?.trace) {
-    let trace_path:string | undefined = resolver.runOptins.remoteReport?.trace
+  if (resolver.control && resolver.control.browserContext && resolver.runOptins.remoteReport?.trace) {
+    console.log("测试关闭追踪逻辑")
+    let trace_path: string | undefined = resolver.runOptins.remoteReport?.trace
     let online_os = false // 是否上传至服务器
     if (/http[s]{0,1}:\/\/([\w.]+\/?)\S*/.test(resolver.runOptins.remoteReport.trace)) { // 如果为http地址则进行上报
       // 如果未http地址则,存储到临时目录中
       trace_path = path.join(os.tmpdir(), 'cherryDfSession', resolver.control.id + '.zip')
       online_os = true
     }
-    
+
     try {
-      await resolver.control?.browserContext?.tracing.stop({ path: trace_path}) // 关闭跟踪 './trace.zip'
+      await resolver.control?.browserContext?.tracing.stop({ path: trace_path }) // 关闭跟踪 './trace.zip'
       console.log(`停止追踪成功, 存储的位置-: ${trace_path}`)
-      if(online_os) {
+      if (online_os) {
         // const buffer = fs.readFileSync(trace_path) // 读取内容，将内容上传到路径中
         await reportTrace(resolver.runOptins.remoteReport.trace, trace_path, resolver.runOptins.storage)
         // 上传后将本地文件删除
         fs.unlinkSync(trace_path)
-      }else if(os.type() === 'Linux' && !online_os){ // 当远程执行时,且地址为本地路径则需要删除文件，放置恶意打满磁盘
+      } else if (os.type() === 'Linux' && !online_os) { // 当远程执行时,且地址为本地路径则需要删除文件，放置恶意打满磁盘
         fs.unlinkSync(trace_path)
         console.log("删除恶意追踪文件!")
       }
@@ -277,14 +277,14 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
       resolver.runOptins.__log_body?.push(`trace save error: ${error}`)
     }
   }
-  
+
   // eslint-disable-next-line prefer-const
   result = resolver.cherryResult || resultData
   if (result.error !== undefined) {
     console.log("运行错误:", result.error)
     const imgPath = path.resolve(os.tmpdir(), '__cherry_auto_error.jpg') // 获取系统临时目录
 
-    let screenshotPath : string | undefined = imgPath
+    let screenshotPath: string | undefined = imgPath
     if (os.type() === 'Linux') { // 远程执行,失败自动截图
       // 增加调试方式,将错误图片落磁盘
       screenshotPath = runOption.storage?.debugImage ? "/tmp/cherry_auto.jpeg" : undefined
@@ -295,9 +295,9 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
     try {
       buffer = await resolver.control?.currentPage?.screenshot({ path: screenshotPath, type: 'jpeg' })
       if (!buffer || buffer && buffer.length < 100) {
-        console.log(`screenshot截图失败-路径: ${imgPath}`," img-size:",buffer.length)
+        console.log(`screenshot截图失败-路径: ${imgPath}`, " img-size:", buffer.length)
         resolver.runOptins.__log_body?.push(`错误自动截图失败screenshot-路径: ${imgPath},mg-size:,${buffer.length}`)
-      } 
+      }
     } catch (error) {
       resolver.runOptins.__log_body?.push("执行<错误-自动截图失败>:" + error)
     }
@@ -337,6 +337,7 @@ async function bootstrap(browserType:string = 'chrome', runOption:any) {
     code: !result.error ? 2000 : 4044,
   }
   sendResult(cherryResult)
+  console.log('上报线程执行结果:',cherryResult.success)
   // 子线程不能自己退出必须等待退出消息
   while (true) {
     await __sleep(3000)

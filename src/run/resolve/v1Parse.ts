@@ -811,6 +811,7 @@ class Dom implements FCherryDom {
   }
 
   // 按元素滚动条设置页面高度以截全图
+  @throwStack()
   async setIonViewport(sign:string) {
     if(!this.control.currentPage) return
 
@@ -844,7 +845,7 @@ class Dom implements FCherryDom {
     if(options.fullPage) {
       const currentViewport = await this.control.currentPage?.viewportSize();
       if(!currentViewport) { this.console.error('dom screenshot error: 无法获取页面视图宽高!'); return}
-      this.setIonViewport(sign)
+      await this.setIonViewport(sign)
       buffer = await this.control.currentPage?.locator(sign).screenshot(options);
       
       // 恢复原始页面
