@@ -12,7 +12,7 @@ export const getImageType = (str) => {
   }
 }
 
-const requestTimeout = 3000
+const requestTimeout = 10000
 
 /**
  * @method 远程报告运行结果

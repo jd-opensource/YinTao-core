@@ -247,7 +247,7 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
   })
   // 判断是否有errorSend命令
   // eslint-disable-next-line prefer-const
-  console.log('resolerCherryResult', JSON.stringify(resolver.cherryResult))
+  console.log('自定义错误结果-resolerCherryResult:', JSON.stringify(resolver.cherryResult))
 
   // 关闭追踪
   if (resolver.control && resolver.control.browserContext && resolver.runOptins.remoteReport?.trace) {

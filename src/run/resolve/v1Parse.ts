@@ -461,6 +461,11 @@ class Mouse implements FCherryMouse {
   }
 
   @throwStack()
+  async move(x: number, y: number) {
+    await this.control.currentPage?.mouse.move(x, y)
+  }
+
+  @throwStack()
   async dragTo(point: {x:number,y:number}, targetPoint: {x:number,y:number}) {
     const page = this.control.currentPage
     if(page){
