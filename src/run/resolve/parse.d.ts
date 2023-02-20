@@ -460,7 +460,7 @@ interface FCherryDom {
    * @param sign
    * @param timeout 超时时间 default:2000ms
    */
-  exist(sign: string, timeout:number) : Promise<boolean>
+  exist(sign: string, option:{state:"attached"|"detached"|"visible"|"hidden",timeout:number}) : Promise<boolean>
 
   /**
    * @method text文字填充

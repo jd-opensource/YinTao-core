@@ -993,20 +993,18 @@ class Dom implements FCherryDom {
   }
 
   @throwStack()
-  async exist(sign: string, ms:number = 2000) : Promise<boolean> {
-    const __wait_time = async (func:any, ms:number, args: any = undefined) => {
-      let count = parseInt(((ms / 1000) * 2) as any, 10)
-      console.log("getAttributes 默认分支:")
-      while (count > 0) {
-        count--
-        const result = await func(args)
-        if (result || count === 0) {
-          return result
-        }
-        await __sleep(500)
+  async exist(sign: string, option:{state:"attached"|"detached"|"visible"|"hidden",timeout:number}) : Promise<boolean> {
+    if(this.control && this.control.runContext){
+      const page = this.control.runContext
+      try {
+        await page.locator(sign).waitFor(option)
+        return true
+      } catch (error) {
+        return false
       }
+    }else{
+      throw new Error("错误的上下文,找不到正确的执行环境")
     }
-    return await __wait_time(this.control?.runContext?.isVisible.bind(this.control.runContext), ms, sign) as boolean
   }
 
   /**
