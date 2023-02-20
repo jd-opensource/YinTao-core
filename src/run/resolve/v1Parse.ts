@@ -507,7 +507,7 @@ class Page implements FCherryPage {
   async waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
       timeout?: number;
     }) {
-    if (!this.control.currentPage) throw new Error('miss currentPage.')
+    if (!this.control.currentPage) throw new Error('miss currentPage. you must pre join any page')
     return await this.control.currentPage.waitForResponse(urlOrPredicate, options)
   }
 
