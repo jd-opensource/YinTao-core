@@ -38,7 +38,8 @@ export default class Compiler {
   async runUnsafeScript(script:string, callback?:Function, timeout:number = 900000) :Promise<CherryResult> {
     return new Promise((resolver, reject) => {
       const options = { execArgv: ['--max-old-space-size=4096'] }; 
-      const worker = fork(path.join(__dirname, 'cherryRunner'), [script, JSON.stringify(this._runOption)],options)
+      const worker = fork(path.join(__dirname, 'cherryRunner'), [],options)
+      worker.send([script, JSON.stringify(this._runOption)]) // 通过进程传递脚本和内容
       const timeoutId = setTimeout(() => {
         worker.send({ kill: true }) // worker.kill() invalid
         reject(new Error("Timeout: Operation exceeds the maximum 900000ms time limit"))

@@ -222,6 +222,14 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
   return new V1Parse(control, runOption)
 }
 
+async function GetStartScript():Promise<string[]> {
+  return new Promise((resolve,reject) => {
+    process.on('message', (msg: any) => {
+      resolve(msg)
+    })
+  })
+}
+
 (async () => {
   process.on('message', (msg: any) => {
     if (msg.kill) {
@@ -229,8 +237,8 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
       process.exit()
     }
   })
-  const code = process.argv[2]
-  const runOption = JSON.parse(process.argv[3] || '{}')
+  const [code,runOptionString] = await GetStartScript()
+  const runOption = JSON.parse(runOptionString || '{}')
   const resolver = await bootstrap('chrome', runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`
   let result: any
@@ -242,7 +250,6 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
     filename: VirtualFile,
 
   }).catch((res) => {
-    console.log('我先感知到出错,这里好像p用没有')
     sendResult(res)
   })
   // 判断是否有errorSend命令
