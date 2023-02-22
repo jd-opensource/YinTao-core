@@ -36,6 +36,23 @@ async function processSend(type:string,data:any) {
   })
 }
 
+function waitForResult(callback: ()=>Promise<boolean>,timeout = 3000) :Promise<boolean>{
+  const end_time = new Date().getTime() + timeout
+  const interval = 200; // 检测间隔
+  return new Promise((resolve,reject)=>{
+    const intervalId = setInterval(async () => {
+      const result = await callback();
+      if (result) {
+        clearInterval(intervalId);
+        resolve(true)
+      } else if (new Date().getTime() > end_time) {
+        clearInterval(intervalId);
+        resolve(false)
+      }
+    }, interval);
+  })
+}
+
 /**
  * @method ai错误诊断
  * @param err 错误文案
@@ -604,6 +621,25 @@ class Page implements FCherryPage {
   
   async refresh(options:PageOptions) {
     this.control.currentPage?.reload(options)
+  }
+
+  @throwStack()
+  async hasText(text:string,options?:{
+    timeout:number
+  }):Promise<boolean> {
+    options = {
+      timeout: options?.timeout || 3000
+    }
+    
+    const _hastext = async () => {
+      const locator = this.control.runContext?.locator('body')
+      const htmlText = await locator?.innerHTML() || ''
+      if (htmlText.includes(text) == false){
+        return false
+      }
+      return true
+    }
+    return await waitForResult(_hastext,options.timeout)
   }
 
   @throwStack()
