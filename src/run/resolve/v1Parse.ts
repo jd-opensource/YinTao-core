@@ -501,14 +501,12 @@ class Page implements FCherryPage {
   parse: V1Parse
   defaultContextOptions: cherry.BrowserContextOptions
   console:Console
-  browserCofing:cherry.BrowserContextOptions
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
     this.defaultContextOptions = {}
     this.console = v1parse.console
-    this.browserCofing = {}
   }
 
   async setDevice(name:string) {
@@ -560,7 +558,7 @@ class Page implements FCherryPage {
   }
 
   setBrowserCofing( browserCofing:cherry.BrowserContextOptions){
-    this.browserCofing = browserCofing
+    this.defaultContextOptions = {...browserCofing}
   }
 
   async _createContext() {
@@ -582,7 +580,7 @@ class Page implements FCherryPage {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],
         },
-        userAgent: this.browserCofing.userAgent || this.defaultContextOptions.userAgent || undefined
+        userAgent: this.defaultContextOptions.userAgent || undefined
       }
       
       this.console.log('userAgent', contextOptions.userAgent)
