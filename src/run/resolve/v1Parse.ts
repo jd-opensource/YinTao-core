@@ -557,7 +557,7 @@ class Page implements FCherryPage {
     }
   }
 
-  setBrowserCofing( browserCofing:cherry.BrowserContextOptions){
+  setBrowserCofing( browserCofing:cherry.BrowserContextOptions) {
     this.defaultContextOptions = {...browserCofing}
   }
 
