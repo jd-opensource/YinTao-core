@@ -1,11 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { BrowserType } from '../client/browserType'
-import { Browser } from '../client/browser'
-import * as cherry from '../../index'
-import { BrowserContext } from '../client/browserContext'
-import { Page } from '../client/page'
+import { BrowserType,Browser,Page,BrowserContext } from 'playwright'
+import * as cherry from 'playwright'
 
 type Options = {
     browser: string;

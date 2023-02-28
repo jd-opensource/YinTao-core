@@ -63,6 +63,7 @@ export async function run(code: string, opts: RunOptions = {
   cookies: [],
 },callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {
   let cherryResult :CherryResult
+  console.log("收到的执行路径:", opts.executablePath)
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     __log_body:[],

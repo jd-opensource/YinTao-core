@@ -3,14 +3,13 @@ import os from 'os'
 import path from 'path'
 import { createRequire } from 'module'
 import { VirtualFile } from './index'
-import * as cherry from '../../../index'
-import { LaunchOptions } from '../../client/types'
 import V1Parse from '../resolve/v1Parse'
 import TestControl from '../../test_control/testControl'
 import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
 import { reportTrace } from '../../utils/remoteReport'
 import fs from 'fs'
+import { chromium, firefox, LaunchOptions, webkit }  from 'playwright'
 
 process.on('uncaughtException', (err) => {
   console.log("异常导致中断: err", err)
@@ -202,8 +201,17 @@ export default async function runScript<T = any>(code: string, options: RunScrip
 */
 async function bootstrap(browserType: string = 'chrome', runOption: any) {
   let browserCore
-  if (browserType === 'chrome') {
-    browserCore = cherry.chromium
+
+  switch (browserType){
+    case 'chrome':
+    case 'chromium':
+      browserCore = chromium
+      break
+    case 'firefox':
+      browserCore = firefox
+      break
+    case 'webkit':
+      browserCore = webkit
   }
 
   const launchOptions: LaunchOptions = {
@@ -211,12 +219,14 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
     executablePath: runOption?.executablePath || undefined,
   }
 
+  console.log("收到的执行路径2:", launchOptions.executablePath)
+
   // hostDns server
   launchOptions.proxy = runOption.proxy
   const browser = await browserCore.launch(launchOptions)
   // set control
   const control = new TestControl(runOption.id, browser)
-  cherry.testControl.set(runOption.id, control)
+  // cherry.testControl.set(runOption.id, control)
 
   // script parse
   return new V1Parse(control, runOption)
@@ -239,7 +249,9 @@ async function GetStartScript():Promise<string[]> {
   })
   const [code,runOptionString] = await GetStartScript()
   const runOption = JSON.parse(runOptionString || '{}')
-  const resolver = await bootstrap('chrome', runOption) // 初始化引导,理论可以传多个配合看后续设计
+
+  const userBrowser = runOption.browser || 'chrome' // 默认使用chrome浏览器
+  const resolver = await bootstrap(userBrowser, runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`
   let result: any
 

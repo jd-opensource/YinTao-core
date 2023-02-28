@@ -10,14 +10,12 @@ import * as cherry from '../../../index'
 import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
-import {
-  Page as PageType, Route, Request, Response, testControl,
-} from '../../../types/types'
 import { reportRunImage, reportRunLog, reportRunResult, reportTrace } from '../../utils/remoteReport'
 import {
   FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,FCherryImage
 } from './parse'
 import { remoteCvSiftMatch } from './callMemoteCv'
+import { PageScreenshotOptions,Response,BrowserContextOptions,devices } from 'playwright'
 
 /**
  * @method 向主进程传递消息
@@ -499,7 +497,7 @@ class Mouse implements FCherryMouse {
 class Page implements FCherryPage {
   control: TestControl
   parse: V1Parse
-  defaultContextOptions: cherry.BrowserContextOptions
+  defaultContextOptions: BrowserContextOptions
   console:Console
 
   constructor(v1parse: V1Parse) {
@@ -510,7 +508,7 @@ class Page implements FCherryPage {
   }
 
   async setDevice(name:string) {
-    const deviceOptions = cherry.devices[name]
+    const deviceOptions = devices[name]
     if (deviceOptions === undefined) {
       throw new Error(`The lack of the preset ${name}`)
     }
@@ -557,7 +555,7 @@ class Page implements FCherryPage {
     }
   }
 
-  setBrowserCofing( browserCofing:cherry.BrowserContextOptions) {
+  setBrowserCofing( browserCofing: BrowserContextOptions) {
     this.defaultContextOptions = {...browserCofing}
   }
 
@@ -571,7 +569,7 @@ class Page implements FCherryPage {
     }
 
     if (!this.control.browserContext) {
-      const contextOptions :cherry.BrowserContextOptions = {
+      const contextOptions : BrowserContextOptions = {
         deviceScaleFactor: 1,
         // eslint-disable-next-line no-unsafe-optional-chaining
         viewport,
@@ -662,7 +660,7 @@ class Page implements FCherryPage {
   }
 
   @throwStack()
-  async screenshot(imgPath: string,options: cherry.LocatorScreenshotOptions={}) {
+  async screenshot(imgPath: string,options:PageScreenshotOptions) {
     // todo: sercer run don't save disk
     options.path = os.type() === 'Linux' ? undefined : imgPath
     const buffer = await this.control.currentPage?.screenshot(options)
@@ -725,8 +723,8 @@ class Page implements FCherryPage {
         let frame = _this.control.currentPage?.frame(index)
         if (!frame) {
           // 按照路径尝试匹配
-          const frames = (<PageType> _this.control.currentPage).frames()
-          for (const _frame of frames) {
+          const frames = _this.control.currentPage?.frames()
+          for (const _frame of frames || []) {
             if (_frame.url().includes(index)) {
               frame = _frame
               break
@@ -738,8 +736,8 @@ class Page implements FCherryPage {
         } else {
           throw new Error(`miss iframe name: ${index}`)
         }
-      } else if (_this.control.currentPage && (<PageType> _this.control.currentPage).frames) {
-        const changeFrame = (<PageType> _this.control.currentPage).frames()[index]
+      } else if (_this.control.currentPage && _this.control.currentPage.frames) {
+        const changeFrame = _this.control.currentPage?.frames()[index]
         if (changeFrame !== undefined) {
           _this.control.updateContext(changeFrame)
         } else {
@@ -873,7 +871,7 @@ class Dom implements FCherryDom {
    * @description 截图指定元素内容
    */
   @throwStack()
-  async screenshot(sign:string, options: cherry.LocatorScreenshotOptions = {}) {
+  async screenshot(sign:string, options: PageScreenshotOptions = {}) {
     const _imgPath :string = options.path || ''
     options.path = os.type() === 'Linux' ? undefined : options.path
 
@@ -972,7 +970,11 @@ class Dom implements FCherryDom {
     timeout?: number | undefined
     trial?: boolean | undefined
 }) {
-    await this.control?.runContext?.tap(sign, options)
+    if(this.control?.currentPage) {
+      await this.control.currentPage.locator(sign).tap(options)
+    }else{
+      throw new Error("tap err: 未获取到正确的上下文环境!")
+    }
   }
 
   @throwStack()

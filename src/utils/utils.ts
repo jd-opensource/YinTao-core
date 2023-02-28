@@ -25,8 +25,6 @@ import https from 'https';
 import { spawn, SpawnOptions, execSync } from 'child_process';
 import { getProxyForUrl } from 'proxy-from-env';
 import * as URL from 'url';
-import { getUbuntuVersionSync, parseOSReleaseText } from './ubuntuVersion';
-import { NameValue } from '../protocol/channels';
 import ProgressBar from 'progress';
 
 // `https-proxy-agent` v5 is written in TypeScript and exposes generated types.
@@ -387,24 +385,7 @@ export function monotonicTime(): number {
   return seconds * 1000 + (nanoseconds / 1000 | 0) / 1000;
 }
 
-export function objectToArray(map?:  { [key: string]: any }): NameValue[] | undefined {
-  if (!map)
-    return undefined;
-  const result = [];
-  for (const [name, value] of Object.entries(map))
-    // @ts-ignore
-    result.push({ name, value: String(value) });
-  return result;
-}
 
-export function arrayToObject(array?: NameValue[]): { [key: string]: string } | undefined {
-  if (!array)
-    return undefined;
-  const result: { [key: string]: string } = {};
-  for (const { name, value } of array)
-    result[name] = value;
-  return result;
-}
 
 export function calculateSha1(buffer: Buffer | string): string {
   const hash = crypto.createHash('sha1');
@@ -439,55 +420,7 @@ export function canAccessFile(file: string) {
 }
 
 let cachedUserAgent: string | undefined;
-export function getUserAgent(): string {
-  if (cachedUserAgent)
-    return cachedUserAgent;
-  try {
-    cachedUserAgent = determineUserAgent();
-  } catch (e) {
-    cachedUserAgent = 'Playwright/unknown';
-  }
-  return cachedUserAgent;
-}
 
-function determineUserAgent(): string {
-  let osIdentifier = 'unknown';
-  let osVersion = 'unknown';
-  if (process.platform === 'win32') {
-    const version = os.release().split('.');
-    osIdentifier = 'windows';
-    osVersion = `${version[0]}.${version[1]}`;
-  } else if (process.platform === 'darwin') {
-    const version = execSync('sw_vers -productVersion', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim().split('.');
-    osIdentifier = 'macOS';
-    osVersion = `${version[0]}.${version[1]}`;
-  } else if (process.platform === 'linux') {
-    try {
-      // List of /etc/os-release values for different distributions could be
-      // found here: https://gist.github.com/aslushnikov/8ceddb8288e4cf9db3039c02e0f4fb75
-      const osReleaseText = fs.readFileSync('/etc/os-release', 'utf8');
-      const fields = parseOSReleaseText(osReleaseText);
-      osIdentifier = fields.get('id') || 'unknown';
-      osVersion = fields.get('version_id') || 'unknown';
-    } catch (e) {
-      // Linux distribution without /etc/os-release.
-      // Default to linux/unknown.
-      osIdentifier = 'linux';
-    }
-  }
-
-  let langName = 'unknown';
-  let langVersion = 'unknown';
-  if (!process.env.PW_LANG_NAME) {
-    langName = 'node';
-    langVersion = process.version.substring(1).split('.').slice(0, 2).join('.');
-  } else if (['node', 'python', 'java', 'csharp'].includes(process.env.PW_LANG_NAME)) {
-    langName = process.env.PW_LANG_NAME;
-    langVersion = process.env.PW_LANG_NAME_VERSION ?? 'unknown';
-  }
-
-  return `Playwright/${getPlaywrightVersion()} (${os.arch()}; ${osIdentifier} ${osVersion}) ${langName}/${langVersion}`;
-}
 
 export function getPlaywrightVersion(majorMinorOnly = false) {
   const packageJson = require('./../../package.json');
@@ -511,40 +444,6 @@ export type HostPlatform = 'win64' |
                            'ubuntu18.04' | 'ubuntu18.04-arm64' |
                            'ubuntu20.04' | 'ubuntu20.04-arm64';
 
-export const hostPlatform = ((): HostPlatform => {
-  const platform = os.platform();
-  if (platform === 'darwin') {
-    const ver = os.release().split('.').map((a: string) => parseInt(a, 10));
-    let macVersion = '';
-    if (ver[0] < 18) {
-      // Everything before 10.14 is considered 10.13.
-      macVersion = 'mac10.13';
-    } else if (ver[0] === 18) {
-      macVersion = 'mac10.14';
-    } else if (ver[0] === 19) {
-      macVersion = 'mac10.15';
-    } else {
-      // ver[0] >= 20
-      const LAST_STABLE_MAC_MAJOR_VERSION = 12;
-      // Best-effort support for MacOS beta versions.
-      macVersion = 'mac' + Math.min(ver[0] - 9, LAST_STABLE_MAC_MAJOR_VERSION);
-      // BigSur is the first version that might run on Apple Silicon.
-      if (os.cpus().some(cpu => cpu.model.includes('Apple')))
-        macVersion += '-arm64';
-    }
-    return macVersion as HostPlatform;
-  }
-  if (platform === 'linux') {
-    const ubuntuVersion = getUbuntuVersionSync();
-    const archSuffix = os.arch() === 'arm64' ? '-arm64' : '';
-    if (parseInt(ubuntuVersion, 10) <= 19)
-      return ('ubuntu18.04' + archSuffix) as HostPlatform;
-    return ('ubuntu20.04' + archSuffix) as HostPlatform;
-  }
-  if (platform === 'win32')
-    return 'win64';
-  return platform as HostPlatform;
-})();
 
 export function wrapInASCIIBox(text: string, padding = 0): string {
   const lines = text.split('\n');

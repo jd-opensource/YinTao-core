@@ -1,6 +1,5 @@
-import { Page } from "../client/page";
-import { Response, Request } from "../../types/types";
-import { Action, actionTitle } from "../server/supplements/recorder/recorderActions";
+
+import { Page,Request,Response } from 'playwright'
 
 type ApiItem = {
     url?: string,
@@ -36,11 +35,11 @@ export class ApiRecorder {
             this._callback = (apiItem: ApiItem) => { console.log(apiItem) }
     }
 
-    setLastAction(action: Action) {
+    setLastAction(action: any) {
         if (this._lastPage) {
             if (action.name === 'closePage')
                 return
-            this._lastAction = actionTitle(action)
+            // this._lastAction = actionTitle(action)
             this._lastPage.action = this._lastAction
         }
     }

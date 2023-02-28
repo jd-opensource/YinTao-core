@@ -1,6 +1,6 @@
 import {
   Browser, BrowserContext, Page, Frame,
-} from '../../types/types'
+} from 'playwright'
 
 export default class TestControl {
   runContext: Page | Frame | undefined

@@ -1,6 +1,6 @@
 import os from 'os'
 import path from 'path'
-import { Page } from '../client/page'
+import { Page } from 'playwright'
 import { ApiRecorder } from './actionApiRecorder'
 import { LaunchContext } from './contextBuilder'
 
@@ -24,9 +24,12 @@ export async function apiLive(url: string, opts: any) {
   const {
     browser, context, launchOptions, contextOptions, homePage,
   } = await launchContext.launch(url)
+
   // 去掉playwright inspector
   launchOptions.headless = true
   launchOptions.executablePath = options.executablePath
+
+  // @ts-ignore
   await context._enableRecorder({
     language: 'test',
     launchOptions,
@@ -80,6 +83,7 @@ export async function live(url: string, opts: any) {
   } = await launchContext.launch(url)
 
   launchOptions.executablePath = options.executablePath
+  // @ts-ignore
   await context._enableRecorder({
     language: 'test',
     launchOptions,

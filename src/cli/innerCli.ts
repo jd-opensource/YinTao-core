@@ -1,9 +1,6 @@
 import { Command, program } from 'commander'
 import { apiLive, live } from '../live'
 import { runFile } from '../run'
-import httpControlServer from '../server/http'
-import { Executable, Registry } from '../utils/registry'
-import { getPlaywrightVersion, spawnAsync } from '../utils/utils'
 
 function commandWithOpenOptions(command: string, description: string, options: any[][]): Command {
   let result = program.command(command).description(description)
@@ -31,7 +28,7 @@ function commandWithOpenOptions(command: string, description: string, options: a
 }
 
 // eslint-disable-next-line global-require
-export const registry = new Registry(require('../../browsers.json'))
+// export const registry = new Registry(require('playwright-core/browsers.json'))
 
 export const _a = 2
 
@@ -76,74 +73,5 @@ commandWithOpenOptions('browsers', 'get local browsers', [])
 Examples:
 
 $ browsers`)
-
-commandWithOpenOptions('server', 'start remote server', [])
-  .action((data, options) => {
-    const { port = 80 } = data
-    httpControlServer(port)
-  })
-  .addHelpText('afterAll', `
-Examples:
-
-$ server 80`)
-
-program
-  .command('install [browser...]')
-  .description('ensure browsers necessary for this version of Playwright are installed')
-  .option('--with-deps', 'install system dependencies for browsers')
-  .option('--platform <platform>', 'install browsers platform win64,mac11,ubuntu20.04', undefined)
-  .action(async (args: string[], options: { withDeps?: boolean,platform?:string }) => {
-    try {
-      if (!args.length) {
-        const executables = registry.defaultExecutables()
-        if (options.withDeps) { await registry.installDeps(executables, false) }
-        await registry.install(executables)
-      } else {
-        const installDockerImage = args.some((arg) => arg === 'docker-image')
-        args = args.filter((arg) => arg !== 'docker-image')
-        if (installDockerImage) {
-          const imageName = `mcr.microsoft.com/playwright:v${getPlaywrightVersion()}-focal`
-          const { code } = await spawnAsync('docker', ['pull', imageName], { stdio: 'inherit' })
-          if (code !== 0) {
-            console.log('Failed to pull docker image')
-            process.exit(1)
-          }
-        }
-
-        const executables = checkBrowsersToInstall(args)
-        if (options.withDeps) { await registry.installDeps(executables, false) }
-        await registry.install(executables, options.platform)
-      }
-    } catch (e) {
-      console.log(`Failed to install browsers\n${e}`)
-      process.exit(1)
-    }
-  })
-  .addHelpText('afterAll', `
-
-Examples:
-  - $ install
-    Install default browsers.
-
-  - $ install chrome firefox
-    Install custom browsers, supports ${suggestedBrowsersToInstall()}.`)
-
-function checkBrowsersToInstall(args: string[]): Executable[] {
-  const faultyArguments: string[] = []
-  const executables: Executable[] = []
-  for (const arg of args) {
-    const executable = registry.findExecutable(arg)
-    if (!executable || executable.installType === 'none') { faultyArguments.push(arg) } else { executables.push(executable) }
-  }
-  if (faultyArguments.length) {
-    console.log(`Invalid installation targets: ${faultyArguments.map((name) => `'${name}'`).join(', ')}. Expecting one of: ${suggestedBrowsersToInstall()}`)
-    process.exit(1)
-  }
-  return executables
-}
-
-function suggestedBrowsersToInstall() {
-  return registry.executables().filter((e) => e.installType !== 'none' && e.type !== 'tool').map((e) => e.name).join(', ')
-}
 
 program.parse(process.argv)

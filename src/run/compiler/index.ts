@@ -10,8 +10,6 @@ import TestControl from '../../test_control/testControl'
 import { createGuid } from '../../utils/utils'
 import Resolver from '../resolve/resolver'
 import { CherryResult, RunOptions } from '..'
-import { Touchscreen } from '../../client/input'
-
 export const VirtualFile = 'virtual_test.js'
 
 export default class Compiler {
@@ -122,8 +120,6 @@ export default class Compiler {
   async clearTest() {
     // 不在等待浏览器关闭, 有时无法收到退出
     // todo: 修改存储位置查看存储内容
-  
     this.control?.browser.close()
-    cherry.testControl.delete(this.id)
   }
 }
