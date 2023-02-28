@@ -660,7 +660,7 @@ class Page implements FCherryPage {
   }
 
   @throwStack()
-  async screenshot(imgPath: string,options:PageScreenshotOptions) {
+  async screenshot(imgPath: string,options:PageScreenshotOptions={}) {
     // todo: sercer run don't save disk
     options.path = os.type() === 'Linux' ? undefined : imgPath
     const buffer = await this.control.currentPage?.screenshot(options)
