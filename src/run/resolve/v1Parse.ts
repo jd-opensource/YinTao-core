@@ -651,6 +651,7 @@ class Page implements FCherryPage {
         if (res == null) {
           this.console.log('page.to 命令异常,无法切换到目标地址:',url)
         } else {
+          this.control.updateContext(this.control.currentPage) // 切换页面后重制以退出iframe
           this.console.log('page.to 命令执行完成。 页面返回的状态码为:', res.status())
         }
       } else {
@@ -663,19 +664,31 @@ class Page implements FCherryPage {
   async screenshot(imgPath: string,options:PageScreenshotOptions={}) {
     // todo: sercer run don't save disk
     options.path = os.type() === 'Linux' ? undefined : imgPath
-    const buffer = await this.control.currentPage?.screenshot(options)
-    this.console.log('screenshot img path:', path.resolve(imgPath), " image size:", buffer?.length || 0)
-    if (!buffer || buffer && buffer.length < 100) {
-      this.console.error(`screenshot截图失败-路径: ${imgPath}`)
-    } else {
-      const screenImage = {
-        path: path.resolve(imgPath),
-        buffer,
-        name: path.basename(imgPath),
-      }
+    if(this.control.currentPage){
 
-      this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
-      await processSend('addScreenImages', screenImage)
+      // 判断传递的是路径还是文件吗，如果为文件名则默认存放在临时目录
+      if( options.path && /^[^./][\w.-]*\.[\w]+$/.test(imgPath)) {
+        const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + options.path)
+        options.path = downloadPath
+      }
+      
+      const page = this.control.currentPage
+      const buffer = await page.screenshot(options)
+      this.console.log('screenshot img path:', path.resolve(options.path || imgPath), " image size:", buffer?.length || 0)
+      if (!buffer || buffer && buffer.length < 100) {
+        this.console.error(`screenshot截图失败-路径: ${imgPath}`)
+      } else {
+        const screenImage = {
+          path: path.resolve(imgPath),
+          buffer,
+          name: path.basename(imgPath),
+        }
+  
+        this.parse.runOptins._screenImages.push(screenImage) // 用于异步上报
+        await processSend('addScreenImages', screenImage)
+      }
+    }else{
+      throw new Error("异常,缺少正确的上下文环境!")
     }
   }
 
