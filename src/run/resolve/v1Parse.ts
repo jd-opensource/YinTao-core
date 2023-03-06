@@ -34,7 +34,7 @@ async function processSend(type:string,data:any) {
   })
 }
 
-function waitForResult(callback: ()=>Promise<boolean>,timeout = 3000) :Promise<boolean>{
+function waitForResult(callback: ()=>Promise<boolean>,timeout = 3000) :Promise<boolean> {
   const end_time = new Date().getTime() + timeout
   const interval = 200; // 检测间隔
   return new Promise((resolve,reject)=>{
@@ -56,9 +56,9 @@ function waitForResult(callback: ()=>Promise<boolean>,timeout = 3000) :Promise<b
  * @param err 错误文案
  * @returns 
  */
-function aiDiagnosis(err:string){
+function aiDiagnosis(err:string) {
   let aiMsg = ''
-  if(err.includes('Timeout') && err.includes('waiting for selector')){
+  if(err.includes('Timeout') && err.includes('waiting for selector')) {
       aiMsg = '\n ai诊断: 命令执行超时,原因为长时间未找到定位元素,通常是因为定位元素不准确导致,请检查并手动调整sign参数。\n 元素定位参考: https://dqa.jd.com/cherry/guide/exam/select.html'
   }
   return err + aiMsg
@@ -179,7 +179,7 @@ const getImageStream =  async (url) => {
   } 
 }
 
-class Img implements FCherryImage{
+class Img implements FCherryImage {
   parse: V1Parse
 
   constructor(v1parse: V1Parse) {
@@ -250,8 +250,8 @@ class assert implements FCherryAssert {
   true(value:any, errorHint:string | undefined='') {
     try{
       expect(value).toBeTruthy()
-    }catch(e){
-      if(!!errorHint){
+    }catch(e) {
+      if(!!errorHint) {
         this.console.error(errorHint)
       }
       throw e
@@ -338,10 +338,10 @@ async function asyncReport(this: V1Parse, ...args: any) {
     this.runOptins.__log_body = [] // 上报后清空日志
   }
 
-  if(trace){
+  if(trace) {
     try {
       let trace_path = path.join(os.tmpdir(), 'cherryDfSession',  new Date().getTime() + '.zip')
-      if(this.control.browserContext){
+      if(this.control.browserContext) {
         await this.control.browserContext.tracing.stop({ path: trace_path})
         await reportTrace(trace,trace_path,{ args, ...this.runOptins.storage })
         fs.unlinkSync(trace_path)
@@ -483,7 +483,7 @@ class Mouse implements FCherryMouse {
   @throwStack()
   async dragTo(point: {x:number,y:number}, targetPoint: {x:number,y:number}) {
     const page = this.control.currentPage
-    if(page){
+    if(page) {
       await page.mouse.move(point.x,point.y)
       await page.mouse.down({button:'left'})
       await page.mouse.move(targetPoint.x,targetPoint.y)
@@ -609,7 +609,7 @@ class Page implements FCherryPage {
    * @method 获取页面视图宽高
    */
   async getViewSize() :Promise<{width:number,height:number} | null > {
-    if(this.control.currentPage){
+    if(this.control.currentPage) {
       return this.control.currentPage.viewportSize()
     }
     return null
@@ -630,7 +630,7 @@ class Page implements FCherryPage {
     const _hastext = async () => {
       const locator = this.control.runContext?.locator('body')
       const htmlText = await locator?.innerHTML() || ''
-      if (htmlText.includes(text) == false){
+      if (htmlText.includes(text) == false) {
         return false
       }
       return true
@@ -664,7 +664,7 @@ class Page implements FCherryPage {
   async screenshot(imgPath: string,options:PageScreenshotOptions={}) {
     // todo: sercer run don't save disk
     options.path = os.type() === 'Linux' ? undefined : imgPath
-    if(this.control.currentPage){
+    if(this.control.currentPage) {
 
       // 判断传递的是路径还是文件吗，如果为文件名则默认存放在临时目录
       if( options.path && /^[^./][\w.-]*\.[\w]+$/.test(imgPath)) {
@@ -855,7 +855,7 @@ class Dom implements FCherryDom {
   /**
    * @method 拖拽元素到指定元素中
    */
-  async dragTo(sign:string, target: string){
+  async dragTo(sign:string, target: string) {
     if(!this.control.currentPage) return
     await this.control.currentPage.locator(sign).dragTo(this.control.currentPage.locator(target));
   }
@@ -1043,7 +1043,7 @@ class Dom implements FCherryDom {
 
   @throwStack()
   async exist(sign: string, option:{state:"attached"|"detached"|"visible"|"hidden",timeout:number}) : Promise<boolean> {
-    if(this.control && this.control.runContext){
+    if(this.control && this.control.runContext) {
       const page = this.control.runContext
       try {
         await page.locator(sign).waitFor(option)
@@ -1123,22 +1123,24 @@ class Dom implements FCherryDom {
   @throwStack()
   async errorSend(sign: string) : Promise<any> {
     const errorSendImage = `${sign}.jpg`
-    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImage, type: 'jpeg' })
-    console.log("screenshot img path:", path.resolve(errorSendImage))
+    const errorSendImagePath = path.join(os.tmpdir(), errorSendImage)
+    // const errorSendImage = `${sign}.jpg`
+    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImagePath, type: 'jpeg' })
+    console.log("screenshot img path:", path.resolve(errorSendImagePath))
     let screenImage: any
-    this.console.log('screenshot img path:', path.resolve(errorSendImage), " image size:", buffer?.length || 0)
+    this.console.log('screenshot img path:', path.resolve(errorSendImagePath), " image size:", buffer?.length || 0)
     if (!buffer || buffer && buffer.length < 100) {
       screenImage = {
-        path: path.resolve(errorSendImage),
+        path: path.resolve(errorSendImagePath),
         buffer,
-        name: path.basename(errorSendImage),
+        name: path.basename(errorSendImagePath),
       }
-      this.console.error(`screenshot截图失败-路径: ${errorSendImage}`)
+      this.console.error(`screenshot截图失败-路径: ${errorSendImagePath}`)
     } else {
       screenImage = {
-        path: path.resolve(errorSendImage),
+        path: path.resolve(errorSendImagePath),
         buffer,
-        name: path.basename(errorSendImage),
+        name: path.basename(errorSendImagePath),
       }
     }
 
@@ -1161,7 +1163,10 @@ class Dom implements FCherryDom {
       _screenImages: [],
     }
     this.runOptins._screenImages.push(screenImage) // 用于异步上报
-    this.runOptins.__log_body.push(`run error auto screenshot path : file://${path.resolve(errorSendImage)}`)
+    // this.runOptins.__log_body.push(`run error11 auto screenshot111 path ，errorSend`)
+    // this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
+    this.runOptins.__log_body.push(`run error auto screenshot path : ${path.resolve(errorSendImagePath)}`)
+
 
     this.parse.cherryResult = {
       duration: new Date().getTime() - (this.parse.runOptins._startTime as number),
@@ -1178,7 +1183,7 @@ class Dom implements FCherryDom {
 }
 
 // 标记错误且不影响程序执行
-class ErrorSend{
+class ErrorSend {
   control: TestControl
   console:Console
   // 增加paras定义Byzwj
@@ -1196,22 +1201,23 @@ class ErrorSend{
   @throwStack()
   async errorSend(sign: string) : Promise<any> {
     const errorSendImage = `${sign}.jpg`
-    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImage, type: 'jpeg' })
-    console.log("screenshot img path:", path.resolve(errorSendImage))
+    const errorSendImagePath = path.join(os.tmpdir(), errorSendImage)
+    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImagePath, type: 'jpeg' })
+    console.log("screenshot img1 path:", path.resolve(errorSendImage))
     let screenImage: any
-    this.console.log('screenshot img path:', path.resolve(errorSendImage), " image size:", buffer?.length || 0)
+    this.console.log('screenshot img path:', path.resolve(errorSendImagePath), " image size:", buffer?.length || 0)
     if (!buffer || buffer && buffer.length < 100) {
       screenImage = {
         path: path.resolve(errorSendImage),
         buffer,
         name: path.basename(errorSendImage),
       }
-      this.console.error(`screenshot截图失败-路径: ${errorSendImage}`)
+      this.console.error(`screenshot截图失败-路径: ${errorSendImagePath}`)
     } else {
       screenImage = {
-        path: path.resolve(errorSendImage),
+        path: path.resolve(errorSendImagePath),
         buffer,
-        name: path.basename(errorSendImage),
+        name: path.basename(errorSendImagePath),
       }
     }
 
@@ -1234,7 +1240,7 @@ class ErrorSend{
       _screenImages: [],
     }
     this.runOptins._screenImages.push(screenImage) // 用于异步上报
-    this.runOptins.__log_body.push(`run error auto screenshot path : file://${path.resolve(errorSendImage)}`)
+    this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
 
     this.parse.cherryResult = {
       duration: new Date().getTime() - (this.parse.runOptins._startTime as number),
