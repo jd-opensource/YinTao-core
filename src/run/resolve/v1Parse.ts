@@ -1143,8 +1143,12 @@ class ErrorSend {
   @throwStack()
   async errorSend(sign: string) : Promise<any> {
     const errorSendImage = `${sign}.jpg`
-    const page =  new Page(this.parse)
-    page.screenshot(errorSendImage)
+    const page = new Page(this.parse)
+    try {
+      page.screenshot(errorSendImage)
+    } catch (error) {
+      this.console.error("errorSend截图失败:", error.message)
+    }
     this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
 
     this.parse.cherryResult = {
