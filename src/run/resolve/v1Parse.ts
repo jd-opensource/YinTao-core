@@ -1111,10 +1111,18 @@ class Dom implements FCherryDom {
          * todo: https://playwright.dev/docs/api/class-page#page-set-input-files
          * 链接上传使用object避免落磁盘
          */
-      const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + path.basename(files))
-      await mkdirIfNeeded(downloadPath)
-      await download(files, downloadPath)
-      files = downloadPath
+      try {
+        var fileName = path.basename(files)
+        if(fileName.includes("?")) {
+          fileName = fileName.split('?')[0]
+        }
+        const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + fileName)
+        await mkdirIfNeeded(downloadPath)
+        await download(files, downloadPath)
+        files = downloadPath
+      } catch (error) {
+        this.console.error("文件下载出现了错误:", error)
+      }
     } else if (fs.existsSync(files) === false) {
       throw new Error(`Invalid file path: ${files}`)
     }
@@ -1136,8 +1144,6 @@ class ErrorSend {
     this.runOptins = v1parse.runOptins
     // 增加parase 定义 Byzwj
     this.parse = v1parse
-
-    this.console.log("ErrorSend 初始化完成")
   }
 
   @throwStack()
