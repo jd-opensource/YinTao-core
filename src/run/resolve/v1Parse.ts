@@ -118,6 +118,7 @@ export default class V1Parse extends Resolver {
 
   registerGlobalApi() {
     const utils = new Utils(this.control)
+    const errorSend = new ErrorSend(this)
 
     return {
       console: this.console,
@@ -129,7 +130,7 @@ export default class V1Parse extends Resolver {
       env:process.env,
       dom: new Dom(this),
       img: new Img(this),
-      errorSend: new ErrorSend(this).errorSend,
+      errorSend: errorSend.errorSend.bind(errorSend),
       sleep: __sleep,
       axios,
       cookies: new Cookies(this),
@@ -1135,6 +1136,8 @@ class ErrorSend {
     this.runOptins = v1parse.runOptins
     // 增加parase 定义 Byzwj
     this.parse = v1parse
+
+    this.console.log("ErrorSend 初始化完成")
   }
 
   @throwStack()
