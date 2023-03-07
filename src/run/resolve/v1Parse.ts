@@ -1164,8 +1164,8 @@ class Dom implements FCherryDom {
     }
     this.runOptins._screenImages.push(screenImage) // 用于异步上报
     // this.runOptins.__log_body.push(`run error11 auto screenshot111 path ，errorSend`)
-    // this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
-    this.runOptins.__log_body.push(`run error auto screenshot path : ${path.resolve(errorSendImagePath)}`)
+    this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
+    // this.runOptins.__log_body.push(`run error auto screenshot path : ${path.resolve(errorSendImagePath)}`)
 
 
     this.parse.cherryResult = {
