@@ -665,8 +665,8 @@ class Page implements FCherryPage {
   async screenshot(imgPath: string,options:PageScreenshotOptions={}) {
     // todo: sercer run don't save disk
     options.path = os.type() === 'Linux' ? undefined : imgPath
+    options.type = options.type && [ "png","jpeg"].includes(options.type) ? options.type : 'jpeg';
     if(this.control.currentPage) {
-
       // 判断传递的是路径还是文件吗，如果为文件名则默认存放在临时目录
       if( options.path && /^[^./][\w.-]*\.[\w]+$/.test(imgPath)) {
         const downloadPath = path.join(os.tmpdir(), 'cherryDfSession', this.control.id + options.path)
