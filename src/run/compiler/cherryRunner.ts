@@ -11,19 +11,31 @@ import { reportTrace } from '../../utils/remoteReport'
 import fs from 'fs'
 import { chromium, firefox, LaunchOptions, webkit }  from 'playwright'
 
-process.on('uncaughtException', (err) => {
-  console.log("异常导致中断: err", err)
-  process.exit(1)
+// 异常中断时
+process.on('uncaughtException', async (err) => {
+  const errResult: CherryResult = {
+    duration: 0,
+    success: false,
+    msg: err?.message || '',
+    divertor: [],
+    log: '',
+    error: err,
+    code: 4044,
+  }
+  await sendResult(errResult)
+  
+  setTimeout(() => {
+    console.log("异常导致中断: err", err)
+    process.exit(1)
+  }, 300);
 })
 
-const sendResult = (result) => {
-  // @ts-ignore
-  process.send({ type: "result", data: result }, undefined, undefined, () => {
-    setTimeout(() => {
-      // 有时未上报完，线程就莫名被关闭，因此添加调试。
-      console.log('send resule success~ exit child process!')
-      process.exit(0)
-    }, 300)
+const sendResult = async (result) => {
+  return new Promise((resolve,reject)=>{
+    // @ts-ignore
+    process.send({ type: "result", data: result }, undefined, undefined, () => {
+      resolve(true)
+    })
   })
 }
 
@@ -263,6 +275,11 @@ async function GetStartScript():Promise<string[]> {
 
   }).catch((res) => {
     sendResult(res)
+
+    setTimeout(() => {
+      console.log("执行出错280")
+      process.exit(1)
+    }, 300);
   })
   // 判断是否有errorSend命令
   // eslint-disable-next-line prefer-const
@@ -355,10 +372,11 @@ async function GetStartScript():Promise<string[]> {
     error: result.error,
     code: !result.error ? 2000 : 4044,
   }
-  sendResult(cherryResult)
+  await sendResult(cherryResult)
   console.log('上报线程执行结果:',cherryResult.success)
-  // 子线程不能自己退出必须等待退出消息
-  while (true) {
-    await __sleep(3000)
-  }
+  
+  setTimeout(() => {
+    console.log("执行子进程完成-filesh")
+    process.exit(1)
+  }, 300);
 })()
