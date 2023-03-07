@@ -1119,67 +1119,6 @@ class Dom implements FCherryDom {
     }
     await this.control?.runContext?.setInputFiles(sign, files)
   }
-
-  @throwStack()
-  async errorSend(sign: string) : Promise<any> {
-    const errorSendImage = `${sign}.jpg`
-    const errorSendImagePath = path.join(os.tmpdir(), errorSendImage)
-    // const errorSendImage = `${sign}.jpg`
-    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImagePath, type: 'jpeg' })
-    console.log("screenshot img path:", path.resolve(errorSendImagePath))
-    let screenImage: any
-    this.console.log('screenshot img path:', path.resolve(errorSendImagePath), " image size:", buffer?.length || 0)
-    if (!buffer || buffer && buffer.length < 100) {
-      screenImage = {
-        path: path.resolve(errorSendImagePath),
-        buffer,
-        name: path.basename(errorSendImagePath),
-      }
-      this.console.error(`screenshot截图失败-路径: ${errorSendImagePath}`)
-    } else {
-      screenImage = {
-        path: path.resolve(errorSendImagePath),
-        buffer,
-        name: path.basename(errorSendImagePath),
-      }
-    }
-
-    this.runOptins = null || {
-      id: this.control.id,
-      remoteReport: {
-        result: "http://uitc.jd.com/api/updateCaseRunResult",
-        log: "http://uitc.jd.com/api/saveCaseLog",
-        image: 'http://uitc.jd.com/api/createCaseScreenShot',
-      },
-      cookies: ["errorSendResult"],
-      script: 'errorSendResultst',
-      storage: any,
-      screen: {
-        width: 1,
-        height: 2,
-      },
-      _startTime: 1,
-      __log_body: ['errorSendResult'],
-      _screenImages: [],
-    }
-    this.runOptins._screenImages.push(screenImage) // 用于异步上报
-    // this.runOptins.__log_body.push(`run error11 auto screenshot111 path ，errorSend`)
-    this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
-    // this.runOptins.__log_body.push(`run error auto screenshot path : ${path.resolve(errorSendImagePath)}`)
-
-
-    this.parse.cherryResult = {
-      duration: new Date().getTime() - (this.parse.runOptins._startTime as number),
-      success: false,
-      code: 400,
-      msg: sign,
-      divertor: [],
-      error: {
-        name: '主动将用例置为失败',
-        message: sign,
-      },
-    }
-  }
 }
 
 // 标记错误且不影响程序执行
@@ -1201,45 +1140,8 @@ class ErrorSend {
   @throwStack()
   async errorSend(sign: string) : Promise<any> {
     const errorSendImage = `${sign}.jpg`
-    const errorSendImagePath = path.join(os.tmpdir(), errorSendImage)
-    const buffer = await this.control.currentPage?.screenshot({ path: os.type() === 'Linux' ? undefined : errorSendImagePath, type: 'jpeg' })
-    console.log("screenshot img1 path:", path.resolve(errorSendImage))
-    let screenImage: any
-    this.console.log('screenshot img path:', path.resolve(errorSendImagePath), " image size:", buffer?.length || 0)
-    if (!buffer || buffer && buffer.length < 100) {
-      screenImage = {
-        path: path.resolve(errorSendImage),
-        buffer,
-        name: path.basename(errorSendImage),
-      }
-      this.console.error(`screenshot截图失败-路径: ${errorSendImagePath}`)
-    } else {
-      screenImage = {
-        path: path.resolve(errorSendImagePath),
-        buffer,
-        name: path.basename(errorSendImagePath),
-      }
-    }
-
-    this.runOptins = null || {
-      id: this.control.id,
-      remoteReport: {
-        result: "http://uitc.jd.com/api/updateCaseRunResult",
-        log: "http://uitc.jd.com/api/saveCaseLog",
-        image: 'http://uitc.jd.com/api/createCaseScreenShot',
-      },
-      cookies: ["errorSendResult"],
-      script: 'errorSendResultst',
-      storage: any,
-      screen: {
-        width: 1,
-        height: 2,
-      },
-      _startTime: 1,
-      __log_body: ['errorSendResult'],
-      _screenImages: [],
-    }
-    this.runOptins._screenImages.push(screenImage) // 用于异步上报
+    const page =  new Page(this.parse)
+    page.screenshot(errorSendImage)
     this.runOptins.__log_body.push(`主动触发错误上报，请查看错误日志`)
 
     this.parse.cherryResult = {

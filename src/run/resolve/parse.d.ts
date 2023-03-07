@@ -502,13 +502,6 @@ interface FCherryDom {
    */
   upload(sign: string, files: string | string[]): Promise<void>
 
-  /**
-   * @method 判断元素是否存在
-   * @param sign
-   * @param timeout 超时时间 default:2000ms
-   */
-  errorSend(sign: string, timeout:number) : Promise<any>
-
 }
 
 interface FCherryCookies {
