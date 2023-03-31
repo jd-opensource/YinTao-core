@@ -341,7 +341,7 @@ async function GetStartScript():Promise<string[]> {
       const screenImage = {
         path: imgPath,
         buffer,
-        name: imgPath,
+        name: '__cherry_auto_error.jpg',
       }
       resolver.runOptins._screenImages.push(screenImage)
       // 直接发送内容避免非必要落本地磁盘
