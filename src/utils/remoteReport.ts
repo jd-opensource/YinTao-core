@@ -41,39 +41,35 @@ export async function reportRunResult(url:string, result:any, storage?:any) {
   })
 }
 
-
 /**
  * @method 远程报告运行图片
  */
-export async function reportRunImage(url:string, imgs: ImgFile[], storage?:any) {
+export async function reportRunImage(url: string, imgs: ImgFile[], storage?: any) {
   // 将要上传的图片
-  console.log(`image upload count:${imgs.length}`)
-  imgs.map(async (img) => {
-    if (Buffer.isBuffer(img.buffer) == false) {
-      img.buffer = Buffer.from(img.buffer)
-    }
-    const imgbase64 = `data:image/${getImageType(img.name)};base64,${img.buffer.toString('base64')}`
-    // fs.writeFileSync("nihaottt.png",imgbase64)
-    console.log(`upload image ${img.path} len:${imgbase64.length}`)
-    await axios.post(
-      url,
-      {
+  console.log(`image upload count: ${imgs.length}`);
+  for (const img of imgs) {
+    try {
+      if (Buffer.isBuffer(img.buffer) == false) {
+        img.buffer = Buffer.from(img.buffer);
+      }
+      const imgbase64 = `data:image/${getImageType(img.name)};base64,${img.buffer.toString("base64")}`;
+      console.log(`upload image ${img.path} len: ${imgbase64.length}`);
+      const res = await axios.post(url, {
         image: imgbase64,
         storage,
         name: img.name,
-      },
-      { timeout: requestTimeout },
-    ).then((res) => {
+      }, {
+        timeout: requestTimeout,
+      });
       if (res.status === 200) {
-        console.log('reportRunImage success!')
+        console.log("reportRunImage success!");
       } else {
-        console.log('reportRunImage error code')
+        console.log("reportRunImage error: HTTP status code is not 200");
       }
-    })
-      .catch((e: Error) => {
-        console.log('reportRunImage error!', e.message, " image-url:", url)
-      })
-  })
+    } catch (err) {
+      console.log(`reportRunImage error: ${err.message} image-url: ${url}`);
+    }
+  }
 }
 
 /**

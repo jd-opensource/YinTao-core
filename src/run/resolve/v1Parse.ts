@@ -374,14 +374,32 @@ class Browser implements FCherryBrowser {
 
   on(event:string, callback:any) {
     // Todo: callback maybe throw error, but it not block run
-    this.control.browserContext?.on(event as any, wrapHandler(callback))
+    if(!!this.control.browserContext){
+      this.control.browserContext.on(event as any, wrapHandler(callback))
+    }else{
+      console.log("browser.on error: not find browserContext please check into page is successful")
+    }
   }
 
   // @ts-ignore
   route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
     times?: number;
   }) {
-    this.control.browserContext?.route(url, wrapHandler(handler), options)
+    if(!!this.control.browserContext){
+      this.control.browserContext.route(url, wrapHandler(handler), options)
+    }else{
+      console.log("browser.route error: not find browserContext please check into page is successful")
+    }
+  }
+
+  // 设置浏览器权限
+  @throwStack()
+  async grantPermissions(permissions: string[],options:{origin:string}) {
+    if (this.control.browserContext) {
+     await this.control.browserContext.grantPermissions(permissions,options)
+    } else {
+      throw new Error("权限配置失败! 未获取到浏览器上下文!")
+    }
   }
 }
 
@@ -582,7 +600,7 @@ class Page implements FCherryPage {
         userAgent: this.defaultContextOptions.userAgent || undefined
       }
       
-      this.console.log('userAgent', contextOptions.userAgent)
+      this.console.log('contextOptions:', JSON.stringify(contextOptions))
       const context = await this.control.browser.newContext(contextOptions)
       context.setDefaultTimeout(10000) // 设置页面内容末日超时10s
       context.setDefaultNavigationTimeout(30000) // 设置页面加载默认超时30s
