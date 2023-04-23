@@ -18,8 +18,8 @@ const requestTimeout = 10000
  * @method 远程报告运行结果
  */
 export async function reportRunResult(url:string, result:any, storage?:any) {
-  console.log("resultReport:", JSON.stringify(result))
   result.storage = storage
+  console.log("resultReport:", JSON.stringify(result))
   await axios.post(
     url,
     result,
