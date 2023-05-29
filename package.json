@@ -1,6 +1,6 @@
 {
   "name": "@cherry-jd/core",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "description": "Cherry core execution library, Used to handle page automation~",
   "main": "lib/index.js",
   "scripts": {
@@ -39,7 +39,7 @@
     "nanoid": "^3.3.1",
     "parse5": "^6.0.1",
     "pixelmatch": "^5.2.1",
-    "playwright": "^1.31.1",
+    "playwright": "1.31.1",
     "progress": "^2.0.3",
     "proper-lockfile": "^4.1.2",
     "proxy-from-env": "^1.1.0",
