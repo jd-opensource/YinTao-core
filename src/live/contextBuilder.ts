@@ -22,6 +22,10 @@ type Options = {
     viewportSize?: string;
     userAgent?: string;
 };
+
+/**
+ * @method 仅在录制中使用
+ */
 export class LaunchContext {
   private _options: Options
   private _headless: boolean = false

@@ -211,19 +211,17 @@ export default async function runScript<T = any>(code: string, options: RunScrip
 /**
 * @method 执行前的前置处理
 */
-async function bootstrap(browserType: string = 'chrome', runOption: any) {
+async function bootstrap(browserType, runOption: any) {
   let browserCore
-
   switch (browserType){
-    case 'chrome':
-    case 'chromium':
-      browserCore = chromium
-      break
     case 'firefox':
       browserCore = firefox
       break
     case 'webkit':
       browserCore = webkit
+      break
+    default:
+      browserCore = chromium
   }
 
   const launchOptions: LaunchOptions = {
@@ -239,7 +237,6 @@ async function bootstrap(browserType: string = 'chrome', runOption: any) {
   // set control
   const control = new TestControl(runOption.id, browser)
   // cherry.testControl.set(runOption.id, control)
-
   // script parse
   return new V1Parse(control, runOption)
 }
@@ -263,6 +260,7 @@ async function GetStartScript():Promise<string[]> {
   const runOption = JSON.parse(runOptionString || '{}')
 
   const userBrowser = runOption.browser || 'chrome' // 默认使用chrome浏览器
+  console.log("use browser:", userBrowser)
   const resolver = await bootstrap(userBrowser, runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`
   let result: any

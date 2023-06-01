@@ -38,6 +38,7 @@ export interface RunOptions extends LaunchOptions{
     image?:string
     trace?:string
   },
+  browser:string
   cookies:any[]
   script?:string
   storage?: any
@@ -59,6 +60,7 @@ export interface RunOptions extends LaunchOptions{
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
+  browser:'chrome',
   __log_body:[],
   cookies: [],
 },callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {
@@ -67,6 +69,7 @@ export async function run(code: string, opts: RunOptions = {
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     __log_body:[],
+    browser: opts.browser,
     headless: opts.headless,
     cookies: opts.cookies || [],
     remoteReport: opts.remoteReport,
