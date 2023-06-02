@@ -225,15 +225,14 @@ async function bootstrap(browserType, runOption: any) {
   }
 
   const launchOptions: LaunchOptions = {
-    headless: runOption?.headless || false,
+    headless: runOption?.headless || false, // 是否无头模式，默认为显示
     executablePath: runOption?.executablePath || undefined,
   }
-
-  console.log("收到的执行路径2:", launchOptions.executablePath)
-
   // hostDns server
   launchOptions.proxy = runOption.proxy
   const browser = await browserCore.launch(launchOptions)
+
+  console.log("run browser launch config: ", JSON.stringify(launchOptions))
   // set control
   const control = new TestControl(runOption.id, browser)
   // cherry.testControl.set(runOption.id, control)
@@ -257,9 +256,10 @@ async function GetStartScript():Promise<string[]> {
     }
   })
   const [code,runOptionString] = await GetStartScript()
-  const runOption = JSON.parse(runOptionString || '{}')
+  const runOption = JSON.parse(runOptionString) || {}
 
-  const userBrowser = runOption.browser || 'chrome' // 默认使用chrome浏览器
+  console.log("browser runOption:", JSON.stringify(runOption))
+  const userBrowser = runOption.browser
   console.log("use browser:", userBrowser)
   const resolver = await bootstrap(userBrowser, runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`

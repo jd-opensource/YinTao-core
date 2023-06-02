@@ -41,6 +41,7 @@ export interface RunOptions extends LaunchOptions{
   browser:string
   cookies:any[]
   script?:string
+  headless?:boolean
   storage?: any
   screen?: {
     width: number
@@ -57,6 +58,7 @@ export interface RunOptions extends LaunchOptions{
  * @param callback 用于执行中的消息传递，目前仅用于实时日志
  * @returns 
  */
+
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
@@ -65,7 +67,7 @@ export async function run(code: string, opts: RunOptions = {
   cookies: [],
 },callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {
   let cherryResult :CherryResult
-  console.log("收到的执行路径:", opts.executablePath)
+  console.log("cherry -> core run config :", JSON.stringify(opts))
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     __log_body:[],
