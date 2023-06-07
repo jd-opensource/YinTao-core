@@ -600,7 +600,6 @@ class Page implements FCherryPage {
         userAgent: this.defaultContextOptions.userAgent || undefined
       }
       
-      this.console.log('contextOptions:', JSON.stringify(contextOptions))
       const context = await this.control.browser.newContext(contextOptions)
       context.setDefaultTimeout(10000) // 设置页面内容末日超时10s
       context.setDefaultNavigationTimeout(30000) // 设置页面加载默认超时30s
