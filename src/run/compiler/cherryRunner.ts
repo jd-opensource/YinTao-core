@@ -11,21 +11,26 @@ import { reportTrace } from '../../utils/remoteReport'
 import fs from 'fs'
 import { chromium, firefox, LaunchOptions, webkit }  from 'playwright'
 
+// cherry解析器实例
+var resolver
+
 // 异常中断时
 process.on('uncaughtException', async (err) => {
+  console.log("因为代码执行异常导致中断", err)
+  resolver.runOptins.__log_body.push(err.stack)
+
   const errResult: CherryResult = {
     duration: 0,
     success: false,
     msg: err?.message || '',
     divertor: [],
-    log: '',
+    log: `${resolver.runOptins.__log_body?.join('\n')}\n`,
     error: err,
     code: 4044,
   }
   await sendResult(errResult)
   
   setTimeout(() => {
-    console.log("异常导致中断: err", err)
     process.exit(1)
   }, 300);
 })
@@ -149,11 +154,24 @@ export default async function runScript<T = any>(code: string, options: RunScrip
 
   const filePath = path.join(dirname, filename || '')
   const requireIn = createRequire(filePath)
+
+  var NodeDebugger = {}
+  if (os.type() !== 'Linux') { // 支持在本地运行时,启动调试程序 TODO: 应该添加debug参数共同限制，只有当开启debug再开调试
+    NodeDebugger = {
+      breakOnSigint: true, // 接收SIGINT信号
+      inspectorOptions: { enabled: true, port: 9229 }
+    }
+    
+    console.log('open debugger on ws prod 9229!')
+  }
+
   const baseScriptOptions = {
     displayErrors: true,
     lineOffset: 0,
     columnOffset: 0,
     filename: filePath,
+    // 启用调试器，并将端口设置为 9229
+    ...NodeDebugger
   }
 
   const fake: FakeModule = {
@@ -261,7 +279,7 @@ async function GetStartScript():Promise<string[]> {
   console.log("browser runOption:", JSON.stringify(runOption))
   const userBrowser = runOption.browser
   console.log("use browser:", userBrowser)
-  const resolver = await bootstrap(userBrowser, runOption) // 初始化引导,理论可以传多个配合看后续设计
+  resolver = await bootstrap(userBrowser, runOption) // 初始化引导,理论可以传多个配合看后续设计
   const runCode = `(async()=>{${code}\n;})()`
   let result: any
 
@@ -284,7 +302,7 @@ async function GetStartScript():Promise<string[]> {
   console.log('自定义错误结果-resolerCherryResult:', JSON.stringify(resolver.cherryResult))
 
   // 关闭追踪
-  if (resolver.control && resolver.control.browserContext && resolver.runOptins.remoteReport?.trace) {
+  if (resolver.runOptins.remoteReport?.trace && resolver.control && resolver.control.browserContext) {
     console.log("测试关闭追踪逻辑")
     let trace_path: string | undefined = resolver.runOptins.remoteReport?.trace
     let online_os = false // 是否上传至服务器
@@ -297,12 +315,12 @@ async function GetStartScript():Promise<string[]> {
     try {
       await resolver.control?.browserContext?.tracing.stop({ path: trace_path }) // 关闭跟踪 './trace.zip'
       console.log(`停止追踪成功, 存储的位置-: ${trace_path}`)
-      if (online_os) {
+      if (online_os && trace_path) {
         // const buffer = fs.readFileSync(trace_path) // 读取内容，将内容上传到路径中
         await reportTrace(resolver.runOptins.remoteReport.trace, trace_path, resolver.runOptins.storage)
         // 上传后将本地文件删除
         fs.unlinkSync(trace_path)
-      } else if (os.type() === 'Linux' && !online_os) { // 当远程执行时,且地址为本地路径则需要删除文件，放置恶意打满磁盘
+      } else if (os.type() === 'Linux' && !online_os && trace_path) { // 当远程执行时,且地址为本地路径则需要删除文件，放置恶意打满磁盘
         fs.unlinkSync(trace_path)
         console.log("删除恶意追踪文件!")
       }

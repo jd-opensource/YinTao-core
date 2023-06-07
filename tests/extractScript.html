@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提取脚本内容</title>
+</head>
+<script>
+    function transform() {
+        let textDom = document.getElementById("text")
+        const text = textDom.value
+
+        const cherryBody = JSON.parse(text)
+        console.log(cherryBody.script)
+
+        textDom.value = cherryBody.script
+    }
+</script>
+<body>
+    <textarea id="text"></textarea>
+    <button onclick="transform()">转换</button>
+</body>
+</html>
+
+<style>
+    #text{
+        height: 400px;
+        width: 400px;
+    }
+    
+</style>
