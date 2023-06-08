@@ -1,12 +1,10 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import expect, { any } from 'expect' // expect-doc: https://jestjs.io/docs/using-matchers
+import expect from 'expect' // expect-doc: https://jestjs.io/docs/using-matchers
 import axios from 'axios'
-import { rsort } from 'semver'
 import Resolver from './resolver'
 import { CherryResult, RunOptions } from '..'
-import * as cherry from '../../../index'
 import { __retry_time, __sleep } from '../../utils/suger'
 import TestControl from '../../test_control/testControl'
 import { download, mkdirIfNeeded } from '../../utils/utils'
