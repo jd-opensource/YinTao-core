@@ -340,8 +340,6 @@ async function GetStartScript():Promise<string[]> {
     if (os.type() === 'Linux') { // 远程执行,失败自动截图
       // 增加调试方式,将错误图片落磁盘
       screenshotPath = runOption.storage?.debugImage ? "/tmp/cherry_auto.jpeg" : undefined
-    } else { // 显示本地错误截图路径
-      resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
     }
     let buffer
     try {
@@ -349,9 +347,11 @@ async function GetStartScript():Promise<string[]> {
       if (!buffer || buffer && buffer.length < 100) {
         console.log(`screenshot截图失败-路径: ${imgPath}`, " img-size:", buffer.length)
         resolver.runOptins.__log_body?.push(`错误自动截图失败screenshot-路径: ${imgPath},mg-size:,${buffer.length}`)
+      } else { // 错误截图成功
+        resolver.runOptins.__log_body?.push(`run error auto screenshot path : file://${imgPath}`)
       }
     } catch (error) {
-      resolver.runOptins.__log_body?.push("执行<错误-自动截图失败>:" + error)
+      resolver.runOptins.__log_body?.push("执行<自动截图失败>:" + error,'<ai: 通常为未打开页面导致,请检查page.to等命令是否正常执行>')
     }
     if (buffer) {
       const screenImage = {
@@ -377,7 +377,9 @@ async function GetStartScript():Promise<string[]> {
   resolver.cherryResult = {}
   if (!result.error) {
     resolver.runOptins.__log_body?.push('run success!')
-  }
+  }else{
+    resolver.runOptins.__log_body?.push(result.error.message)
+  } 
   // 这里构建统一的运行结果，评估执行成功或失败
   const cherryResult: CherryResult = {
     duration: 0,

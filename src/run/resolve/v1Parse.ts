@@ -13,7 +13,7 @@ import {
   FCherryPage, FCherryDom, FCherryCookies, FCherryAssert, FCherryKeyboard, FCherryMouse, FCherryBrowser,FCherryImage
 } from './parse'
 import { remoteCvSiftMatch } from './callMemoteCv'
-import { PageScreenshotOptions,Response,BrowserContextOptions,devices } from 'playwright'
+import { PageScreenshotOptions,Response,BrowserContextOptions,devices, BrowserContext, ElementHandle, Locator } from 'playwright'
 
 /**
  * @method 向主进程传递消息
@@ -246,7 +246,7 @@ class assert implements FCherryAssert {
   }
 
   @throwStack()
-  true(value:any, errorHint:string | undefined='') {
+  true(value: any, errorHint?:string) {
     try{
       expect(value).toBeTruthy()
     }catch(e) {
@@ -361,43 +361,29 @@ async function asyncReport(this: V1Parse, ...args: any) {
   // this.runOptins = undefined
 }
 
-class Browser implements FCherryBrowser {
+class Browser {
   control: TestControl
-  parse: any
+  parse: V1Parse
 
   constructor(v1parse: V1Parse) {
     this.control = v1parse.control
     this.parse = v1parse
   }
 
-  on(event:string, callback:any) {
-    // Todo: callback maybe throw error, but it not block run
-    if(!!this.control.browserContext){
-      this.control.browserContext.on(event as any, wrapHandler(callback))
-    }else{
-      console.log("browser.on error: not find browserContext please check into page is successful")
-    }
+  get on(){
+    if (!this.control.browserContext) throw new Error("not find browserContext!")
+    return this.control.browserContext.on.bind(this.control.browserContext)
   }
 
-  // @ts-ignore
-  route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
-    times?: number;
-  }) {
-    if(!!this.control.browserContext){
-      this.control.browserContext.route(url, wrapHandler(handler), options)
-    }else{
-      console.log("browser.route error: not find browserContext please check into page is successful")
-    }
+  get route() {
+    if (!this.control.browserContext) throw new Error("not find browserContext!")
+    return this.control.browserContext.route.bind(this.control.browserContext)
   }
 
-  // 设置浏览器权限
   @throwStack()
   async grantPermissions(permissions: string[],options:{origin:string}) {
-    if (this.control.browserContext) {
-     await this.control.browserContext.grantPermissions(permissions,options)
-    } else {
-      throw new Error("权限配置失败! 未获取到浏览器上下文!")
-    }
+    if (!this.control.browserContext) throw new Error("not find browserContext!")
+    await this.control.browserContext.grantPermissions(permissions,options)
   }
 }
 
@@ -541,6 +527,33 @@ class Page implements FCherryPage {
     return await this.control.currentPage.waitForResponse(urlOrPredicate, options)
   }
 
+  async addScriptTag(options?: {
+    /**
+     * Raw JavaScript content to be injected into frame.
+     */
+    content?: string;
+
+    /**
+     * Path to the JavaScript file to be injected into frame. If `path` is a relative path, then it is resolved relative
+     * to the current working directory.
+     */
+    path?: string;
+
+    /**
+     * Script type. Use 'module' in order to load a Javascript ES6 module. See
+     * [script](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) for more details.
+     */
+    type?: string;
+
+    /**
+     * URL of a script to be added.
+     */
+    url?: string;
+  }): Promise<ElementHandle> {
+    if (!this.control.currentPage) throw new Error('miss currentPage. you must pre join any page')
+    return await this.control.currentPage.addScriptTag(options)
+  }
+
   @throwStack()
   async waitPopup(opt:any) :Promise<void> {
     const page = await this.control.currentPage?.waitForEvent('popup', opt)
@@ -652,6 +665,26 @@ class Page implements FCherryPage {
       return true
     }
     return await waitForResult(_hastext,options.timeout)
+  }
+
+  async locator(selector: string, options?: {
+    /**
+     * Matches elements containing an element that matches an inner locator. Inner locator is queried against the outer
+     * one. For example, `article` that has `text=Playwright` matches `<article><div>Playwright</div></article>`.
+     *
+     * Note that outer and inner locators must belong to the same frame. Inner locator must not contain [FrameLocator]s.
+     */
+    has?: Locator;
+
+    /**
+     * Matches elements containing specified text somewhere inside, possibly in a child or a descendant element. When
+     * passed a [string], matching is case-insensitive and searches for a substring. For example, `"Playwright"` matches
+     * `<article><div>Playwright</div></article>`.
+     */
+    hasText?: string|RegExp;
+  }):Promise<Locator> {
+    if(!this.control.currentPage) throw new Error("miss currentPage please check page!")
+    return this.control.currentPage.locator(selector,options)
   }
 
   @throwStack()
@@ -818,11 +851,58 @@ class Cookies implements FCherryCookies {
     return ''
   }
 
+  /**
+   * 
+   * @method 检查cookie对象是否有效
+   * @param cookie 
+   * @returns 
+   */
+  validateCookie(cookie) {
+    const msgPrefix = `$Cookie对象${cookie.name || ''}`
+    if (!cookie.name || typeof cookie.name !== 'string') {
+      throw new Error(`${msgPrefix}缺少有效的name属性`);
+    }
+  
+    if (!cookie.value || typeof cookie.value !== 'string') {
+      throw new Error(`${msgPrefix}缺少有效的value属性`);
+    }
+
+    if (cookie.path && !cookie.domain || cookie.domain && !cookie.path ) {
+      if(!cookie.domain) throw new Error(`${msgPrefix}缺少有效的domain属性`);
+      else throw new Error(`${msgPrefix}缺少有效的path属性`);
+    }
+  
+    // 可以根据需要验证其他属性
+    if (cookie.expires && !(cookie.expires instanceof Date || typeof cookie.expires === 'number')) {
+      throw new Error(`${msgPrefix}的expires属性必须是日期对象或UNIX时间戳`);
+    }
+  
+    if (cookie.httpOnly && typeof cookie.httpOnly !== 'boolean') {
+      throw new Error(`${msgPrefix}的httpOnly属性必须是布尔值`);
+    }
+  
+    if (cookie.secure && typeof cookie.secure !== 'boolean') {
+      throw new Error(`${msgPrefix}的secure属性必须是布尔值`);
+    }
+  
+    if (cookie.sameSite && !['Strict', 'Lax', 'None'].includes(cookie.sameSite)) {
+      throw new Error(`${msgPrefix}的sameSite属性值无效`);
+    }
+  
+    // 校验通过
+    return true;
+  }
+
   @throwStack()
-  async set(value:any[]) {
-    this.parse.runOptins.cookies = this.parse?.runOptins?.cookies.concat(value)
+  async set(_cookies:any[]) {
+    this.parse.runOptins.cookies = this.parse?.runOptins?.cookies.concat(_cookies)
+    // 检查cookie的格式
+    for (const __cookie of _cookies) {
+      this.validateCookie(__cookie)
+    }
+
     if (this.control.browserContext) {
-      await this.control.browserContext.addCookies(value as any)
+      await this.control.browserContext.addCookies(_cookies as any)
     }
   }
 
@@ -842,6 +922,11 @@ class Cookies implements FCherryCookies {
       cookieList.push(cookie)
     }
     this.parse.runOptins.cookies = this.parse?.runOptins?.cookies?.concat(cookieList)
+
+    for (const __cookie of cookieList) {
+      this.validateCookie(__cookie)
+    }
+
     if (this.control.browserContext) {
       await this.control.browserContext?.addCookies(cookieList)
     }
@@ -893,6 +978,18 @@ class Dom implements FCherryDom {
       width: currentViewport.width,
       height: currentViewport.height + pixelAmountRenderedOffscreen + 100
     })
+  }
+
+  /**
+   * @method 高亮元素
+   * @param sign 
+   * @returns 
+   */
+  async highlight(sign:string) {
+    if(!this.control.currentPage) return
+    const page = this.control.currentPage
+    const locator = page.locator(sign)
+    locator.highlight()
   }
 
   /**

@@ -1,8 +1,4 @@
-/**
- * 禁止使用export
- */
-import { PageScreenshotOptions,Response } from 'playwright';
-// monaco 引用时无法引用此文件，因此在之后需要合并
+import { PageScreenshotOptions,Response,Page, BrowserContext, Locator, ElementHandle } from 'playwright';
 
 interface Route {
   /**
@@ -207,22 +203,7 @@ interface APIResponse {
  */
 type Serializable = any;
 
-interface FCherryBrowser {
-  /**
-   * @method 监听页面请求
-   * @param event
-   * @param callback
-   */
-  on(event:string, callback:any)
-  /**
-   * @method 拦截页面请求并修改
-   * @param url
-   * @param handler
-   * @param options
-   */
-  route(url: string|RegExp|((url: URL) => boolean), handler: ((route: Route, request: Request) => void), options?: {
-    times?: number;
-  })
+interface FCherryBrowser extends BrowserContext{
 }
 
 interface FCherryPage {
@@ -235,6 +216,47 @@ interface FCherryPage {
     /** *
      * @method 等待url响应结果
      */
+
+    addScriptTag(options?: {
+      /**
+       * Raw JavaScript content to be injected into frame.
+       */
+      content?: string;
+  
+      /**
+       * Path to the JavaScript file to be injected into frame. If `path` is a relative path, then it is resolved relative
+       * to the current working directory.
+       */
+      path?: string;
+  
+      /**
+       * Script type. Use 'module' in order to load a Javascript ES6 module. See
+       * [script](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script) for more details.
+       */
+      type?: string;
+  
+      /**
+       * URL of a script to be added.
+       */
+      url?: string;
+    }): Promise<ElementHandle>
+
+    locator(selector: string, options?: {
+      /**
+       * Matches elements containing an element that matches an inner locator. Inner locator is queried against the outer
+       * one. For example, `article` that has `text=Playwright` matches `<article><div>Playwright</div></article>`.
+       *
+       * Note that outer and inner locators must belong to the same frame. Inner locator must not contain [FrameLocator]s.
+       */
+      has?: Locator;
+      /**
+       * Matches elements containing specified text somewhere inside, possibly in a child or a descendant element. When
+       * passed a [string], matching is case-insensitive and searches for a substring. For example, `"Playwright"` matches
+       * `<article><div>Playwright</div></article>`.
+       */
+      hasText?: string|RegExp;
+    }):Promise<Locator> 
+
     waitForResponse(urlOrPredicate: string|RegExp|((response: Response) => boolean|Promise<boolean>), options?: {
       timeout?: number;
     }): Promise<Response>
@@ -323,6 +345,9 @@ interface FCherryDom {
    * @param sign 混合定位符xpath,selector
    */
   viewTo(sign:string):Promise<void>
+
+  highlight(sign:string) :Promise<void>
+
   /**
    * @method 点击目标元素
    * @param sign 混合定位符xpath,selector
@@ -507,9 +532,48 @@ interface FCherryDom {
 interface FCherryCookies {
   /**
    * @method 设置浏览器cookie
-   * @param value
+   * @param value string
    */
-  set(value:any[]) :Promise<void>
+  set(value:Array<{
+    name: string;
+
+    value: string;
+
+    /**
+     * either url or domain / path are required. Optional.
+     */
+    url?: string;
+
+    /**
+     * either url or domain / path are required Optional.
+     */
+    domain?: string;
+
+    /**
+     * either url or domain / path are required Optional.
+     */
+    path?: string;
+
+    /**
+     * Unix time in seconds. Optional.
+     */
+    expires?: number;
+
+    /**
+     * Optional.
+     */
+    httpOnly?: boolean;
+
+    /**
+     * Optional.
+     */
+    secure?: boolean;
+
+    /**
+     * Optional.
+     */
+    sameSite?: "Strict"|"Lax"|"None";
+  }>) :Promise<void>
   /**
    * @method 通过请求cookie批量设置
    * @param url cookie网页地址
@@ -534,6 +598,14 @@ interface FCherryAssert {
    * @param url
    */
   location(url:string)
+
+  /**
+   * @method 判断内容是否为true
+   * @param value 内容
+   * @param errHint 当内存出错时将显示传递的错误提示 
+   */
+  true(value: any, errHint?: string)
+
   /**
    * @method 页面标题断言
    * @param title
