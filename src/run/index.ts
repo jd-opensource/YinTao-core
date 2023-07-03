@@ -62,7 +62,7 @@ export interface RunOptions extends LaunchOptions{
 export async function run(code: string, opts: RunOptions = {
   _screenImages: [],
   script: '',
-  browser:'chrome',
+  browser:'chromium',
   __log_body:[],
   cookies: [],
 },callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {

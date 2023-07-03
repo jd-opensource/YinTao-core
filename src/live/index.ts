@@ -31,7 +31,7 @@ export async function apiLive(url: string, opts: any) {
 
   // @ts-ignore
   await context._enableRecorder({
-    language: 'test',
+    language: 'javascript',
     launchOptions,
     contextOptions,
     device: options.device,
@@ -85,7 +85,7 @@ export async function live(url: string, opts: any) {
   launchOptions.executablePath = options.executablePath
   // @ts-ignore
   await context._enableRecorder({
-    language: 'test',
+    language: 'javascript',
     launchOptions,
     contextOptions,
     device: options.device,
