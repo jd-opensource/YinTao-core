@@ -1,17 +1,16 @@
-# cherry-core
+# YinTao-core
 
-
-<div align=center><img width="150" height="150" src="https://raw.githubusercontent.com/rr13k/cherry/master/strawberry.ico"/></div>
+<div align=center><img width="150" height="150" src="https://yintao.jd.com/icon.png"/></div>
 
 <p align="center">
-<a href="https://coding.jd.com/cherry/cherry-core/"><img alt="Tests" src="https://badgen.net/badge/cherry/core/pink?icon=github"></a>
-<a href="https://coding.jd.com/cherry/cherry-core/"><img alt="Test Dependencies" src="https://badgen.net/badge/webUi/auto/red?icon=github" /></a>
-<a href="https://coding.jd.com/cherry/cherry-core/"><img alt="NPM Version" src="https://badgen.net/github/status/micromatch/micromatch/4.0.1" style="max-width:100%;"></a>
-<a href="https://coding.jd.com/cherry/cherry-core/"><img alt="NPM Version" src="https://badgen.net/badge/license/MIT/blue" style="max-width:100%;"></a>
+<a href="#"><img alt="Tests" src="https://badgen.net/badge/webUi/auto/blue?icon=test"></a>
+<a href="#"><img alt="Test Dependencies" src="https://badgen.net/badge/webUi/auto/red?icon=github" /></a>
+<a href="#"><img alt="NPM Version" src="https://badgen.net/badge/npm/8.19.3/yellow" style="max-width:100%;"></a>
+<a href="#"><img alt="NPM Version" src="https://badgen.net/badge/license/MIT/blue" style="max-width:100%;"></a>
 </p>
 
 <div align=center>
-    <i>cherry 执行引擎
+    <i>YinTao 执行引擎
     </br>js/ts脚本执行输出</i>
 </div>
 <br/>
@@ -46,16 +45,16 @@
 
 推荐使用  `yarn`。十分简单。
 ```shell
-yarn add @cherry-jd/cherry-core
+yarn add @YinTao-jd/YinTao-core
 ```
 
 ## Usage
 
 ```sh
-cherry main.js # default use cherry-drier
-cherry -b   # get local browsers
+YinTao main.js # default use YinTao-drier
+YinTao -b   # get local browsers
 ->  usable browsers: [ 'chrome', 'ie', 'firefox', 'edge', 'edge-legacy' ]
-cherry chrome  main.js // use other browser
+YinTao chrome  main.js // use other browser
 ```
 
 ## 主流程
@@ -83,21 +82,21 @@ cherry chrome  main.js // use other browser
 
 ## 问题跟踪
 
-使用我们的 `Coding Issues` 页面 [报告错误](https://coding.jd.com/cherry/cherry-core/issues/new) 并 [提出改进建议](https://coding.jd.com/cherry/cherry-core/issues/new)
+使用我们的 `Coding Issues` 页面 [报告错误](https://coding.jd.com/YinTao/YinTao-core/issues/new) 并 [提出改进建议](https://coding.jd.com/YinTao/YinTao-core/issues/new)
 
 ## 贡献
 
-阅读我们的[贡献指南](https://coding.jd.com/cherry/cherry-core/blob/master/CONTRIBUTING.md) ，了解如何为项目做出贡献。
+阅读我们的[贡献指南](https://coding.jd.com/YinTao/YinTao-core/blob/master/CONTRIBUTING.md) ，了解如何为项目做出贡献。
 
 ## 徽章
 
-向大家展示您正在使用 `CherryCore`: ![Tested with CherryCore](https://img.shields.io/badge/tested%20with-CherryCore-2fa4cf.svg)
+向大家展示您正在使用 `YinTaoCore`: ![Tested with YinTaoCore](https://img.shields.io/badge/tested%20with-YinTaoCore-2fa4cf.svg)
 
 要显示此徽章，请将以下代码添加到您的存储库自述文件中：
 
 ```html
-<a href="https://coding.jd.com/cherry/cherry-core/">
-    <img alt="Tested with CherryCore" src="https://img.shields.io/badge/tested%20with-CherryCore-2fa4cf.svg">
+<a href="https://coding.jd.com/YinTao/YinTao-core/">
+    <img alt="Tested with YinTaoCore" src="https://img.shields.io/badge/tested%20with-YinTaoCore-2fa4cf.svg">
 </a>
 ```
 

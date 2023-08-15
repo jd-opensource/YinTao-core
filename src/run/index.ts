@@ -68,6 +68,7 @@ export async function run(code: string, opts: RunOptions = {
 },callback?:(data:{type:'callback',msg:string})=>{}) :Promise<CherryResult> {
   let cherryResult :CherryResult
   console.log("cherry -> core run config :", JSON.stringify(opts))
+  console.log("cherry -> core run script :", code)
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
     __log_body:[],
