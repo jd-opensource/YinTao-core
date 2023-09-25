@@ -1,6 +1,6 @@
 {
-  "name": "@yintao-jd/core",
-  "version": "2.0.8",
+  "name": "@cherry-jd/core",
+  "version": "2.0.9",
   "description": "YinTao core execution library, Used to handle page automation~",
   "main": "lib/index.js",
   "scripts": {
