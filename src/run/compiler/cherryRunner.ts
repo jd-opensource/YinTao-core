@@ -9,6 +9,7 @@ import { CherryResult } from '..'
 import { __sleep } from '../../utils/suger'
 import { reportTrace } from '../../utils/remoteReport'
 import fs from 'fs'
+import ip from "ip"
 import { chromium, firefox, LaunchOptions, webkit }  from 'playwright'
 
 // cherry解析器实例
@@ -22,6 +23,7 @@ process.on('uncaughtException', async (err) => {
   const errResult: CherryResult = {
     duration: 0,
     success: false,
+    serverIp: ip.address(),
     msg: err?.message || '',
     divertor: [],
     log: `${resolver.runOptins.__log_body?.join('\n')}\n`,
@@ -384,6 +386,7 @@ async function GetStartScript():Promise<string[]> {
   const cherryResult: CherryResult = {
     duration: 0,
     success: !result.error,
+    serverIp: ip.address(),
     msg: result.error?.message || '',
     divertor: [],
     log: `${resolver.runOptins.__log_body?.join('\n')}\n`,

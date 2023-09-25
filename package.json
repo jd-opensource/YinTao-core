@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "gulp",
-    "fast": "gulp && cp -rf lib ../cherry/node_modules/@cherry-jd/core && cp -rf lib ../cherry/packages/cherry-server/node_modules/@cherry-jd/core",
+    "fast": "gulp  && cp -rf lib ../cherry/node_modules/@cherry-jd/core && cp -rf lib ../cherry/packages/cherry-server/node_modules/@cherry-jd/core &&  cp -rf lib ../cherry/node_modules/@cherry-jd/cherry-server/node_modules/@cherry-jd/core",
     "test": "jest",
     "js:debug": "jest js_debug",
     "publish": "npm publish --access public",
@@ -39,7 +39,7 @@
     "nanoid": "^3.3.1",
     "parse5": "^6.0.1",
     "pixelmatch": "^5.2.1",
-    "playwright": "1.31.1",
+    "playwright": "1.37.1",
     "progress": "^2.0.3",
     "proper-lockfile": "^4.1.2",
     "proxy-from-env": "^1.1.0",

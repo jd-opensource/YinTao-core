@@ -5,6 +5,7 @@ import { getImageType, reportRunImage, reportRunLog, reportRunResult } from '../
 import { readFile } from '../utils/suger'
 import stripAnsi from 'strip-ansi'
 import Compiler from './compiler'
+import ip from "ip"
 
 export interface CherryResult {
   duration:number,
@@ -13,6 +14,7 @@ export interface CherryResult {
   divertor:any[], // 目前来说价值不大了，后续应该删除
   storage?:any
   log?:string
+  serverIp:string,
   error? : Error
   images?:{
     path:string,
@@ -91,6 +93,7 @@ export async function run(code: string, opts: RunOptions = {
     cherryResult = {
       duration: 0,
       success: false,
+      serverIp: ip.address(),
       msg: error.message,
       divertor: [],
       log:stripAnsi(error.message),
@@ -125,7 +128,6 @@ export async function run(code: string, opts: RunOptions = {
   )
   cherryResult.duration = duration
   cherryResult.storage = opts.storage
-
   if (launchOptions.remoteReport) {
     console.log("执行完毕-启动远程异步数据上报!")
     const caseId = launchOptions?.storage?.__caseList?.shift() || undefined

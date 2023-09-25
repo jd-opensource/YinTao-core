@@ -722,6 +722,7 @@ class Page implements FCherryPage {
       }
       
       const page = this.control.currentPage
+      this.console.log("start screenshot... use options:", JSON.stringify(options))
       const buffer = await page.screenshot(options)
       this.console.log('screenshot img path:', path.resolve(options.path || imgPath), " image size:", buffer?.length || 0)
       if (!buffer || buffer && buffer.length < 100) {
@@ -776,6 +777,9 @@ class Page implements FCherryPage {
 
   async changeIframe(index: number| string, ms:number = 3000) {
     const _this = this
+    _this.control.currentPage?.frames().map(__frame=>{
+      this.console.log("frames: ", __frame.url())
+    })
     const __changeIframe = function (index: number| string) {
       if (index == -1 && _this.control.currentPage) { // 切出iframe
         return _this.control.updateContext(_this.control.currentPage)
@@ -1109,6 +1113,7 @@ class Dom implements FCherryDom {
     if (!locator) throw new Error(`custom not find sign:', ${sign}`)
     let result
     switch (attr) {
+      case 'text':
       case 'innerText': {
         result = await locator.innerText()
         break
