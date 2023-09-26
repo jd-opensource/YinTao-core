@@ -17,21 +17,27 @@ var resolver
 
 // 异常中断时
 process.on('uncaughtException', async (err) => {
-  console.log("因为代码执行异常导致中断", err)
-  resolver.runOptins.__log_body.push(err.stack)
-
-  const errResult: CherryResult = {
-    duration: 0,
-    success: false,
-    serverIp: ip.address(),
-    msg: err?.message || '',
-    divertor: [],
-    log: `${resolver.runOptins.__log_body?.join('\n')}\n`,
-    error: err,
-    code: 4044,
-  }
-  await sendResult(errResult)
+  try{
+    console.log("因为代码执行异常导致中断", err)
+    const errResult: CherryResult = {
+      duration: 0,
+      success: false,
+      serverIp: ip.address(),
+      msg: err?.message || '',
+      divertor: [],
+      log: err.message,
+      error: err,
+      code: 4044,
+    }
   
+    if (resolver){
+      resolver.runOptins.__log_body.push(err.stack)
+      errResult.log = `${resolver.runOptins.__log_body?.join('\n')}\n`
+    }
+    await sendResult(errResult)
+  }catch(e) {
+    console.log("Deadly recursion error:", e)
+  }
   setTimeout(() => {
     process.exit(1)
   }, 300);
