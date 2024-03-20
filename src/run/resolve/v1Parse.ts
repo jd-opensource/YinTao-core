@@ -611,7 +611,9 @@ class Page implements FCherryPage {
     let _recordVideo : BrowserContextOptions['recordVideo'] | undefined
     if ( this.parse.runOptins.audio && !!this.parse.runOptins.audio.url.trim() ){
       // 使用默认路径, 禁止用户传递路径
-      let video_path = path.join(os.tmpdir(), 'cherryDfSession')
+      let tmp_video_path = path.join(os.tmpdir(), 'cherryDfSession')
+      // 当本地调试时, 支持传递本地路径, 远程时仅支持传递http上报地址
+      let video_path = os.type() === 'Linux' ? tmp_video_path : this.parse.runOptins.audio.url
       console.log("存放的视频路径为:", video_path)
       _recordVideo = {
         dir: video_path,
