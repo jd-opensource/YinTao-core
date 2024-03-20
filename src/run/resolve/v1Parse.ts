@@ -107,7 +107,11 @@ export default class V1Parse extends Resolver {
             _this.runOptins.__log_body.push(args.join(' '))
             processSend('log', args.join(' '))
           }
-          trapTarget[key](...args)
+          try {
+            trapTarget[key](...args)
+          } catch (error) {
+            console.log("console proxy error:", error, " key: ", key)
+          }
         }
       },
     }
@@ -303,6 +307,7 @@ class assert implements FCherryAssert {
 }
 
 /**
+ * 单case执行没有asyncReport步骤
  * @method 远程上报case执行(用于合并任务进度上报)
  * @param this
  * @param args
@@ -566,11 +571,16 @@ class Page implements FCherryPage {
   }
 
   @throwStack()
-  async waitForEvent(event:"framenavigated", opt:any) {
+  async waitForEvent(event:"framenavigated", opt:any) :Promise<Object>{
     const page = await this.control.currentPage?.waitForEvent(event, opt)
     if (event === 'framenavigated' && page) {
       this.control.updateContext(page)
     }
+
+    if (page == undefined){
+      throw new Error('waitForEvent error not find event resp!')
+    } 
+    return page
   }
 
   @throwStack()
@@ -597,13 +607,27 @@ class Page implements FCherryPage {
         height: Math.floor(this.parse.runOptins.screen.height * 0.9),
       }
     }
+    // 视频配置通过传递，如果有则使用没有则为空
+    let _recordVideo : BrowserContextOptions['recordVideo'] | undefined
+    if ( this.parse.runOptins.audio && !!this.parse.runOptins.audio.url.trim() ){
+      // 使用默认路径, 禁止用户传递路径
+      let video_path = path.join(os.tmpdir(), 'cherryDfSession')
+      console.log("存放的视频路径为:", video_path)
+      _recordVideo = {
+        dir: video_path,
+        size: this.parse.runOptins.audio.size || undefined
+      }
+    }
 
+    console.log("录制配置查看:", JSON.stringify(this.parse.runOptins))
+    console.log("used video config:", _recordVideo)
     if (!this.control.browserContext) {
       const contextOptions : BrowserContextOptions = {
         deviceScaleFactor: 1,
         // eslint-disable-next-line no-unsafe-optional-chaining
         viewport,
         ...this.defaultContextOptions,
+        recordVideo: _recordVideo,
         storageState: {
           cookies: this.parse.runOptins.cookies as any,
           origins: [],

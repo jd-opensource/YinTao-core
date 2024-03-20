@@ -40,6 +40,43 @@ export interface RunOptions extends LaunchOptions{
     image?:string
     trace?:string
   },
+  audio?:{
+    // 非必填, 控制录制时的分辨率
+    size?: {
+      /**
+       * Video frame width.
+       */
+      width: number;
+      /**
+       * Video frame height.
+       */
+      height: number;
+    }
+    //url必填视频上报的地址
+    url :string
+  }
+  recordVideo?: {
+    /**
+     * Path to the directory to put videos into.
+     */
+    dir: string;
+
+    /**
+     * Optional dimensions of the recorded videos. If not specified the size will be equal to `viewport` scaled down to fit
+     * into 800x800. If `viewport` is not configured explicitly the video size defaults to 800x450. Actual picture of each page
+     * will be scaled down if necessary to fit the specified size.
+     */
+    size?: {
+      /**
+       * Video frame width.
+       */
+      width: number;
+      /**
+       * Video frame height.
+       */
+      height: number;
+    };
+  };
   browser:string
   cookies:any[]
   script?:string
@@ -73,6 +110,7 @@ export async function run(code: string, opts: RunOptions = {
   console.log("cherry -> core run script :", code)
   const launchOptions :RunOptions = {
     executablePath: opts.executablePath,
+    audio: opts.audio,
     __log_body:[],
     browser: opts.browser,
     headless: opts.headless,

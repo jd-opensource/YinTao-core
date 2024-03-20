@@ -276,7 +276,7 @@ interface FCherryPage {
     waitForEvent(event:"framenavigated", optionsOrPredicate?:{
       predicate:Function,
       timeout?: 30000
-    }): Promise<void>
+    }): Promise<Object>
 
     /**
      * @method 打开新页面

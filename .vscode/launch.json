@@ -88,6 +88,18 @@
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
+        }, {
+            "type": "node",
+            "request": "launch",
+            "name": "playwright",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/tests/playwright_test.js",
+            // "args": [ "install","chromium"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
         }
     ]
 }

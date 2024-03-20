@@ -62,7 +62,7 @@ export default class Compiler {
               })
             break
           case 'result':
-            console.log("获取最终的执行结果:",data)
+            console.log("获取最终的执行结果:", data)
             clearTimeout(timeoutId)
             resolver(data)
             worker.send({ kill: true }) // 这里会报错. write EPIPE

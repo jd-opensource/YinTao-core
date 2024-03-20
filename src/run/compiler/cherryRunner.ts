@@ -11,6 +11,7 @@ import { reportTrace } from '../../utils/remoteReport'
 import fs from 'fs'
 import ip from "ip"
 import { chromium, firefox, LaunchOptions, webkit }  from 'playwright'
+import { reportVideo } from '../../utils/remoteReport'
 
 // cherry解析器实例
 var resolver
@@ -243,9 +244,12 @@ async function bootstrap(browserType, runOption: any) {
     case 'firefox':
       browserCore = firefox
       break
+    case 'edge':
+    case 'safari':
     case 'webkit':
       browserCore = webkit
       break
+    case 'chromium':
     default:
       browserCore = chromium
   }
@@ -338,6 +342,21 @@ async function GetStartScript():Promise<string[]> {
     }
   }
 
+  // 关闭页面以上传视频
+  if ( runOption.audio && !!runOption.audio.url.trim() ) {
+    let pages = await resolver.control?.browserContext?.pages() || []
+    console.log("获取到的页面数量:", pages.length)
+    for(let page of pages) { 
+      await page.close() // 视频上传前需要关闭页面
+      let video_path = await page.video()?.path() // 读取视频文件
+      console.log("视频文件路径:", video_path)
+      if (video_path) {
+        await reportVideo(runOption.audio.url,video_path, runOption.storage)
+      }
+      // 上传完成后删除文件
+      // await page.video()?.delete()
+    }
+  }
   // eslint-disable-next-line prefer-const
   result = resolver.cherryResult || resultData
   if (result.error !== undefined) {
