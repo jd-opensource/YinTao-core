@@ -123,6 +123,13 @@ export async function reportTrace(url:string, filePath:string, storage?:any) {
  */
 export async function reportVideo(url:string, filePath:string, storage?:any) {
   console.log('run reportVideo', url, 'filePath:', filePath)
+
+  // 获取文件大小并转换为KB
+  const stats = fs.statSync(filePath);
+  const fileSizeInBytes = stats.size;
+  const fileSizeInKilobytes = fileSizeInBytes / 1024;
+  console.log(`audio File size: ${fileSizeInKilobytes} KB`);
+   
   // log 获取不到运行结果,运行报错这里无法接收
   const FormData = require('form-data')
   const param = new FormData()

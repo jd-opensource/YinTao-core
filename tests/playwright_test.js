@@ -23,31 +23,21 @@ const { chromium } = require('playwright'); // 或者 'firefox' 或 'webkit'.
   await page.goto('https://baidu.com'); // 导航到指定网址
   await __sleep(1000)
   console.log("等待视频另存为1")
-  await page.close()
-  await video.saveAs("./videos2/a.webm")
   console.log("等待视频另存为2")
-  // await console.log(await page.video());
 
   const path = await video.path();
-  // 读取文件内容, 进行文件上传，上传后删除文件内容   
   console.log(path)
 
-  page = await context.newPage(); 
-  video = await page.video()
   await page.goto("https://4399.com")
   await __sleep(1000)
   // 进行其他操作...
-  await page.close()
-
-
-  await video.saveAs("./videos3/b.webm")
-
-
   await page.close(); // 关闭页面
+
+  // await video.saveAs('./videos/a.webm')
 
 
   //  只能在页面关闭时进行删除  
-  await video.delete()
+  // await video.delete()
 
   await context.close(); // 关闭浏览器上下文
   await browser.close(); // 关闭浏览器

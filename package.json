@@ -1,11 +1,11 @@
 {
   "name": "@cherry-jd/core",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "YinTao core execution library, Used to handle page automation~",
   "main": "lib/index.js",
   "scripts": {
     "build": "gulp",
-    "fast": "gulp  && cp -rf lib ../cherry/node_modules/@cherry-jd/core && cp -rf lib ../cherry/packages/cherry-server/node_modules/@cherry-jd/core &&  cp -rf lib ../cherry/node_modules/@cherry-jd/cherry-server/node_modules/@cherry-jd/core",
+    "fast": "gulp  && cp -rf lib ../cherry/node_modules/@cherry-jd/core && cp -rf lib ../cherry/packages/cherry-server/node_modules/@cherry-jd/core",
     "test": "jest",
     "js:debug": "jest js_debug",
     "publish": "npm publish --access public",

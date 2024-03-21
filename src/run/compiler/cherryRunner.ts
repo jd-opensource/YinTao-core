@@ -346,15 +346,21 @@ async function GetStartScript():Promise<string[]> {
   if ( runOption.audio && !!runOption.audio.url.trim() ) {
     let pages = await resolver.control?.browserContext?.pages() || []
     console.log("获取到的页面数量:", pages.length)
-    for(let page of pages) { 
+    for(let page of pages) {
+      const video = await page.video()
       await page.close() // 视频上传前需要关闭页面
-      let video_path = await page.video()?.path() // 读取视频文件
+      let video_path = await video?.path() // 读取视频文件
       console.log("视频文件路径:", video_path)
+      let as_video_path = path.join(os.tmpdir(), 'cherryDfSession', resolver.control.id + '_video' + '.webm')
+      // 必须使用saveAs再另存一个目录否则, 视频大小将为0
+      await video.saveAs(as_video_path)
       if (video_path) {
         await reportVideo(runOption.audio.url,video_path, runOption.storage)
       }
       // 上传完成后删除文件
-      // await page.video()?.delete()
+      await page.video()?.delete()
+      // 删除as的audio文件
+      fs.unlinkSync(as_video_path)
     }
   }
   // eslint-disable-next-line prefer-const
