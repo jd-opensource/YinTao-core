@@ -723,8 +723,8 @@ class Page implements FCherryPage {
       if (fs.existsSync(url)) url = `file://${path.resolve(url)}`; else if (!url.startsWith('http') && !url.startsWith('file://') && !url.startsWith('about:') && !url.startsWith('data:')) url = `http://${url}`
       if(this.control && this.control.currentPage) {
         let res = await this.control.currentPage.goto(url, options)
-        if (res == null) {
-          this.console.log('page.to 命令异常,无法切换到目标地址:',url)
+        if (res == null) { // 当导航成功，并没有发生重定向时返回null
+          this.console.log('Navigation succeeded without any redirection. ',url)
         } else {
           this.control.updateContext(this.control.currentPage) // 切换页面后重制以退出iframe
           this.console.log('page.to 命令执行完成。 页面返回的状态码为:', res.status())

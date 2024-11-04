@@ -19,7 +19,7 @@ var resolver
 // 异常中断时
 process.on('uncaughtException', async (err) => {
   try{
-    console.log("因为代码执行异常导致中断", err)
+    console.log("code uncaughtException error:", err)
     const errResult: CherryResult = {
       duration: 0,
       success: false,
